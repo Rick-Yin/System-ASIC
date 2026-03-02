@@ -1,0 +1,1 @@
+blocks__1__att__time_decay_wexp[0]=0\nblocks__1__att__time_decay_wexp[1]=0\nblocks__1__att__time_decay_wexp[2]=0\nblocks__1__att__time_decay_wexp[3]=-1\nblocks__1__att__time_decay_wexp[4]=-5\nblocks__1__att__time_decay_wexp[5]=-79\n

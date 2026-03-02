@@ -1,0 +1,1 @@
+blocks__0__ffn__time_mix_k[0][0][0]=6\nblocks__0__ffn__time_mix_k[0][0][1]=46\nblocks__0__ffn__time_mix_k[0][0][2]=62\nblocks__0__ffn__time_mix_k[0][0][3]=167\nblocks__0__ffn__time_mix_k[0][0][4]=228\nblocks__0__ffn__time_mix_k[0][0][5]=241\n

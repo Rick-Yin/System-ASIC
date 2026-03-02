@@ -1,0 +1,1 @@
+root__wkv_log_exp[0]=-2\n

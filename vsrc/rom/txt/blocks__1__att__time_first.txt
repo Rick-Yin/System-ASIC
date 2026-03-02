@@ -1,0 +1,1 @@
+blocks__1__att__time_first[0]=-4\nblocks__1__att__time_first[1]=-3\nblocks__1__att__time_first[2]=-7\nblocks__1__att__time_first[3]=-4\nblocks__1__att__time_first[4]=-2\nblocks__1__att__time_first[5]=-5\n

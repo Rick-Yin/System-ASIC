@@ -1,0 +1,1 @@
+blocks__1__att__time_mix_k[0][0][0]=17\nblocks__1__att__time_mix_k[0][0][1]=98\nblocks__1__att__time_mix_k[0][0][2]=146\nblocks__1__att__time_mix_k[0][0][3]=184\nblocks__1__att__time_mix_k[0][0][4]=216\nblocks__1__att__time_mix_k[0][0][5]=235\n

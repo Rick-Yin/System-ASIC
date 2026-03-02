@@ -1,0 +1,1 @@
+root__wkv_min_delta_i[0]=-48\n

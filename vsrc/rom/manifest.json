@@ -1,0 +1,1043 @@
+{
+  "version": 1,
+  "generated_at_utc": "2026-03-02T02:46:55.537749+00:00",
+  "export_root": "checkpoints/E3-1/E3-1_OD_RWKVCNN_20260302-104434_stage3/asic_int",
+  "ckpt_path": "checkpoints/E3-1/E3-1_OD_RWKVCNN_20260302-104434_stage3",
+  "model_name": "RWKVCNN_Quan",
+  "qparams_from_yaml": {
+    "w_bits": 8,
+    "act_bits": 8,
+    "time_decay_w_exp": 8,
+    "bit_override": {
+      "input_proj": 12,
+      "blocks.0.ffn.receptance": 4,
+      "blocks.0.ffn.time_shift": 4,
+      "blocks.1.att.key": 4,
+      "blocks.1.att.time_shift": 4,
+      "blocks.0.att.key": 4,
+      "blocks.0.att.receptance": 4,
+      "blocks.1.att.receptance": 4
+    },
+    "act_points": [
+      "after_input_proj",
+      "after_time_shift",
+      "after_kvr",
+      "after_gate",
+      "after_mul",
+      "after_residual_add"
+    ],
+    "act_override": {},
+    "calib": {
+      "split": "train",
+      "num_batches": 200,
+      "clip_method": "percentile",
+      "percentile": 99.9,
+      "fmt": {
+        "k_bits": 12,
+        "v_bits": 12,
+        "u_bits": 12,
+        "w_bits": 12,
+        "out_bits": 12
+      },
+      "acc": {
+        "a_bits": 24,
+        "b_bits": 24,
+        "p_bits": 16
+      },
+      "exp_approx": {
+        "type": "lut",
+        "lut_size": 256,
+        "in_bits": 12,
+        "out_bits": 16,
+        "clamp_in": [
+          -12.0,
+          0.0
+        ]
+      }
+    },
+    "in_bits": 12,
+    "out_bits": 12
+  },
+  "model_qparams_runtime": {
+    "w_bits": 8,
+    "act_bits": 8,
+    "time_decay_w_exp": 8,
+    "bit_override": {
+      "input_proj": 12,
+      "blocks.0.ffn.receptance": 4,
+      "blocks.0.ffn.time_shift": 4,
+      "blocks.1.att.key": 4,
+      "blocks.1.att.time_shift": 4,
+      "blocks.0.att.key": 4,
+      "blocks.0.att.receptance": 4,
+      "blocks.1.att.receptance": 4
+    },
+    "act_points": [
+      "after_input_proj",
+      "after_time_shift",
+      "after_kvr",
+      "after_gate",
+      "after_mul",
+      "after_residual_add"
+    ],
+    "act_override": {},
+    "calib": {
+      "split": "train",
+      "num_batches": 200,
+      "clip_method": "percentile",
+      "percentile": 99.9,
+      "fmt": {
+        "k_bits": 12,
+        "v_bits": 12,
+        "u_bits": 12,
+        "w_bits": 12,
+        "out_bits": 12
+      },
+      "acc": {
+        "a_bits": 24,
+        "b_bits": 24,
+        "p_bits": 16
+      },
+      "exp_approx": {
+        "type": "lut",
+        "lut_size": 256,
+        "in_bits": 12,
+        "out_bits": 16,
+        "clamp_in": [
+          -12.0,
+          0.0
+        ]
+      }
+    },
+    "wkv_int": {
+      "fmt": {
+        "k_bits": 8,
+        "v_bits": 8,
+        "u_bits": 8,
+        "w_bits": 8,
+        "out_bits": 8
+      },
+      "acc": {
+        "a_bits": 24,
+        "b_bits": 24,
+        "p_bits": 16
+      },
+      "exp_approx": {
+        "lut_size": 256,
+        "out_bits": 16,
+        "clamp_in": [
+          -12.0,
+          0.0
+        ]
+      }
+    },
+    "io_int": {
+      "in_bits": 12,
+      "out_bits": 12
+    }
+  },
+  "int_ctx": {
+    "res_exp": -6,
+    "res_bits": 8,
+    "att_cfg": {
+      "k_bits": 8,
+      "v_bits": 8,
+      "r_bits": 8,
+      "exp_v": -7,
+      "exp_r": -7,
+      "exp_mul": -6,
+      "gate_bits": 8,
+      "mul_bits": 8,
+      "p_bits": 16,
+      "a_bits": 24,
+      "b_bits": 24
+    },
+    "gate_bits": 8
+  },
+  "io": {
+    "in_bits": 12,
+    "out_bits": 12,
+    "exp_in": -11,
+    "exp_out": -11
+  },
+  "tensor_count": 49,
+  "tensors": [
+    {
+      "name": "input_proj.w",
+      "module": "input_proj",
+      "tensor": "w",
+      "category": "weight",
+      "shape": [
+        6,
+        2
+      ],
+      "numel": 12,
+      "storage_dtype": "int32_le",
+      "logical_bits": 12,
+      "exp": -10,
+      "signed": true,
+      "bin_file": "input_proj__w.bin",
+      "txt_file": "input_proj__w.txt",
+      "sha256": "c58ed8240206fbef685be4094969a3615de0cd9b54d40bbeaad542b060658941"
+    },
+    {
+      "name": "input_proj.b",
+      "module": "input_proj",
+      "tensor": "b",
+      "category": "bias",
+      "shape": [
+        6
+      ],
+      "numel": 6,
+      "storage_dtype": "int32_le",
+      "logical_bits": 20,
+      "exp": -10,
+      "signed": true,
+      "bin_file": "input_proj__b.bin",
+      "txt_file": "input_proj__b.txt",
+      "sha256": "d8c536605bcd64e64f7c52fad06d329379e493095a34227fb5e6c57a65b45961"
+    },
+    {
+      "name": "blocks.0.att.time_shift.w",
+      "module": "blocks.0.att.time_shift",
+      "tensor": "w",
+      "category": "weight",
+      "shape": [
+        6,
+        1,
+        4
+      ],
+      "numel": 24,
+      "storage_dtype": "int32_le",
+      "logical_bits": 8,
+      "exp": -7,
+      "signed": true,
+      "bin_file": "blocks__0__att__time_shift__w.bin",
+      "txt_file": "blocks__0__att__time_shift__w.txt",
+      "sha256": "775e2f5b918a2ce64984349de6ebd809c1f1f240f18ddf7ab4fe7b42ef3d5716"
+    },
+    {
+      "name": "blocks.0.att.time_shift.b",
+      "module": "blocks.0.att.time_shift",
+      "tensor": "b",
+      "category": "bias",
+      "shape": [
+        6
+      ],
+      "numel": 6,
+      "storage_dtype": "int32_le",
+      "logical_bits": 16,
+      "exp": -7,
+      "signed": true,
+      "bin_file": "blocks__0__att__time_shift__b.bin",
+      "txt_file": "blocks__0__att__time_shift__b.txt",
+      "sha256": "362d3902e52a3d610256da741a6eb87262a819bb03e1f8db5aa1e741935a27fa"
+    },
+    {
+      "name": "blocks.0.att.key.w",
+      "module": "blocks.0.att.key",
+      "tensor": "w",
+      "category": "weight",
+      "shape": [
+        6,
+        6
+      ],
+      "numel": 36,
+      "storage_dtype": "int32_le",
+      "logical_bits": 4,
+      "exp": -3,
+      "signed": true,
+      "bin_file": "blocks__0__att__key__w.bin",
+      "txt_file": "blocks__0__att__key__w.txt",
+      "sha256": "77edc8a9e221a6fd4c87a6628ab152d2dc804574c4669cd976a8ccb0593180e3"
+    },
+    {
+      "name": "blocks.0.att.value.w",
+      "module": "blocks.0.att.value",
+      "tensor": "w",
+      "category": "weight",
+      "shape": [
+        6,
+        6
+      ],
+      "numel": 36,
+      "storage_dtype": "int32_le",
+      "logical_bits": 8,
+      "exp": -8,
+      "signed": true,
+      "bin_file": "blocks__0__att__value__w.bin",
+      "txt_file": "blocks__0__att__value__w.txt",
+      "sha256": "b22de866f000dd0226f22ee5977cb6f19d252b42022da75938138cc9d5eb8824"
+    },
+    {
+      "name": "blocks.0.att.receptance.w",
+      "module": "blocks.0.att.receptance",
+      "tensor": "w",
+      "category": "weight",
+      "shape": [
+        6,
+        6
+      ],
+      "numel": 36,
+      "storage_dtype": "int32_le",
+      "logical_bits": 4,
+      "exp": -3,
+      "signed": true,
+      "bin_file": "blocks__0__att__receptance__w.bin",
+      "txt_file": "blocks__0__att__receptance__w.txt",
+      "sha256": "d4c988a7868fbccced91fde8b71f1b18902cb16b5e05921d9416d99d96a4d21b"
+    },
+    {
+      "name": "blocks.0.att.output.w",
+      "module": "blocks.0.att.output",
+      "tensor": "w",
+      "category": "weight",
+      "shape": [
+        6,
+        6
+      ],
+      "numel": 36,
+      "storage_dtype": "int32_le",
+      "logical_bits": 8,
+      "exp": -8,
+      "signed": true,
+      "bin_file": "blocks__0__att__output__w.bin",
+      "txt_file": "blocks__0__att__output__w.txt",
+      "sha256": "c8b0137ac303f1d70b2e37686941f1f2b1e2f33caaf7c0e9b0fa71c8ffd6f53d"
+    },
+    {
+      "name": "blocks.0.ffn.time_shift.w",
+      "module": "blocks.0.ffn.time_shift",
+      "tensor": "w",
+      "category": "weight",
+      "shape": [
+        6,
+        1,
+        4
+      ],
+      "numel": 24,
+      "storage_dtype": "int32_le",
+      "logical_bits": 4,
+      "exp": -3,
+      "signed": true,
+      "bin_file": "blocks__0__ffn__time_shift__w.bin",
+      "txt_file": "blocks__0__ffn__time_shift__w.txt",
+      "sha256": "42c70e716acb0d785ba127b831e2df95fe84577626d5c46bbf647efeef75fae0"
+    },
+    {
+      "name": "blocks.0.ffn.time_shift.b",
+      "module": "blocks.0.ffn.time_shift",
+      "tensor": "b",
+      "category": "bias",
+      "shape": [
+        6
+      ],
+      "numel": 6,
+      "storage_dtype": "int32_le",
+      "logical_bits": 12,
+      "exp": -3,
+      "signed": true,
+      "bin_file": "blocks__0__ffn__time_shift__b.bin",
+      "txt_file": "blocks__0__ffn__time_shift__b.txt",
+      "sha256": "7d149d2abc33b2fc178841705c43504e0e4e7cf37614d867c7b1a2170c7219fb"
+    },
+    {
+      "name": "blocks.0.ffn.key.w",
+      "module": "blocks.0.ffn.key",
+      "tensor": "w",
+      "category": "weight",
+      "shape": [
+        18,
+        6
+      ],
+      "numel": 108,
+      "storage_dtype": "int32_le",
+      "logical_bits": 8,
+      "exp": -7,
+      "signed": true,
+      "bin_file": "blocks__0__ffn__key__w.bin",
+      "txt_file": "blocks__0__ffn__key__w.txt",
+      "sha256": "aa33bf2e94a79fff7e98195c70cd426b8ca0ff0d8f1741cbb393c14fcc0e9393"
+    },
+    {
+      "name": "blocks.0.ffn.receptance.w",
+      "module": "blocks.0.ffn.receptance",
+      "tensor": "w",
+      "category": "weight",
+      "shape": [
+        6,
+        6
+      ],
+      "numel": 36,
+      "storage_dtype": "int32_le",
+      "logical_bits": 4,
+      "exp": -3,
+      "signed": true,
+      "bin_file": "blocks__0__ffn__receptance__w.bin",
+      "txt_file": "blocks__0__ffn__receptance__w.txt",
+      "sha256": "7d683f490017055875b08d4a89db6a10d9cad936c38a1c590c1da40ea808f6fc"
+    },
+    {
+      "name": "blocks.0.ffn.value.w",
+      "module": "blocks.0.ffn.value",
+      "tensor": "w",
+      "category": "weight",
+      "shape": [
+        6,
+        18
+      ],
+      "numel": 108,
+      "storage_dtype": "int32_le",
+      "logical_bits": 8,
+      "exp": -8,
+      "signed": true,
+      "bin_file": "blocks__0__ffn__value__w.bin",
+      "txt_file": "blocks__0__ffn__value__w.txt",
+      "sha256": "9bed125923dd15cbf681e2ec9b839999d47128b878161c8c761a893ab7bf5bc2"
+    },
+    {
+      "name": "blocks.1.att.time_shift.w",
+      "module": "blocks.1.att.time_shift",
+      "tensor": "w",
+      "category": "weight",
+      "shape": [
+        6,
+        1,
+        4
+      ],
+      "numel": 24,
+      "storage_dtype": "int32_le",
+      "logical_bits": 4,
+      "exp": -3,
+      "signed": true,
+      "bin_file": "blocks__1__att__time_shift__w.bin",
+      "txt_file": "blocks__1__att__time_shift__w.txt",
+      "sha256": "6e9b27f83e6dd8d2290455e9c36ddebb08d26c095e6e857285e3afdda830435a"
+    },
+    {
+      "name": "blocks.1.att.time_shift.b",
+      "module": "blocks.1.att.time_shift",
+      "tensor": "b",
+      "category": "bias",
+      "shape": [
+        6
+      ],
+      "numel": 6,
+      "storage_dtype": "int32_le",
+      "logical_bits": 12,
+      "exp": -3,
+      "signed": true,
+      "bin_file": "blocks__1__att__time_shift__b.bin",
+      "txt_file": "blocks__1__att__time_shift__b.txt",
+      "sha256": "788daca7ab9b7c3d351664d9b7058089ada1fe244833a37c06ae22299ec63067"
+    },
+    {
+      "name": "blocks.1.att.key.w",
+      "module": "blocks.1.att.key",
+      "tensor": "w",
+      "category": "weight",
+      "shape": [
+        6,
+        6
+      ],
+      "numel": 36,
+      "storage_dtype": "int32_le",
+      "logical_bits": 4,
+      "exp": -4,
+      "signed": true,
+      "bin_file": "blocks__1__att__key__w.bin",
+      "txt_file": "blocks__1__att__key__w.txt",
+      "sha256": "d0ca0fac75b216e40b619bb2f438c83ee84ac78cb984beb64cf143b66290e115"
+    },
+    {
+      "name": "blocks.1.att.value.w",
+      "module": "blocks.1.att.value",
+      "tensor": "w",
+      "category": "weight",
+      "shape": [
+        6,
+        6
+      ],
+      "numel": 36,
+      "storage_dtype": "int32_le",
+      "logical_bits": 8,
+      "exp": -8,
+      "signed": true,
+      "bin_file": "blocks__1__att__value__w.bin",
+      "txt_file": "blocks__1__att__value__w.txt",
+      "sha256": "2065c376e7205d59a06c343180ec81fe2c2fea5e59f7a9427c1d964344d4c85d"
+    },
+    {
+      "name": "blocks.1.att.receptance.w",
+      "module": "blocks.1.att.receptance",
+      "tensor": "w",
+      "category": "weight",
+      "shape": [
+        6,
+        6
+      ],
+      "numel": 36,
+      "storage_dtype": "int32_le",
+      "logical_bits": 4,
+      "exp": -3,
+      "signed": true,
+      "bin_file": "blocks__1__att__receptance__w.bin",
+      "txt_file": "blocks__1__att__receptance__w.txt",
+      "sha256": "0466441e7e5f18412704387ea043a43f8a8cc366110a12394a0e76b1584bd29e"
+    },
+    {
+      "name": "blocks.1.att.output.w",
+      "module": "blocks.1.att.output",
+      "tensor": "w",
+      "category": "weight",
+      "shape": [
+        6,
+        6
+      ],
+      "numel": 36,
+      "storage_dtype": "int32_le",
+      "logical_bits": 8,
+      "exp": -8,
+      "signed": true,
+      "bin_file": "blocks__1__att__output__w.bin",
+      "txt_file": "blocks__1__att__output__w.txt",
+      "sha256": "35bcfce41a0674fb7ca036df01d88e4fbf883c32b20476b5ca891f68c3fccb36"
+    },
+    {
+      "name": "blocks.1.ffn.time_shift.w",
+      "module": "blocks.1.ffn.time_shift",
+      "tensor": "w",
+      "category": "weight",
+      "shape": [
+        6,
+        1,
+        4
+      ],
+      "numel": 24,
+      "storage_dtype": "int32_le",
+      "logical_bits": 8,
+      "exp": -7,
+      "signed": true,
+      "bin_file": "blocks__1__ffn__time_shift__w.bin",
+      "txt_file": "blocks__1__ffn__time_shift__w.txt",
+      "sha256": "6b688b0568f6483df34da09452a42da43ff0e7960257df8287024481c424cca7"
+    },
+    {
+      "name": "blocks.1.ffn.time_shift.b",
+      "module": "blocks.1.ffn.time_shift",
+      "tensor": "b",
+      "category": "bias",
+      "shape": [
+        6
+      ],
+      "numel": 6,
+      "storage_dtype": "int32_le",
+      "logical_bits": 16,
+      "exp": -7,
+      "signed": true,
+      "bin_file": "blocks__1__ffn__time_shift__b.bin",
+      "txt_file": "blocks__1__ffn__time_shift__b.txt",
+      "sha256": "0295dd228b7cfcf2c541f67e369b205546198f7fba7b0dfeceec3b0bb3cadf8f"
+    },
+    {
+      "name": "blocks.1.ffn.key.w",
+      "module": "blocks.1.ffn.key",
+      "tensor": "w",
+      "category": "weight",
+      "shape": [
+        18,
+        6
+      ],
+      "numel": 108,
+      "storage_dtype": "int32_le",
+      "logical_bits": 8,
+      "exp": -7,
+      "signed": true,
+      "bin_file": "blocks__1__ffn__key__w.bin",
+      "txt_file": "blocks__1__ffn__key__w.txt",
+      "sha256": "8e06cf72922b1a1a8212dd27f96e7fe44fddd22c96c79769446c1de4dfd78467"
+    },
+    {
+      "name": "blocks.1.ffn.receptance.w",
+      "module": "blocks.1.ffn.receptance",
+      "tensor": "w",
+      "category": "weight",
+      "shape": [
+        6,
+        6
+      ],
+      "numel": 36,
+      "storage_dtype": "int32_le",
+      "logical_bits": 8,
+      "exp": -7,
+      "signed": true,
+      "bin_file": "blocks__1__ffn__receptance__w.bin",
+      "txt_file": "blocks__1__ffn__receptance__w.txt",
+      "sha256": "4451c9f456cd1bda071ad1f18d1590bfd82803f5ab2912f8aee8e67d3069eb71"
+    },
+    {
+      "name": "blocks.1.ffn.value.w",
+      "module": "blocks.1.ffn.value",
+      "tensor": "w",
+      "category": "weight",
+      "shape": [
+        6,
+        18
+      ],
+      "numel": 108,
+      "storage_dtype": "int32_le",
+      "logical_bits": 8,
+      "exp": -7,
+      "signed": true,
+      "bin_file": "blocks__1__ffn__value__w.bin",
+      "txt_file": "blocks__1__ffn__value__w.txt",
+      "sha256": "32dc3267b70752425522bbeffdff8a2d0642217198d448d5ef4a53c84355ad04"
+    },
+    {
+      "name": "output_proj.w",
+      "module": "output_proj",
+      "tensor": "w",
+      "category": "weight",
+      "shape": [
+        2,
+        6
+      ],
+      "numel": 12,
+      "storage_dtype": "int32_le",
+      "logical_bits": 8,
+      "exp": -7,
+      "signed": true,
+      "bin_file": "output_proj__w.bin",
+      "txt_file": "output_proj__w.txt",
+      "sha256": "acd86c0d77e55da1879b4cc7d1d16eef1bf2076bc940582eb36d3a329a0deb08"
+    },
+    {
+      "name": "output_proj.b",
+      "module": "output_proj",
+      "tensor": "b",
+      "category": "bias",
+      "shape": [
+        2
+      ],
+      "numel": 2,
+      "storage_dtype": "int32_le",
+      "logical_bits": 16,
+      "exp": -7,
+      "signed": true,
+      "bin_file": "output_proj__b.bin",
+      "txt_file": "output_proj__b.txt",
+      "sha256": "30656bde983020b4a04d4fb8027463ad8cd15d89d4b953f961654b1d6579b9b9"
+    },
+    {
+      "name": "blocks.0.att.time_mix_k",
+      "module": "blocks.0.att",
+      "tensor": "time_mix_k",
+      "category": "time_mix",
+      "shape": [
+        1,
+        1,
+        6
+      ],
+      "numel": 6,
+      "storage_dtype": "int32_le",
+      "logical_bits": 8,
+      "exp": -8,
+      "signed": false,
+      "bin_file": "blocks__0__att__time_mix_k.bin",
+      "txt_file": "blocks__0__att__time_mix_k.txt",
+      "sha256": "7cedf0f618846e4609c5caecaabb71567f219b27740bf80fd77914e7ab7ca6ba"
+    },
+    {
+      "name": "blocks.0.att.time_mix_v",
+      "module": "blocks.0.att",
+      "tensor": "time_mix_v",
+      "category": "time_mix",
+      "shape": [
+        1,
+        1,
+        6
+      ],
+      "numel": 6,
+      "storage_dtype": "int32_le",
+      "logical_bits": 8,
+      "exp": -8,
+      "signed": false,
+      "bin_file": "blocks__0__att__time_mix_v.bin",
+      "txt_file": "blocks__0__att__time_mix_v.txt",
+      "sha256": "243759b772956f38b00104d2a689d4b94b953e2016ae2a33437c42ee87d96b27"
+    },
+    {
+      "name": "blocks.0.att.time_mix_r",
+      "module": "blocks.0.att",
+      "tensor": "time_mix_r",
+      "category": "time_mix",
+      "shape": [
+        1,
+        1,
+        6
+      ],
+      "numel": 6,
+      "storage_dtype": "int32_le",
+      "logical_bits": 8,
+      "exp": -8,
+      "signed": false,
+      "bin_file": "blocks__0__att__time_mix_r.bin",
+      "txt_file": "blocks__0__att__time_mix_r.txt",
+      "sha256": "51c784d3400238d8f5dd2de8be0adb1a7f58f0431dbb629303723fa9ff310db0"
+    },
+    {
+      "name": "blocks.0.att.one_tm",
+      "module": "blocks.0.att",
+      "tensor": "one_tm",
+      "category": "time_mix_meta",
+      "shape": [
+        1
+      ],
+      "numel": 1,
+      "storage_dtype": "int32_le",
+      "logical_bits": 8,
+      "exp": -8,
+      "signed": false,
+      "bin_file": "blocks__0__att__one_tm.bin",
+      "txt_file": "blocks__0__att__one_tm.txt",
+      "sha256": "81ff65efc4487853bdb4625559e69ab44f19e0f5efbd6d5b2af5e3ab267c8e06"
+    },
+    {
+      "name": "blocks.0.ffn.time_mix_k",
+      "module": "blocks.0.ffn",
+      "tensor": "time_mix_k",
+      "category": "time_mix",
+      "shape": [
+        1,
+        1,
+        6
+      ],
+      "numel": 6,
+      "storage_dtype": "int32_le",
+      "logical_bits": 8,
+      "exp": -8,
+      "signed": false,
+      "bin_file": "blocks__0__ffn__time_mix_k.bin",
+      "txt_file": "blocks__0__ffn__time_mix_k.txt",
+      "sha256": "8c4407fe1ea9561e2720bc52c75ecfdf6724ff4f9dfa26631c7b65b607a956dc"
+    },
+    {
+      "name": "blocks.0.ffn.time_mix_r",
+      "module": "blocks.0.ffn",
+      "tensor": "time_mix_r",
+      "category": "time_mix",
+      "shape": [
+        1,
+        1,
+        6
+      ],
+      "numel": 6,
+      "storage_dtype": "int32_le",
+      "logical_bits": 8,
+      "exp": -8,
+      "signed": false,
+      "bin_file": "blocks__0__ffn__time_mix_r.bin",
+      "txt_file": "blocks__0__ffn__time_mix_r.txt",
+      "sha256": "b2b78304cc6dfe278cfe364f8de4ea7b1219554eafea3709e527e09d65306820"
+    },
+    {
+      "name": "blocks.0.ffn.one_tm",
+      "module": "blocks.0.ffn",
+      "tensor": "one_tm",
+      "category": "time_mix_meta",
+      "shape": [
+        1
+      ],
+      "numel": 1,
+      "storage_dtype": "int32_le",
+      "logical_bits": 8,
+      "exp": -8,
+      "signed": false,
+      "bin_file": "blocks__0__ffn__one_tm.bin",
+      "txt_file": "blocks__0__ffn__one_tm.txt",
+      "sha256": "81ff65efc4487853bdb4625559e69ab44f19e0f5efbd6d5b2af5e3ab267c8e06"
+    },
+    {
+      "name": "blocks.1.att.time_mix_k",
+      "module": "blocks.1.att",
+      "tensor": "time_mix_k",
+      "category": "time_mix",
+      "shape": [
+        1,
+        1,
+        6
+      ],
+      "numel": 6,
+      "storage_dtype": "int32_le",
+      "logical_bits": 8,
+      "exp": -8,
+      "signed": false,
+      "bin_file": "blocks__1__att__time_mix_k.bin",
+      "txt_file": "blocks__1__att__time_mix_k.txt",
+      "sha256": "94d2dccca0ca6d1079a38a91a9b781cd8c81c95873df5472c5980de320972c2d"
+    },
+    {
+      "name": "blocks.1.att.time_mix_v",
+      "module": "blocks.1.att",
+      "tensor": "time_mix_v",
+      "category": "time_mix",
+      "shape": [
+        1,
+        1,
+        6
+      ],
+      "numel": 6,
+      "storage_dtype": "int32_le",
+      "logical_bits": 8,
+      "exp": -8,
+      "signed": false,
+      "bin_file": "blocks__1__att__time_mix_v.bin",
+      "txt_file": "blocks__1__att__time_mix_v.txt",
+      "sha256": "0ec4e1393b92ab919cdd34fcd0738f8e614b554aeaeb9ac292c73ed95aa1dac9"
+    },
+    {
+      "name": "blocks.1.att.time_mix_r",
+      "module": "blocks.1.att",
+      "tensor": "time_mix_r",
+      "category": "time_mix",
+      "shape": [
+        1,
+        1,
+        6
+      ],
+      "numel": 6,
+      "storage_dtype": "int32_le",
+      "logical_bits": 8,
+      "exp": -8,
+      "signed": false,
+      "bin_file": "blocks__1__att__time_mix_r.bin",
+      "txt_file": "blocks__1__att__time_mix_r.txt",
+      "sha256": "f573e2b712e5d4a408094b4ed786719c56333cf331f607668cf915a772f7cc4d"
+    },
+    {
+      "name": "blocks.1.att.one_tm",
+      "module": "blocks.1.att",
+      "tensor": "one_tm",
+      "category": "time_mix_meta",
+      "shape": [
+        1
+      ],
+      "numel": 1,
+      "storage_dtype": "int32_le",
+      "logical_bits": 8,
+      "exp": -8,
+      "signed": false,
+      "bin_file": "blocks__1__att__one_tm.bin",
+      "txt_file": "blocks__1__att__one_tm.txt",
+      "sha256": "81ff65efc4487853bdb4625559e69ab44f19e0f5efbd6d5b2af5e3ab267c8e06"
+    },
+    {
+      "name": "blocks.1.ffn.time_mix_k",
+      "module": "blocks.1.ffn",
+      "tensor": "time_mix_k",
+      "category": "time_mix",
+      "shape": [
+        1,
+        1,
+        6
+      ],
+      "numel": 6,
+      "storage_dtype": "int32_le",
+      "logical_bits": 8,
+      "exp": -8,
+      "signed": false,
+      "bin_file": "blocks__1__ffn__time_mix_k.bin",
+      "txt_file": "blocks__1__ffn__time_mix_k.txt",
+      "sha256": "191aeef62c74378ac2fbfb92e4bb1e7615de343148a02b628bce58363adb8373"
+    },
+    {
+      "name": "blocks.1.ffn.time_mix_r",
+      "module": "blocks.1.ffn",
+      "tensor": "time_mix_r",
+      "category": "time_mix",
+      "shape": [
+        1,
+        1,
+        6
+      ],
+      "numel": 6,
+      "storage_dtype": "int32_le",
+      "logical_bits": 8,
+      "exp": -8,
+      "signed": false,
+      "bin_file": "blocks__1__ffn__time_mix_r.bin",
+      "txt_file": "blocks__1__ffn__time_mix_r.txt",
+      "sha256": "2d325669761c77fd9d76fe4bacdc75fce1de47913fd38c61875c84a0aefc67df"
+    },
+    {
+      "name": "blocks.1.ffn.one_tm",
+      "module": "blocks.1.ffn",
+      "tensor": "one_tm",
+      "category": "time_mix_meta",
+      "shape": [
+        1
+      ],
+      "numel": 1,
+      "storage_dtype": "int32_le",
+      "logical_bits": 8,
+      "exp": -8,
+      "signed": false,
+      "bin_file": "blocks__1__ffn__one_tm.bin",
+      "txt_file": "blocks__1__ffn__one_tm.txt",
+      "sha256": "81ff65efc4487853bdb4625559e69ab44f19e0f5efbd6d5b2af5e3ab267c8e06"
+    },
+    {
+      "name": "wkv_lut",
+      "module": "",
+      "tensor": "wkv_lut",
+      "category": "wkv_lut",
+      "shape": [
+        256
+      ],
+      "numel": 256,
+      "storage_dtype": "int32_le",
+      "logical_bits": 16,
+      "exp": -16,
+      "signed": false,
+      "bin_file": "root__wkv_lut.bin",
+      "txt_file": "root__wkv_lut.txt",
+      "sha256": "dda3594959eac02ca38443497ebf638243607770c3dc64df408197ea61fdeaed"
+    },
+    {
+      "name": "wkv_min_delta_i",
+      "module": "",
+      "tensor": "wkv_min_delta_i",
+      "category": "wkv_meta",
+      "shape": [
+        1
+      ],
+      "numel": 1,
+      "storage_dtype": "int32_le",
+      "logical_bits": 32,
+      "exp": -2,
+      "signed": true,
+      "bin_file": "root__wkv_min_delta_i.bin",
+      "txt_file": "root__wkv_min_delta_i.txt",
+      "sha256": "a55ba5b2e6b936c3946e53431095404e6c93f9dac40c5c84ef6a7d71a7b5063b"
+    },
+    {
+      "name": "wkv_step_i",
+      "module": "",
+      "tensor": "wkv_step_i",
+      "category": "wkv_meta",
+      "shape": [
+        1
+      ],
+      "numel": 1,
+      "storage_dtype": "int32_le",
+      "logical_bits": 32,
+      "exp": -2,
+      "signed": true,
+      "bin_file": "root__wkv_step_i.bin",
+      "txt_file": "root__wkv_step_i.txt",
+      "sha256": "67abdd721024f0ff4e0b3f4c2fc13bc5bad42d0b7851d456d88d203d15aaa450"
+    },
+    {
+      "name": "wkv_e_frac",
+      "module": "",
+      "tensor": "wkv_e_frac",
+      "category": "wkv_meta",
+      "shape": [
+        1
+      ],
+      "numel": 1,
+      "storage_dtype": "int32_le",
+      "logical_bits": 32,
+      "exp": 0,
+      "signed": false,
+      "bin_file": "root__wkv_e_frac.bin",
+      "txt_file": "root__wkv_e_frac.txt",
+      "sha256": "097328e8c957de2428283954f6a1ee8ff7ad7def12e100a600178407f5decf24"
+    },
+    {
+      "name": "wkv_log_exp",
+      "module": "",
+      "tensor": "wkv_log_exp",
+      "category": "wkv_meta",
+      "shape": [
+        1
+      ],
+      "numel": 1,
+      "storage_dtype": "int32_le",
+      "logical_bits": 32,
+      "exp": 0,
+      "signed": true,
+      "bin_file": "root__wkv_log_exp.bin",
+      "txt_file": "root__wkv_log_exp.txt",
+      "sha256": "b4248c210a2905b94345e1a8414d0e12efcfb2f4f0f2397159a71283397a0ccd"
+    },
+    {
+      "name": "blocks.0.att.time_first",
+      "module": "blocks.0.att",
+      "tensor": "time_first",
+      "category": "wkv_param",
+      "shape": [
+        6
+      ],
+      "numel": 6,
+      "storage_dtype": "int32_le",
+      "logical_bits": 12,
+      "exp": -2,
+      "signed": true,
+      "bin_file": "blocks__0__att__time_first.bin",
+      "txt_file": "blocks__0__att__time_first.txt",
+      "sha256": "e56f72c04574b46370827e67799d3e97751edf39b88f37954cf7cbb32ea4393f"
+    },
+    {
+      "name": "blocks.0.att.time_decay_wexp",
+      "module": "blocks.0.att",
+      "tensor": "time_decay_wexp",
+      "category": "wkv_param",
+      "shape": [
+        6
+      ],
+      "numel": 6,
+      "storage_dtype": "int32_le",
+      "logical_bits": 12,
+      "exp": -2,
+      "signed": true,
+      "bin_file": "blocks__0__att__time_decay_wexp.bin",
+      "txt_file": "blocks__0__att__time_decay_wexp.txt",
+      "sha256": "76b6af962cad0b6541e8ecbcb2d91deb0f99055b83d49d8f9c47e2ed2c7f914b"
+    },
+    {
+      "name": "blocks.1.att.time_first",
+      "module": "blocks.1.att",
+      "tensor": "time_first",
+      "category": "wkv_param",
+      "shape": [
+        6
+      ],
+      "numel": 6,
+      "storage_dtype": "int32_le",
+      "logical_bits": 12,
+      "exp": -2,
+      "signed": true,
+      "bin_file": "blocks__1__att__time_first.bin",
+      "txt_file": "blocks__1__att__time_first.txt",
+      "sha256": "09213e32ce19a944f012cdb63973a675855a6c60af4218c19e37aa2a183ca9c1"
+    },
+    {
+      "name": "blocks.1.att.time_decay_wexp",
+      "module": "blocks.1.att",
+      "tensor": "time_decay_wexp",
+      "category": "wkv_param",
+      "shape": [
+        6
+      ],
+      "numel": 6,
+      "storage_dtype": "int32_le",
+      "logical_bits": 12,
+      "exp": -2,
+      "signed": true,
+      "bin_file": "blocks__1__att__time_decay_wexp.bin",
+      "txt_file": "blocks__1__att__time_decay_wexp.txt",
+      "sha256": "a5d49bfd00f6cc1e7277f5f96c8d0d1290657d24e2506452deaf953820bb955d"
+    }
+  ]
+}
