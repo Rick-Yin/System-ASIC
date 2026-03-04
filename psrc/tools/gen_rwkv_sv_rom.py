@@ -1,0 +1,219 @@
+import argparse
+import json
+import pathlib
+import struct
+from typing import List, Dict, Any
+
+
+def sanitize(name: str) -> str:
+    out = []
+    for ch in name:
+        if ch.isalnum():
+            out.append(ch.upper())
+        else:
+            out.append("_")
+    s = "".join(out)
+    while "__" in s:
+        s = s.replace("__", "_")
+    return s.strip("_")
+
+
+def read_int32_le(path: pathlib.Path, numel: int) -> List[int]:
+    raw = path.read_bytes()
+    if len(raw) != numel * 4:
+        raise ValueError(f"{path} size mismatch: got {len(raw)} bytes, expected {numel*4}")
+    vals = list(struct.unpack("<" + "i" * numel, raw))
+    return vals
+
+
+def sv_int32(v: int) -> str:
+    return f"32'sd{int(v)}"
+
+
+def chunked(items: List[str], n: int) -> List[List[str]]:
+    return [items[i:i+n] for i in range(0, len(items), n)]
+
+
+def parse_model_dims(tensors: List[Dict[str, Any]]) -> Dict[str, int]:
+    by_name = {t["name"]: t for t in tensors}
+    input_w = by_name["input_proj.w"]["shape"]
+    output_w = by_name["output_proj.w"]["shape"]
+    ffn_key = by_name["blocks.0.ffn.key.w"]["shape"]
+    ts_w = by_name["blocks.0.att.time_shift.w"]["shape"]
+
+    layer_ids = set()
+    for t in tensors:
+        n = t["name"]
+        if n.startswith("blocks."):
+            try:
+                lid = int(n.split(".")[1])
+                layer_ids.add(lid)
+            except (IndexError, ValueError):
+                pass
+
+    return {
+        "MODEL_DIM": int(input_w[0]),
+        "IN_DIM": int(input_w[1]),
+        "OUT_DIM": int(output_w[0]),
+        "LAYER_NUM": (max(layer_ids) + 1) if layer_ids else 0,
+        "HIDDEN_SZ": int(ffn_key[0]),
+        "KERNEL_SIZE": int(ts_w[2]),
+    }
+
+
+def emit_pkg(manifest: Dict[str, Any], tensors: List[Dict[str, Any]], tensor_vals: Dict[str, List[int]], out_path: pathlib.Path) -> None:
+    dims = parse_model_dims(tensors)
+    int_ctx = manifest.get("int_ctx", {})
+    io = manifest.get("io", {})
+    att_cfg = int_ctx.get("att_cfg", {})
+
+    lines: List[str] = []
+    lines.append("package rwkvcnn_pkg;")
+    lines.append("")
+    lines.append("  // Auto-generated from vsrc/rom/manifest.json and vsrc/rom/bin/*.bin")
+    lines.append(f"  localparam string MANIFEST_GENERATED_AT = \"{manifest.get('generated_at_utc', '')}\";")
+    lines.append("")
+
+    for k in ["IN_DIM", "MODEL_DIM", "LAYER_NUM", "OUT_DIM", "KERNEL_SIZE", "HIDDEN_SZ"]:
+        lines.append(f"  localparam int {k} = {dims[k]};")
+    lines.append("")
+
+    lines.append(f"  localparam int RES_EXP = {int(int_ctx.get('res_exp', -6))};")
+    lines.append(f"  localparam int RES_BITS = {int(int_ctx.get('res_bits', 8))};")
+    lines.append(f"  localparam int GATE_BITS = {int(int_ctx.get('gate_bits', 8))};")
+    lines.append(f"  localparam int K_BITS = {int(att_cfg.get('k_bits', 8))};")
+    lines.append(f"  localparam int V_BITS = {int(att_cfg.get('v_bits', 8))};")
+    lines.append(f"  localparam int R_BITS = {int(att_cfg.get('r_bits', 8))};")
+    lines.append(f"  localparam int EXP_V = {int(att_cfg.get('exp_v', -7))};")
+    lines.append(f"  localparam int EXP_R = {int(att_cfg.get('exp_r', -7))};")
+    lines.append(f"  localparam int EXP_MUL = {int(att_cfg.get('exp_mul', -6))};")
+    lines.append(f"  localparam int MUL_BITS = {int(att_cfg.get('mul_bits', 8))};")
+    lines.append(f"  localparam int P_BITS = {int(att_cfg.get('p_bits', 16))};")
+    lines.append(f"  localparam int A_BITS = {int(att_cfg.get('a_bits', 24))};")
+    lines.append(f"  localparam int B_BITS = {int(att_cfg.get('b_bits', 24))};")
+    lines.append(f"  localparam int IO_EXP_IN = {int(io.get('exp_in', -11))};")
+    lines.append(f"  localparam int IO_EXP_OUT = {int(io.get('exp_out', -11))};")
+    lines.append(f"  localparam int IO_IN_BITS = {int(io.get('in_bits', 12))};")
+    lines.append(f"  localparam int IO_OUT_BITS = {int(io.get('out_bits', 12))};")
+    lines.append("")
+
+    lines.append(f"  localparam int ROM_COUNT = {len(tensors)};")
+    lines.append("")
+
+    rom_numels = []
+
+    for idx, t in enumerate(tensors):
+        tname = t["name"]
+        sid = sanitize(tname)
+        vals = tensor_vals[tname]
+        rom_numels.append(len(vals))
+
+        lines.append(f"  localparam int ROM_ID_{sid} = {idx};")
+        lines.append(f"  localparam int {sid}_NUMEL = {len(vals)};")
+        lines.append(f"  localparam int {sid}_EXP = {int(t.get('exp', 0))};")
+        lines.append(f"  localparam int {sid}_LOGICAL_BITS = {int(t.get('logical_bits', 32))};")
+        lines.append(f"  localparam bit {sid}_IS_SIGNED = 1'b{1 if t.get('signed', True) else 0};")
+
+        sv_vals = [sv_int32(v) for v in vals]
+        lines.append(f"  localparam logic signed [31:0] {sid}_FLAT [0:{len(vals)-1}] = '{{")
+        for grp in chunked(sv_vals, 8):
+            lines.append("    " + ", ".join(grp) + ",")
+        if lines[-1].rstrip().endswith(","):
+            lines[-1] = lines[-1].rstrip().rstrip(",")
+        lines.append("  };")
+        lines.append("")
+
+    numels_s = ", ".join(str(n) for n in rom_numels)
+    lines.append(f"  localparam int ROM_NUMEL [0:ROM_COUNT-1] = '{{{numels_s}}};")
+    lines.append("")
+
+    lines.append("  function automatic logic signed [31:0] rom_read(input logic [7:0] rom_id, input logic [15:0] addr);")
+    lines.append("    logic signed [31:0] v;")
+    lines.append("    begin")
+    lines.append("      v = 32'sd0;")
+    lines.append("      unique case (rom_id)")
+    for t in tensors:
+        sid = sanitize(t["name"])
+        lines.append(f"        ROM_ID_{sid}: begin")
+        lines.append(f"          if (addr < {sid}_NUMEL) v = {sid}_FLAT[addr];")
+        lines.append("        end")
+    lines.append("        default: begin")
+    lines.append("          v = 32'sd0;")
+    lines.append("        end")
+    lines.append("      endcase")
+    lines.append("      rom_read = v;")
+    lines.append("    end")
+    lines.append("  endfunction")
+    lines.append("")
+    lines.append("endpackage")
+
+    out_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def emit_tensor_map(tensors: List[Dict[str, Any]], out_path: pathlib.Path) -> None:
+    lines: List[str] = []
+    lines.append("package rwkv_tensor_map;")
+    lines.append("  import rwkvcnn_pkg::*;")
+    lines.append("")
+    lines.append("  // ROM IDs")
+    for t in tensors:
+        sid = sanitize(t["name"])
+        lines.append(f"  localparam int {sid} = ROM_ID_{sid};")
+    lines.append("")
+    lines.append("endpackage")
+    out_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def emit_rom_bank(out_path: pathlib.Path) -> None:
+    lines = [
+        "module rwkv_rom_bank (",
+        "  input  logic [7:0] rom_id,",
+        "  input  logic [15:0] addr,",
+        "  output logic signed [31:0] rdata",
+        ");",
+        "  import rwkvcnn_pkg::*;",
+        "",
+        "  always_comb begin",
+        "    rdata = rom_read(rom_id, addr);",
+        "  end",
+        "",
+        "endmodule",
+    ]
+    out_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Generate SV package and ROM bank from RWKVCNN manifest/bin")
+    parser.add_argument("--manifest", type=pathlib.Path, default=pathlib.Path("vsrc/rom/manifest.json"))
+    parser.add_argument("--bin-dir", type=pathlib.Path, default=pathlib.Path("vsrc/rom/bin"))
+    parser.add_argument("--out-pkg", type=pathlib.Path, default=pathlib.Path("vsrc/Joint-CFR-DPD/include/rwkvcnn_pkg.sv"))
+    parser.add_argument("--out-map", type=pathlib.Path, default=pathlib.Path("vsrc/Joint-CFR-DPD/rom/rwkv_tensor_map.sv"))
+    parser.add_argument("--out-rom", type=pathlib.Path, default=pathlib.Path("vsrc/Joint-CFR-DPD/rom/rwkv_rom_bank.sv"))
+    args = parser.parse_args()
+
+    manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
+    tensors = manifest["tensors"]
+
+    tensor_vals: Dict[str, List[int]] = {}
+    for t in tensors:
+        name = t["name"]
+        bin_name = t["bin_file"]
+        numel = int(t["numel"])
+        vals = read_int32_le(args.bin_dir / bin_name, numel)
+        tensor_vals[name] = vals
+
+    args.out_pkg.parent.mkdir(parents=True, exist_ok=True)
+    args.out_map.parent.mkdir(parents=True, exist_ok=True)
+    args.out_rom.parent.mkdir(parents=True, exist_ok=True)
+
+    emit_pkg(manifest, tensors, tensor_vals, args.out_pkg)
+    emit_tensor_map(tensors, args.out_map)
+    emit_rom_bank(args.out_rom)
+
+    print(f"[OK] Generated {args.out_pkg}")
+    print(f"[OK] Generated {args.out_map}")
+    print(f"[OK] Generated {args.out_rom}")
+
+
+if __name__ == "__main__":
+    main()

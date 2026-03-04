@@ -1,0 +1,5 @@
+set FLOW_NAME migo
+source [file join [file dirname [info script]] config_base.tcl]
+
+set TOP_MODULE MIGO_method_migo_n_65_q_bit_8_wp_pi_0_2_width_pi_0_02_alpha_p_0_1_alpha_s_0_01_lam1_0_01_lam2_0_1_e_topk_1_e_d_max_2_e_e_max_0
+set RTL_FILELIST [file join $ROOT_DIR dc filelist_migo.f]
