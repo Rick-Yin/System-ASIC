@@ -1,0 +1,15 @@
+fs=200000000;
+h=spectrum.welch;
+hpsd_HPA_s_p=psd(h,simout,'fs',fs);
+figure(1);
+plot(hpsd_HPA_s_p);
+hpsd_HPA_s_p1=psd(h,simout1(4000:8000),'fs',fs);
+figure(2);
+plot(hpsd_HPA_s_p1);
+% figure(3);
+% plot(hpsd_HPA_s_p2);
+% figure(4);
+% plot(hpsd_HPA_s_p1);
+% hold on;
+% hpsd_HPA_s_p2=psd(h,simout2,'fs',fs);
+% plot(hpsd_HPA_s_p2);
