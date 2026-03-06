@@ -8,7 +8,7 @@ function decoded_bits = Receiver(rx_sum, params)
     for k = 1:params.rf.numCarriers
         t = (0:length(rx_sum)-1)' / params.rf.Fs_total;
         rx_baseband = rx_sum .* exp(-1j*2*pi*params.rf.f_center(k)*t);
-        rx_matched = conv(rx_baseband, params.filter.rcFilter, 'same');
+        rx_matched = conv(rx_baseband, params.filter.active_coeffs, 'same');
 
         %% Plot frequency spectrum before and after matched filter (optional)
         if isfield(params.plot, 'rxSpectrum') && params.plot.rxSpectrum && k == 1

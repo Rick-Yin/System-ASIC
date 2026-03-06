@@ -39,7 +39,7 @@ function [tx_sig, info, params] = Transmitter(params)
         ofdm_cp = [ofdm_k(end-params.ofdm.CP_len+1:end, :); ofdm_k];
         tx_serial = ofdm_cp(:); % Flatten to serial stream
         tx_upsampled = upsample(tx_serial, params.filter.sps);
-        tx_filt = conv(tx_upsampled, params.filter.rcFilter, 'same');
+        tx_filt = conv(tx_upsampled, params.filter.active_coeffs, 'same');
         t = (0:length(tx_filt)-1).' / params.rf.Fs_total;
         tx_carriers(:, k) = tx_filt .* exp(1j*2*pi*params.rf.f_center(k)*t);
 

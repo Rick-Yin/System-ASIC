@@ -35,6 +35,39 @@ function params = ConfigParams(config)
     params.filter.span = 10;
     params.filter.rolloff = 0.25;
     params.filter.rcFilter = rcosdesign(params.filter.rolloff, params.filter.span, params.filter.sps, 'sqrt');
+    params.filter.expected_len = params.filter.span * params.filter.sps + 1;
+    params.filter.design_mode = "SRRC";
+    params.filter.compare_methods = "SRRC";
+    params.filter.active_method = "SRRC";
+    params.filter.active_coeffs = params.filter.rcFilter(:);
+    params.filter.active_source = "rcosdesign";
+    params.filter.external_json = struct("MIGO", "", "WLS", "", "SWLS", "");
+    params.filter.external_bank = struct();
+
+    if isfield(config, 'filterDesignMode')
+        params.filter.design_mode = string(config.filterDesignMode);
+    end
+    if isfield(config, 'filterCompareMethods')
+        params.filter.compare_methods = string(config.filterCompareMethods);
+    elseif strcmpi(params.filter.design_mode, "ExternalCompare")
+        params.filter.compare_methods = ["MIGO", "WLS", "SWLS"];
+    end
+    if isfield(config, 'filterExternalJsons')
+        params.filter.external_json = config.filterExternalJsons;
+    end
+
+    if strcmpi(params.filter.design_mode, "ExternalCompare")
+        compare_methods = string(params.filter.compare_methods);
+        for method_idx = 1:numel(compare_methods)
+            method_name = upper(char(compare_methods(method_idx)));
+            if ~isfield(params.filter.external_json, method_name)
+                error('Missing JSON path for filter method %s.', method_name);
+            end
+            params.filter.external_bank.(method_name) = loadFilterFromRunSummary( ...
+                params.filter.external_json.(method_name), ...
+                params.filter.expected_len);
+        end
+    end
 
     %% 编码调制参数
     [params.mod.bits_per_sym, params.mod.R] = getMCSValue(config.MCSValue);
