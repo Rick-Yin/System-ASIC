@@ -28,12 +28,19 @@ function saveCompareResults(params, save_root)
     ber_curve_by_method = params.save.ber_curve_by_method;
     method_names = params.save.method_names;
     compare_results = params.save.compare_results;
+    case_ids = method_names;
 
     ber_filename = sprintf("ber_compare_MCS_%d_seed_%d.mat", ...
         params.info.MCSValue, params.info.randseed);
     ber_file = fullfile(save_root_ber, ber_filename);
-    save(ber_file, 'snr_range', 'ber_curve_by_method', ...
-        'method_names', 'compare_results', '-v7.3');
+    if isfield(params.save, 'case_configs')
+        case_configs = params.save.case_configs;
+        save(ber_file, 'snr_range', 'ber_curve_by_method', ...
+            'method_names', 'case_ids', 'compare_results', 'case_configs', '-v7.3');
+    else
+        save(ber_file, 'snr_range', 'ber_curve_by_method', ...
+            'method_names', 'case_ids', 'compare_results', '-v7.3');
+    end
 end
 
 

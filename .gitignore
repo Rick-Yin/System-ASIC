@@ -11,3 +11,6 @@ psrc/__pycache__/
 psrc/tools/__pycache__/
 report/
 dc/runs/
+data/BER-SNR/
+data/HPA/
+data/linear_backend_exchange/

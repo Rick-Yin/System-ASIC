@@ -1,4 +1,9 @@
 function params = ConfigParams(config)
+    repo_root = fileparts(fileparts(mfilename('fullpath')));
+    params.repo.root = repo_root;
+    cfr_type = normalizeConfigMode(config, 'CFRType', "NoCFR");
+    dpd_type = normalizeConfigMode(config, 'DPDType', "NoDPD");
+
     %% Iteration config setting
     params.iter.snr_range = -5:1:24;
     params.iter.numIter = 1;
@@ -43,6 +48,7 @@ function params = ConfigParams(config)
     params.filter.active_source = "rcosdesign";
     params.filter.external_json = struct("MIGO", "", "WLS", "", "SWLS", "");
     params.filter.external_bank = struct();
+    params.filter.workspace_root = fullfile(repo_root, 'data', 'ber_coeff_workspace');
 
     if isfield(config, 'filterDesignMode')
         params.filter.design_mode = string(config.filterDesignMode);
@@ -55,6 +61,9 @@ function params = ConfigParams(config)
     if isfield(config, 'filterExternalJsons')
         params.filter.external_json = config.filterExternalJsons;
     end
+    if isfield(config, 'filterWorkspaceRoot')
+        params.filter.workspace_root = char(string(config.filterWorkspaceRoot));
+    end
 
     if strcmpi(params.filter.design_mode, "ExternalCompare")
         compare_methods = string(params.filter.compare_methods);
@@ -63,8 +72,11 @@ function params = ConfigParams(config)
             if ~isfield(params.filter.external_json, method_name)
                 error('Missing JSON path for filter method %s.', method_name);
             end
+            explicit_json = string(params.filter.external_json.(method_name));
+            resolved_json = resolveWorkspaceJsonPath(method_name, explicit_json, params.filter.workspace_root);
+            params.filter.external_json.(method_name) = char(resolved_json);
             params.filter.external_bank.(method_name) = loadFilterFromRunSummary( ...
-                params.filter.external_json.(method_name), ...
+                resolved_json, ...
                 params.filter.expected_len);
         end
     end
@@ -99,10 +111,11 @@ function params = ConfigParams(config)
 
     %% CFR 算法参数
     % CFR_Params.Method 0: No CFR 1: HF 2: CAF ...
-    switch config.CFRType
+    switch cfr_type
         case "NoCFR"
             % No CFR
             params.CFR.Method = 0;
+            params.CFR.ClipMax = 1.0;
         case "HC"
             % Hard clipper
             params.CFR.Method = 1;
@@ -111,12 +124,15 @@ function params = ConfigParams(config)
             % Crest Factor Reduction Filter
             params.CFR.Method = 2;
             params.CFR.ClipFactor = 0.9;
+            params.CFR.ClipMax = 0.12;
+        otherwise
+            error('Unsupported CFRType: %s', cfr_type);
     end
 
     %% DPD Method and params
     params.DPD = struct();
     params.DPD.symNum = 15000;
-    switch config.DPDType
+    switch dpd_type
         case "NoDPD"
             % No DPD
             params.DPD.Method = 0;
@@ -129,13 +145,102 @@ function params = ConfigParams(config)
             params.DPD.Method = 3;
         case "MP"
             params.DPD.Method = 4;
+        otherwise
+            error('Unsupported DPDType: %s', dpd_type);
     end
 
     %% PA parameters
     params.PA.Gain = 1;
     params.PA.TargetPeakAmp = 0.8;
 
+    %% Experiment matrix
+    params.experiment = struct();
+    params.experiment.cases = buildDefaultBerExperimentCases();
+    params.experiment.active_case = struct();
+    if isfield(config, 'experimentCases')
+        params.experiment.cases = config.experimentCases;
+    end
+
+    %% External linearization backend
+    params.linearization = struct();
+    params.linearization.backend = "python_file_exchange";
+    params.linearization.python_cmd = defaultPythonCommand();
+    params.linearization.backend_entry = fullfile(repo_root, 'psrc', 'ber_linear_backend.py');
+    params.linearization.exchange_root = fullfile(repo_root, 'data', 'linear_backend_exchange');
+    params.linearization.model_manifest = fullfile(repo_root, 'vsrc', 'rom', 'manifest.json');
+    params.linearization.model_bin_dir = fullfile(repo_root, 'vsrc', 'rom', 'bin');
+    params.linearization.hc_clip_max = 0.12;
+    params.linearization.dpd_iterations = 4;
+    params.linearization.dpd_step = 0.75;
+    params.linearization.volterra_coeffs = [ ...
+        1.0513 + 0.0904i, -0.0680 - 0.0023i,  0.0289 + 0.0054i, ...
+        0.0542 - 0.2900i,  0.2234 + 0.2317i, -0.0621 - 0.0932i, ...
+       -0.9657 - 0.7028i, -0.2451 - 0.3735i,  0.1229 + 0.1508i];
+    if isfield(config, 'pythonCommand')
+        params.linearization.python_cmd = string(config.pythonCommand);
+    end
+    if isfield(config, 'linearBackendEntry')
+        params.linearization.backend_entry = char(string(config.linearBackendEntry));
+    end
+    if isfield(config, 'linearExchangeRoot')
+        params.linearization.exchange_root = char(string(config.linearExchangeRoot));
+    end
+    if isfield(config, 'linearizationHCClipMax')
+        params.linearization.hc_clip_max = double(config.linearizationHCClipMax);
+    elseif cfr_type == "HC" || cfr_type == "CAF"
+        params.linearization.hc_clip_max = params.CFR.ClipMax;
+    end
+    if isfield(config, 'linearizationDPDIterations')
+        params.linearization.dpd_iterations = double(config.linearizationDPDIterations);
+    end
+    if isfield(config, 'linearizationDPDStep')
+        params.linearization.dpd_step = double(config.linearizationDPDStep);
+    end
+
     %% Save data
     params.save.enable = true;
     params.save.save_root = 'data/';
+end
+
+
+function resolved_path = resolveWorkspaceJsonPath(method_name, explicit_path, workspace_root)
+    if strlength(strtrim(explicit_path)) > 0
+        resolved_path = explicit_path;
+        return;
+    end
+
+    candidates = [ ...
+        string(fullfile(workspace_root, upper(method_name), 'run_summary.json')), ...
+        string(fullfile(workspace_root, lower(method_name), 'run_summary.json')), ...
+        string(fullfile(workspace_root, method_name, 'run_summary.json')) ...
+    ];
+
+    for idx = 1:numel(candidates)
+        if exist(candidates(idx), 'file') == 2
+            resolved_path = candidates(idx);
+            return;
+        end
+    end
+
+    error(['Missing run_summary.json for filter method %s. ', ...
+        'Expected explicit path or workspace layout %s/<METHOD>/run_summary.json.'], ...
+        method_name, workspace_root);
+end
+
+
+function python_cmd = defaultPythonCommand()
+    if ispc
+        python_cmd = "python";
+    else
+        python_cmd = "python3";
+    end
+end
+
+
+function mode_value = normalizeConfigMode(config, field_name, default_value)
+    if isfield(config, field_name) && strlength(strtrim(string(config.(field_name)))) > 0
+        mode_value = string(config.(field_name));
+    else
+        mode_value = string(default_value);
+    end
 end

@@ -1,4 +1,4 @@
-function [tx_sig, info, params] = Transmitter(params)
+function [tx_sum, info, params] = Transmitter(params)
     % SLB OFDM System: Transmitter Module
     % This function generates the transmitted signal for a multi-carrier OFDM system.
 
@@ -54,23 +54,9 @@ function [tx_sig, info, params] = Transmitter(params)
     end
     tx_sum = sum(tx_carriers, 2);
     tx_sum = params.PA.TargetPeakAmp * tx_sum / sqrt(max(abs(tx_sum).^2));
-    %% Digital Front-End Processing
-
-    % CFR Algorithm
-    tx_CFR = applyCFR(tx_sum, params);
-
-    % DPD Algorithm
-    tx_DPD = applyDPD(tx_CFR, params);
-
-    % PA Model
-    tx_sig = PA(tx_DPD, params);
 
     %% debug data
-    params.debug.tx_sig = tx_sig;
-
-    %% save transimit data
-    params.save.tx_sum_all(:, params.info.IterNum, params.info.SNRidx) = tx_sum;
-    params.save.tx_sig_all(:, params.info.IterNum, params.info.SNRidx) = tx_sig;
+    params.debug.tx_sum = tx_sum;
 
     %% Plot data
     if isfield(params.plot, 'txMD') && params.plot.txMD
