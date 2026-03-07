@@ -1,0 +1,11 @@
+vsrc/Joint-CFR-DPD/include/rwkvcnn_pkg.sv
+vsrc/Joint-CFR-DPD/common/quant_utils_pkg.sv
+vsrc/Joint-CFR-DPD/rom/rwkv_rom_bank.sv
+vsrc/Joint-CFR-DPD/rom/rwkv_tensor_map.sv
+vsrc/Joint-CFR-DPD/core/linear_engine.sv
+vsrc/Joint-CFR-DPD/core/dwconv1d_timeshift.sv
+vsrc/Joint-CFR-DPD/core/wkv_core_int.sv
+vsrc/Joint-CFR-DPD/core/timemix_core.sv
+vsrc/Joint-CFR-DPD/core/channelmix_core.sv
+vsrc/Joint-CFR-DPD/core/rwkv_block_core.sv
+vsrc/Joint-CFR-DPD/top/rwkvcnn_top.sv

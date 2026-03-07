@@ -1,8 +1,13 @@
-import argparse
 import json
 import pathlib
 import struct
 from typing import List, Dict, Any
+
+MANIFEST_PATH = pathlib.Path("vsrc/rom/manifest.json")
+BIN_DIR = pathlib.Path("vsrc/rom/bin")
+OUT_PKG_PATH = pathlib.Path("vsrc/Joint-CFR-DPD/include/rwkvcnn_pkg.sv")
+OUT_MAP_PATH = pathlib.Path("vsrc/Joint-CFR-DPD/rom/rwkv_tensor_map.sv")
+OUT_ROM_PATH = pathlib.Path("vsrc/Joint-CFR-DPD/rom/rwkv_rom_bank.sv")
 
 
 def sanitize(name: str) -> str:
@@ -27,11 +32,10 @@ def read_int32_le(path: pathlib.Path, numel: int) -> List[int]:
 
 
 def sv_int32(v: int) -> str:
-    return f"32'sd{int(v)}"
-
-
-def chunked(items: List[str], n: int) -> List[List[str]]:
-    return [items[i:i+n] for i in range(0, len(items), n)]
+    iv = int(v)
+    if iv < 0:
+        return f"-32'sd{abs(iv)}"
+    return f"32'sd{iv}"
 
 
 def parse_model_dims(tensors: List[Dict[str, Any]]) -> Dict[str, int]:
@@ -71,7 +75,7 @@ def emit_pkg(manifest: Dict[str, Any], tensors: List[Dict[str, Any]], tensor_val
     lines.append("package rwkvcnn_pkg;")
     lines.append("")
     lines.append("  // Auto-generated from vsrc/rom/manifest.json and vsrc/rom/bin/*.bin")
-    lines.append(f"  localparam string MANIFEST_GENERATED_AT = \"{manifest.get('generated_at_utc', '')}\";")
+    lines.append(f"  // MANIFEST_GENERATED_AT: {manifest.get('generated_at_utc', '')}")
     lines.append("")
 
     for k in ["IN_DIM", "MODEL_DIM", "LAYER_NUM", "OUT_DIM", "KERNEL_SIZE", "HIDDEN_SZ"]:
@@ -100,42 +104,34 @@ def emit_pkg(manifest: Dict[str, Any], tensors: List[Dict[str, Any]], tensor_val
     lines.append(f"  localparam int ROM_COUNT = {len(tensors)};")
     lines.append("")
 
-    rom_numels = []
-
     for idx, t in enumerate(tensors):
         tname = t["name"]
         sid = sanitize(tname)
         vals = tensor_vals[tname]
-        rom_numels.append(len(vals))
 
         lines.append(f"  localparam int ROM_ID_{sid} = {idx};")
         lines.append(f"  localparam int {sid}_NUMEL = {len(vals)};")
         lines.append(f"  localparam int {sid}_EXP = {int(t.get('exp', 0))};")
         lines.append(f"  localparam int {sid}_LOGICAL_BITS = {int(t.get('logical_bits', 32))};")
         lines.append(f"  localparam bit {sid}_IS_SIGNED = 1'b{1 if t.get('signed', True) else 0};")
-
-        sv_vals = [sv_int32(v) for v in vals]
-        lines.append(f"  localparam logic signed [31:0] {sid}_FLAT [0:{len(vals)-1}] = '{{")
-        for grp in chunked(sv_vals, 8):
-            lines.append("    " + ", ".join(grp) + ",")
-        if lines[-1].rstrip().endswith(","):
-            lines[-1] = lines[-1].rstrip().rstrip(",")
-        lines.append("  };")
         lines.append("")
-
-    numels_s = ", ".join(str(n) for n in rom_numels)
-    lines.append(f"  localparam int ROM_NUMEL [0:ROM_COUNT-1] = '{{{numels_s}}};")
-    lines.append("")
 
     lines.append("  function automatic logic signed [31:0] rom_read(input logic [7:0] rom_id, input logic [15:0] addr);")
     lines.append("    logic signed [31:0] v;")
     lines.append("    begin")
     lines.append("      v = 32'sd0;")
-    lines.append("      unique case (rom_id)")
+    lines.append("      case (rom_id)")
     for t in tensors:
         sid = sanitize(t["name"])
+        sv_vals = [sv_int32(v) for v in tensor_vals[t["name"]]]
         lines.append(f"        ROM_ID_{sid}: begin")
-        lines.append(f"          if (addr < {sid}_NUMEL) v = {sid}_FLAT[addr];")
+        lines.append(f"          if (addr < {sid}_NUMEL) begin")
+        lines.append("            case (addr)")
+        for vidx, v in enumerate(sv_vals):
+            lines.append(f"              16'd{vidx}: v = {v};")
+        lines.append("              default: v = 32'sd0;")
+        lines.append("            endcase")
+        lines.append("          end")
         lines.append("        end")
     lines.append("        default: begin")
     lines.append("          v = 32'sd0;")
@@ -183,15 +179,7 @@ def emit_rom_bank(out_path: pathlib.Path) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Generate SV package and ROM bank from RWKVCNN manifest/bin")
-    parser.add_argument("--manifest", type=pathlib.Path, default=pathlib.Path("vsrc/rom/manifest.json"))
-    parser.add_argument("--bin-dir", type=pathlib.Path, default=pathlib.Path("vsrc/rom/bin"))
-    parser.add_argument("--out-pkg", type=pathlib.Path, default=pathlib.Path("vsrc/Joint-CFR-DPD/include/rwkvcnn_pkg.sv"))
-    parser.add_argument("--out-map", type=pathlib.Path, default=pathlib.Path("vsrc/Joint-CFR-DPD/rom/rwkv_tensor_map.sv"))
-    parser.add_argument("--out-rom", type=pathlib.Path, default=pathlib.Path("vsrc/Joint-CFR-DPD/rom/rwkv_rom_bank.sv"))
-    args = parser.parse_args()
-
-    manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
+    manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
     tensors = manifest["tensors"]
 
     tensor_vals: Dict[str, List[int]] = {}
@@ -199,20 +187,20 @@ def main() -> None:
         name = t["name"]
         bin_name = t["bin_file"]
         numel = int(t["numel"])
-        vals = read_int32_le(args.bin_dir / bin_name, numel)
+        vals = read_int32_le(BIN_DIR / bin_name, numel)
         tensor_vals[name] = vals
 
-    args.out_pkg.parent.mkdir(parents=True, exist_ok=True)
-    args.out_map.parent.mkdir(parents=True, exist_ok=True)
-    args.out_rom.parent.mkdir(parents=True, exist_ok=True)
+    OUT_PKG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    OUT_MAP_PATH.parent.mkdir(parents=True, exist_ok=True)
+    OUT_ROM_PATH.parent.mkdir(parents=True, exist_ok=True)
 
-    emit_pkg(manifest, tensors, tensor_vals, args.out_pkg)
-    emit_tensor_map(tensors, args.out_map)
-    emit_rom_bank(args.out_rom)
+    emit_pkg(manifest, tensors, tensor_vals, OUT_PKG_PATH)
+    emit_tensor_map(tensors, OUT_MAP_PATH)
+    emit_rom_bank(OUT_ROM_PATH)
 
-    print(f"[OK] Generated {args.out_pkg}")
-    print(f"[OK] Generated {args.out_map}")
-    print(f"[OK] Generated {args.out_rom}")
+    print(f"[OK] Generated {OUT_PKG_PATH}")
+    print(f"[OK] Generated {OUT_MAP_PATH}")
+    print(f"[OK] Generated {OUT_ROM_PATH}")
 
 
 if __name__ == "__main__":

@@ -7,18 +7,6 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 import weakref
-try:
-    from trainers import FIXED_RULES
-    from utils import _qmax_signed, _qmin_signed, _qmax_unsigned, choose_pow2_exp
-except ImportError:
-    # add path to import from ../../trainers/quantize_helper.py
-    import sys
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    proj_dir = os.path.dirname(os.path.dirname(current_dir))
-    if proj_dir not in sys.path:
-        sys.path.append(proj_dir)
-    from trainers import FIXED_RULES
-    from utils import _qmax_signed, _qmin_signed, _qmax_unsigned, choose_pow2_exp
 
 from torch.utils.cpp_extension import load as _torch_ext_load
 
@@ -28,6 +16,76 @@ wkv_op_path = os.path.join(code_dir, 'cuda', 'wkv_op_quan.cpp')
 wkv_cuda_path = os.path.join(code_dir, 'cuda', 'wkv_cuda.cu')
 _wkv_cuda = None
 DEBUG = False
+
+FIXED_RULES: dict = {
+    # Choose pow2 exponent
+    "max_exp": 15,
+    "min_exp": -31,
+    "zfb_exp": -15,  # Zero fallback exponent
+
+    # Right shift + RNE (round-to-nearest-even)
+    "max_rshift": 64,  # Beyond this shift, result is ~0
+
+    # HardSigmoid: y = clamp(slope*x + bias, 0, 1)
+    # Represent slope/bias as rationals (num/den) for bit-accurate fixed-point.
+    "hs_slp_n": 1,
+    "hs_slp_d": 6,
+    "hs_bia_n": 1,
+    "hs_bia_d": 2,
+    "hs_cmin": 0.0,
+    "hs_cmax": 1.0,
+
+    # TimeMix decay_speed:
+    # decay = d_base + d_scl * x^(p_base + p_scl*ratio_0_to_1)
+    "tm_db": -5.0,  # Decay base
+    "tm_ds": 8.0,  # Decay scale
+    "tm_pb": 0.7,  # Decay power base
+    "tm_ps": 1.3,  # Decay power scale
+
+    # Zigzag: ((i + 1) % 3 - 1) * zz
+    "tm_zz": 0.5,  # Zigzag scale
+
+    # time_first: ones*log(lbase) + zigzag (implementation uses log(0.3))
+    "tm_lbase": 0.3,  # Stored pre-log base
+
+    # time_mix_*:
+    # k = x^(kpow*ratio_1_to_almost0)
+    # v = x^(vpow*ratio_1_to_almost0) + vadd*ratio_0_to_1
+    # r = x^(rsc*ratio_1_to_almost0)  (rsc=0.5 matches 0.5*ratio_1_to_almost0)
+    "tm_kpow": 1.0,  # not write in code
+    "tm_vpow": 1.0,  # not write in code
+    "tm_vadd": 0.3,
+    "tm_rsc": 0.5,
+
+    # ChannelMix init (code-fixed)
+    "cm_kpow": 1.0,  # not write in code
+    "cm_rpow": 1.0,  # not write in code
+}
+
+
+def _qmax_signed(bits: int) -> int:
+    return (1 << (bits - 1)) - 1
+
+
+def _qmin_signed(bits: int) -> int:
+    return -(1 << (bits - 1))
+
+
+def _qmax_unsigned(bits: int) -> int:
+    return (1 << bits) - 1
+
+
+def _ceil_log2(x: float) -> int:
+    return int(math.ceil(math.log2(x)))
+
+
+def choose_pow2_exp(amax: float, qmax: int, zfb_exp: int, min_exp: int, max_exp: int) -> int:
+    amax = float(amax)
+    if amax <= 1e-9 or not math.isfinite(amax):
+        return zfb_exp
+    raw = _ceil_log2(amax / max(1e-12, float(qmax)))
+    exp = max(min_exp, min(raw, max_exp))
+    return exp
 
 
 def get_wkv_cuda():
@@ -1222,23 +1280,22 @@ def _parse_quant_params(params: Dict[str, Any]) -> Dict[str, Any]:
 
 
 if __name__ == "__main__":
-    import argparse
     import torch
     if torch.cuda.is_available():
         cap = torch.cuda.get_device_capability()
         os.environ["TORCH_CUDA_ARCH_LIST"] = f"{cap[0]}.{cap[1]}"
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--B", type=int, default=2)
-    parser.add_argument("--T", type=int, default=16)
-    parser.add_argument("--trials", type=int, default=3)
-    parser.add_argument("--calib_batches", type=int, default=2)
-    parser.add_argument("--device", type=str, default="cuda")
-    args, _unknown = parser.parse_known_args()
+    CFG = {
+        "seed": 0,
+        "B": 2,
+        "T": 16,
+        "trials": 3,
+        "calib_batches": 2,
+        "device": "cpu",
+    }
 
-    torch.manual_seed(args.seed)
-    device = torch.device(args.device)
+    torch.manual_seed(CFG["seed"])
+    device = torch.device(CFG["device"])
 
     params = {
         "in_dim": 2,
@@ -1261,7 +1318,7 @@ if __name__ == "__main__":
         },
         "act_points": ["after_input_proj", "after_time_shift", "after_kvr", "after_gate", "after_mul", "after_residual_add"],
         "act_override": {},
-        "calib": {"num_batches": args.calib_batches, "clip_method": "maxabs", "percentile": 99.9},
+        "calib": {"num_batches": CFG["calib_batches"], "clip_method": "maxabs", "percentile": 99.9},
         "io_int": {"in_bits": 12, "out_bits": 12},
         "wkv_int": {
             "fmt": {"k_bits": 12, "v_bits": 12, "u_bits": 12, "w_bits": 12, "out_bits": 12},
@@ -1357,21 +1414,21 @@ if __name__ == "__main__":
 
     if os.path.isfile(_val_csv):
         print(f"[INFO] 使用真实验证集: {_val_csv}")
-        dl = _RealDL(_val_csv, B=args.B, T=args.T, max_batches=max(3, args.calib_batches))
+        dl = _RealDL(_val_csv, B=CFG["B"], T=CFG["T"], max_batches=max(3, CFG["calib_batches"]))
     else:
         print(f"[WARN] 未找到 {_val_csv}，回退到随机数据")
 
         class _FakeDL:
             def __iter__(self):
-                for _ in range(max(3, args.calib_batches)):
-                    x = torch.randn(args.B, args.T, 2, device=device) * 0.2
-                    y = torch.randn(args.B, args.T, 2, device=device)
+                for _ in range(max(3, CFG["calib_batches"])):
+                    x = torch.randn(CFG["B"], CFG["T"], 2, device=device) * 0.2
+                    y = torch.randn(CFG["B"], CFG["T"], 2, device=device)
                     yield x, y, 0
         dl = _FakeDL()
 
     model.enable_int_infer(False)
 
-    model.calibrate_activations(dl, device=device, num_batches=args.calib_batches)
+    model.calibrate_activations(dl, device=device, num_batches=CFG["calib_batches"])
     model.prepare_int_infer(require_calib=True)
     print("[INFO] exp_mul (auto) =", model._int_ctx["att_cfg"]["exp_mul"])
     model.enable_dump(True)
@@ -1418,13 +1475,13 @@ if __name__ == "__main__":
 
     real_data_batches = list(iter(dl))
 
-    for t in range(args.trials):
-        torch.manual_seed(args.seed + t)
+    for t in range(CFG["trials"]):
+        torch.manual_seed(CFG["seed"] + t)
 
         x = real_data_batches[t % len(real_data_batches)][0].to(device)
 
         model.enable_int_infer(False)
-        torch.manual_seed(args.seed + t)
+        torch.manual_seed(CFG["seed"] + t)
         y_ref = model(x).detach()
 
         model.enable_int_infer(True)

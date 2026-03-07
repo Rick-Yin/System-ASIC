@@ -12,15 +12,18 @@ module rwkvcnn_top (
   import quant_utils_pkg::*;
 
   typedef enum logic [2:0] {
-    S_IDLE = 3'd0,
-    S_IP   = 3'd1,
-    S_ATT  = 3'd2,
-    S_FFN  = 3'd3,
-    S_OP   = 3'd4,
-    S_OUT  = 3'd5
+    S_IDLE     = 3'd0,
+    S_IP       = 3'd1,
+    S_ATT_PRE  = 3'd2,
+    S_ATT_POST = 3'd3,
+    S_FFN_PRE  = 3'd4,
+    S_FFN_POST = 3'd5,
+    S_OP       = 3'd6,
+    S_OUT      = 3'd7
   } state_t;
 
   state_t state;
+  localparam int KERNEL_HEAD_W = (KERNEL_SIZE <= 1) ? 1 : $clog2(KERNEL_SIZE);
   logic [$clog2(LAYER_NUM)-1:0] blk_idx;
 
   logic signed [31:0] in_vec [0:IN_DIM-1];
@@ -29,6 +32,8 @@ module rwkvcnn_top (
 
   logic signed [31:0] att_hist [0:LAYER_NUM-1][0:MODEL_DIM-1][0:KERNEL_SIZE-1];
   logic signed [31:0] ffn_hist [0:LAYER_NUM-1][0:MODEL_DIM-1][0:KERNEL_SIZE-1];
+  logic [KERNEL_HEAD_W-1:0] att_hist_head [0:LAYER_NUM-1][0:MODEL_DIM-1];
+  logic [KERNEL_HEAD_W-1:0] ffn_hist_head [0:LAYER_NUM-1][0:MODEL_DIM-1];
 
   logic signed [31:0] pp_state [0:LAYER_NUM-1][0:MODEL_DIM-1];
   logic signed [63:0] aa_state [0:LAYER_NUM-1][0:MODEL_DIM-1];
@@ -59,9 +64,9 @@ module rwkvcnn_top (
     begin
       idx = c*KERNEL_SIZE + k;
       if (blk == 0) begin
-        att_ts_w = BLOCKS_0_ATT_TIME_SHIFT_W_FLAT[idx];
+        att_ts_w = rom_read(ROM_ID_BLOCKS_0_ATT_TIME_SHIFT_W, idx);
       end else begin
-        att_ts_w = BLOCKS_1_ATT_TIME_SHIFT_W_FLAT[idx];
+        att_ts_w = rom_read(ROM_ID_BLOCKS_1_ATT_TIME_SHIFT_W, idx);
       end
     end
   endfunction
@@ -69,9 +74,9 @@ module rwkvcnn_top (
   function automatic logic signed [31:0] att_ts_b(input int blk, input int c);
     begin
       if (blk == 0) begin
-        att_ts_b = BLOCKS_0_ATT_TIME_SHIFT_B_FLAT[c];
+        att_ts_b = rom_read(ROM_ID_BLOCKS_0_ATT_TIME_SHIFT_B, c);
       end else begin
-        att_ts_b = BLOCKS_1_ATT_TIME_SHIFT_B_FLAT[c];
+        att_ts_b = rom_read(ROM_ID_BLOCKS_1_ATT_TIME_SHIFT_B, c);
       end
     end
   endfunction
@@ -99,9 +104,9 @@ module rwkvcnn_top (
   function automatic logic signed [31:0] att_tm_k(input int blk, input int c);
     begin
       if (blk == 0) begin
-        att_tm_k = BLOCKS_0_ATT_TIME_MIX_K_FLAT[c];
+        att_tm_k = rom_read(ROM_ID_BLOCKS_0_ATT_TIME_MIX_K, c);
       end else begin
-        att_tm_k = BLOCKS_1_ATT_TIME_MIX_K_FLAT[c];
+        att_tm_k = rom_read(ROM_ID_BLOCKS_1_ATT_TIME_MIX_K, c);
       end
     end
   endfunction
@@ -109,9 +114,9 @@ module rwkvcnn_top (
   function automatic logic signed [31:0] att_tm_v(input int blk, input int c);
     begin
       if (blk == 0) begin
-        att_tm_v = BLOCKS_0_ATT_TIME_MIX_V_FLAT[c];
+        att_tm_v = rom_read(ROM_ID_BLOCKS_0_ATT_TIME_MIX_V, c);
       end else begin
-        att_tm_v = BLOCKS_1_ATT_TIME_MIX_V_FLAT[c];
+        att_tm_v = rom_read(ROM_ID_BLOCKS_1_ATT_TIME_MIX_V, c);
       end
     end
   endfunction
@@ -119,9 +124,9 @@ module rwkvcnn_top (
   function automatic logic signed [31:0] att_tm_r(input int blk, input int c);
     begin
       if (blk == 0) begin
-        att_tm_r = BLOCKS_0_ATT_TIME_MIX_R_FLAT[c];
+        att_tm_r = rom_read(ROM_ID_BLOCKS_0_ATT_TIME_MIX_R, c);
       end else begin
-        att_tm_r = BLOCKS_1_ATT_TIME_MIX_R_FLAT[c];
+        att_tm_r = rom_read(ROM_ID_BLOCKS_1_ATT_TIME_MIX_R, c);
       end
     end
   endfunction
@@ -129,9 +134,9 @@ module rwkvcnn_top (
   function automatic logic signed [31:0] att_one_tm(input int blk);
     begin
       if (blk == 0) begin
-        att_one_tm = BLOCKS_0_ATT_ONE_TM_FLAT[0];
+        att_one_tm = rom_read(ROM_ID_BLOCKS_0_ATT_ONE_TM, 0);
       end else begin
-        att_one_tm = BLOCKS_1_ATT_ONE_TM_FLAT[0];
+        att_one_tm = rom_read(ROM_ID_BLOCKS_1_ATT_ONE_TM, 0);
       end
     end
   endfunction
@@ -151,9 +156,9 @@ module rwkvcnn_top (
     begin
       idx = o*MODEL_DIM + i;
       if (blk == 0) begin
-        att_key_w = BLOCKS_0_ATT_KEY_W_FLAT[idx];
+        att_key_w = rom_read(ROM_ID_BLOCKS_0_ATT_KEY_W, idx);
       end else begin
-        att_key_w = BLOCKS_1_ATT_KEY_W_FLAT[idx];
+        att_key_w = rom_read(ROM_ID_BLOCKS_1_ATT_KEY_W, idx);
       end
     end
   endfunction
@@ -163,9 +168,9 @@ module rwkvcnn_top (
     begin
       idx = o*MODEL_DIM + i;
       if (blk == 0) begin
-        att_value_w = BLOCKS_0_ATT_VALUE_W_FLAT[idx];
+        att_value_w = rom_read(ROM_ID_BLOCKS_0_ATT_VALUE_W, idx);
       end else begin
-        att_value_w = BLOCKS_1_ATT_VALUE_W_FLAT[idx];
+        att_value_w = rom_read(ROM_ID_BLOCKS_1_ATT_VALUE_W, idx);
       end
     end
   endfunction
@@ -175,9 +180,9 @@ module rwkvcnn_top (
     begin
       idx = o*MODEL_DIM + i;
       if (blk == 0) begin
-        att_receptance_w = BLOCKS_0_ATT_RECEPTANCE_W_FLAT[idx];
+        att_receptance_w = rom_read(ROM_ID_BLOCKS_0_ATT_RECEPTANCE_W, idx);
       end else begin
-        att_receptance_w = BLOCKS_1_ATT_RECEPTANCE_W_FLAT[idx];
+        att_receptance_w = rom_read(ROM_ID_BLOCKS_1_ATT_RECEPTANCE_W, idx);
       end
     end
   endfunction
@@ -187,9 +192,9 @@ module rwkvcnn_top (
     begin
       idx = o*MODEL_DIM + i;
       if (blk == 0) begin
-        att_output_w = BLOCKS_0_ATT_OUTPUT_W_FLAT[idx];
+        att_output_w = rom_read(ROM_ID_BLOCKS_0_ATT_OUTPUT_W, idx);
       end else begin
-        att_output_w = BLOCKS_1_ATT_OUTPUT_W_FLAT[idx];
+        att_output_w = rom_read(ROM_ID_BLOCKS_1_ATT_OUTPUT_W, idx);
       end
     end
   endfunction
@@ -237,9 +242,9 @@ module rwkvcnn_top (
   function automatic logic signed [31:0] att_time_first(input int blk, input int c);
     begin
       if (blk == 0) begin
-        att_time_first = BLOCKS_0_ATT_TIME_FIRST_FLAT[c];
+        att_time_first = rom_read(ROM_ID_BLOCKS_0_ATT_TIME_FIRST, c);
       end else begin
-        att_time_first = BLOCKS_1_ATT_TIME_FIRST_FLAT[c];
+        att_time_first = rom_read(ROM_ID_BLOCKS_1_ATT_TIME_FIRST, c);
       end
     end
   endfunction
@@ -247,9 +252,9 @@ module rwkvcnn_top (
   function automatic logic signed [31:0] att_time_decay(input int blk, input int c);
     begin
       if (blk == 0) begin
-        att_time_decay = BLOCKS_0_ATT_TIME_DECAY_WEXP_FLAT[c];
+        att_time_decay = rom_read(ROM_ID_BLOCKS_0_ATT_TIME_DECAY_WEXP, c);
       end else begin
-        att_time_decay = BLOCKS_1_ATT_TIME_DECAY_WEXP_FLAT[c];
+        att_time_decay = rom_read(ROM_ID_BLOCKS_1_ATT_TIME_DECAY_WEXP, c);
       end
     end
   endfunction
@@ -259,9 +264,9 @@ module rwkvcnn_top (
     begin
       idx = c*KERNEL_SIZE + k;
       if (blk == 0) begin
-        ffn_ts_w = BLOCKS_0_FFN_TIME_SHIFT_W_FLAT[idx];
+        ffn_ts_w = rom_read(ROM_ID_BLOCKS_0_FFN_TIME_SHIFT_W, idx);
       end else begin
-        ffn_ts_w = BLOCKS_1_FFN_TIME_SHIFT_W_FLAT[idx];
+        ffn_ts_w = rom_read(ROM_ID_BLOCKS_1_FFN_TIME_SHIFT_W, idx);
       end
     end
   endfunction
@@ -269,9 +274,9 @@ module rwkvcnn_top (
   function automatic logic signed [31:0] ffn_ts_b(input int blk, input int c);
     begin
       if (blk == 0) begin
-        ffn_ts_b = BLOCKS_0_FFN_TIME_SHIFT_B_FLAT[c];
+        ffn_ts_b = rom_read(ROM_ID_BLOCKS_0_FFN_TIME_SHIFT_B, c);
       end else begin
-        ffn_ts_b = BLOCKS_1_FFN_TIME_SHIFT_B_FLAT[c];
+        ffn_ts_b = rom_read(ROM_ID_BLOCKS_1_FFN_TIME_SHIFT_B, c);
       end
     end
   endfunction
@@ -299,9 +304,9 @@ module rwkvcnn_top (
   function automatic logic signed [31:0] ffn_tm_k(input int blk, input int c);
     begin
       if (blk == 0) begin
-        ffn_tm_k = BLOCKS_0_FFN_TIME_MIX_K_FLAT[c];
+        ffn_tm_k = rom_read(ROM_ID_BLOCKS_0_FFN_TIME_MIX_K, c);
       end else begin
-        ffn_tm_k = BLOCKS_1_FFN_TIME_MIX_K_FLAT[c];
+        ffn_tm_k = rom_read(ROM_ID_BLOCKS_1_FFN_TIME_MIX_K, c);
       end
     end
   endfunction
@@ -309,9 +314,9 @@ module rwkvcnn_top (
   function automatic logic signed [31:0] ffn_tm_r(input int blk, input int c);
     begin
       if (blk == 0) begin
-        ffn_tm_r = BLOCKS_0_FFN_TIME_MIX_R_FLAT[c];
+        ffn_tm_r = rom_read(ROM_ID_BLOCKS_0_FFN_TIME_MIX_R, c);
       end else begin
-        ffn_tm_r = BLOCKS_1_FFN_TIME_MIX_R_FLAT[c];
+        ffn_tm_r = rom_read(ROM_ID_BLOCKS_1_FFN_TIME_MIX_R, c);
       end
     end
   endfunction
@@ -319,9 +324,9 @@ module rwkvcnn_top (
   function automatic logic signed [31:0] ffn_one_tm(input int blk);
     begin
       if (blk == 0) begin
-        ffn_one_tm = BLOCKS_0_FFN_ONE_TM_FLAT[0];
+        ffn_one_tm = rom_read(ROM_ID_BLOCKS_0_FFN_ONE_TM, 0);
       end else begin
-        ffn_one_tm = BLOCKS_1_FFN_ONE_TM_FLAT[0];
+        ffn_one_tm = rom_read(ROM_ID_BLOCKS_1_FFN_ONE_TM, 0);
       end
     end
   endfunction
@@ -341,9 +346,9 @@ module rwkvcnn_top (
     begin
       idx = o*MODEL_DIM + i;
       if (blk == 0) begin
-        ffn_key_w = BLOCKS_0_FFN_KEY_W_FLAT[idx];
+        ffn_key_w = rom_read(ROM_ID_BLOCKS_0_FFN_KEY_W, idx);
       end else begin
-        ffn_key_w = BLOCKS_1_FFN_KEY_W_FLAT[idx];
+        ffn_key_w = rom_read(ROM_ID_BLOCKS_1_FFN_KEY_W, idx);
       end
     end
   endfunction
@@ -353,9 +358,9 @@ module rwkvcnn_top (
     begin
       idx = o*MODEL_DIM + i;
       if (blk == 0) begin
-        ffn_receptance_w = BLOCKS_0_FFN_RECEPTANCE_W_FLAT[idx];
+        ffn_receptance_w = rom_read(ROM_ID_BLOCKS_0_FFN_RECEPTANCE_W, idx);
       end else begin
-        ffn_receptance_w = BLOCKS_1_FFN_RECEPTANCE_W_FLAT[idx];
+        ffn_receptance_w = rom_read(ROM_ID_BLOCKS_1_FFN_RECEPTANCE_W, idx);
       end
     end
   endfunction
@@ -365,9 +370,9 @@ module rwkvcnn_top (
     begin
       idx = o*HIDDEN_SZ + i;
       if (blk == 0) begin
-        ffn_value_w = BLOCKS_0_FFN_VALUE_W_FLAT[idx];
+        ffn_value_w = rom_read(ROM_ID_BLOCKS_0_FFN_VALUE_W, idx);
       end else begin
-        ffn_value_w = BLOCKS_1_FFN_VALUE_W_FLAT[idx];
+        ffn_value_w = rom_read(ROM_ID_BLOCKS_1_FFN_VALUE_W, idx);
       end
     end
   endfunction
@@ -404,24 +409,14 @@ module rwkvcnn_top (
 
   function automatic logic signed [31:0] wkv_lut_lookup(input logic signed [31:0] delta_i);
     integer idx;
-    logic signed [63:0] q;
-    logic signed [63:0] num;
     begin
-      num = $signed(delta_i) - $signed(WKV_MIN_DELTA_I_FLAT[0]);
-      if (WKV_STEP_I_FLAT[0] == 0) begin
-        idx = 0;
-      end else begin
-        q = div_rne64(num, $signed(WKV_STEP_I_FLAT[0]));
-        idx = q;
-      end
-
-      if (idx < 0) begin
-        idx = 0;
-      end else if (idx >= WKV_LUT_NUMEL) begin
-        idx = WKV_LUT_NUMEL - 1;
-      end
-
-      wkv_lut_lookup = WKV_LUT_FLAT[idx];
+      idx = wkv_lut_lookup_idx(
+        delta_i,
+        rom_read(ROM_ID_WKV_MIN_DELTA_I, 0),
+        rom_read(ROM_ID_WKV_STEP_I, 0),
+        WKV_LUT_NUMEL
+      );
+      wkv_lut_lookup = rom_read(ROM_ID_WKV_LUT, idx);
     end
   endfunction
 
@@ -471,6 +466,8 @@ module rwkvcnn_top (
   logic signed [31:0] uu;
 
   integer exp_acc;
+  integer hist_head_idx;
+  integer hist_rd_idx;
 
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
@@ -491,6 +488,8 @@ module rwkvcnn_top (
           pp_state[j][i] <= PP_INIT;
           aa_state[j][i] <= 64'sd0;
           bb_state[j][i] <= 64'sd0;
+          att_hist_head[j][i] <= '0;
+          ffn_hist_head[j][i] <= '0;
           for (k = 0; k < KERNEL_SIZE; k++) begin
             att_hist[j][i][k] <= '0;
             ffn_hist[j][i][k] <= '0;
@@ -513,26 +512,31 @@ module rwkvcnn_top (
           for (o = 0; o < MODEL_DIM; o++) begin
             acc = 64'sd0;
             for (i = 0; i < IN_DIM; i++) begin
-              acc = acc + $signed(in_vec[i]) * $signed(INPUT_PROJ_W_FLAT[o*IN_DIM + i]);
+              acc = acc + $signed(in_vec[i]) * $signed(rom_read(ROM_ID_INPUT_PROJ_W, o*IN_DIM + i));
             end
             exp_acc = IO_EXP_IN + INPUT_PROJ_W_EXP;
-            b_aligned = requant_pow2_signed($signed(INPUT_PROJ_B_FLAT[o]), INPUT_PROJ_B_EXP, exp_acc, 32);
+            b_aligned = requant_pow2_signed($signed(rom_read(ROM_ID_INPUT_PROJ_B, o)), INPUT_PROJ_B_EXP, exp_acc, 32);
             acc = acc + $signed(b_aligned);
             work_vec[o] <= requant_pow2_signed(acc, exp_acc, RES_EXP, RES_BITS);
           end
           blk_idx <= '0;
-          state <= S_ATT;
+          state <= S_ATT_PRE;
         end
 
-        S_ATT: begin
+        S_ATT_PRE: begin
           for (c = 0; c < MODEL_DIM; c++) begin
             x_base[c] = work_vec[c];
           end
 
           for (c = 0; c < MODEL_DIM; c++) begin
             acc = 64'sd0;
+            hist_head_idx = att_hist_head[blk_idx][c];
             for (k = 0; k < KERNEL_SIZE; k++) begin
-              acc = acc + $signed(att_hist[blk_idx][c][k]) * $signed(att_ts_w(blk_idx, c, k));
+              hist_rd_idx = hist_head_idx + k;
+              if (hist_rd_idx >= KERNEL_SIZE) begin
+                hist_rd_idx = hist_rd_idx - KERNEL_SIZE;
+              end
+              acc = acc + $signed(att_hist[blk_idx][c][hist_rd_idx]) * $signed(att_ts_w(blk_idx, c, k));
             end
             exp_acc = RES_EXP + att_ts_w_exp(blk_idx);
             b_aligned = requant_pow2_signed($signed(att_ts_b(blk_idx, c)), att_ts_b_exp(blk_idx), exp_acc, 32);
@@ -560,7 +564,7 @@ module rwkvcnn_top (
             for (i = 0; i < MODEL_DIM; i++) begin
               acc = acc + $signed(xk[i]) * $signed(att_key_w(blk_idx, o, i));
             end
-            k_att[o] = requant_pow2_signed(acc, RES_EXP + att_key_w_exp(blk_idx), WKV_LOG_EXP_FLAT[0], K_BITS);
+            k_att[o] = requant_pow2_signed(acc, RES_EXP + att_key_w_exp(blk_idx), rom_read(ROM_ID_WKV_LOG_EXP, 0), K_BITS);
 
             acc = 64'sd0;
             for (i = 0; i < MODEL_DIM; i++) begin
@@ -576,6 +580,10 @@ module rwkvcnn_top (
             gate_att[o] = hardsigmoid_int_default(r_att[o], EXP_R, GATE_BITS);
           end
 
+          state <= S_ATT_POST;
+        end
+
+        S_ATT_POST: begin
           for (c = 0; c < MODEL_DIM; c++) begin
             uu = att_time_first(blk_idx, c);
             wd = att_time_decay(blk_idx, c);
@@ -589,11 +597,11 @@ module rwkvcnn_top (
             aa = aa_state[blk_idx][c];
             bb = bb_state[blk_idx][c];
 
-            t1 = rshift_rne64(aa * e1, WKV_E_FRAC_FLAT[0]);
+            t1 = rshift_rne64(aa * e1, rom_read(ROM_ID_WKV_E_FRAC, 0));
             t2 = $signed(v_att[c]) * e2;
             aa = sat_signed64(t1 + t2, A_BITS);
 
-            t1 = rshift_rne64(bb * e1, WKV_E_FRAC_FLAT[0]);
+            t1 = rshift_rne64(bb * e1, rom_read(ROM_ID_WKV_E_FRAC, 0));
             t2 = e2;
             bb = $signed(sat_unsigned64(t1 + t2, B_BITS));
 
@@ -607,11 +615,11 @@ module rwkvcnn_top (
             e1n = $signed(wkv_lut_lookup(ww2 - p2));
             e2n = $signed(wkv_lut_lookup(k_att[c] - p2));
 
-            t1 = rshift_rne64(aa * e1n, WKV_E_FRAC_FLAT[0]);
+            t1 = rshift_rne64(aa * e1n, rom_read(ROM_ID_WKV_E_FRAC, 0));
             t2 = $signed(v_att[c]) * e2n;
             aa = sat_signed64(t1 + t2, A_BITS);
 
-            t1 = rshift_rne64(bb * e1n, WKV_E_FRAC_FLAT[0]);
+            t1 = rshift_rne64(bb * e1n, rom_read(ROM_ID_WKV_E_FRAC, 0));
             t2 = e2n;
             bb = $signed(sat_unsigned64(t1 + t2, B_BITS));
 
@@ -635,24 +643,34 @@ module rwkvcnn_top (
           end
 
           for (c = 0; c < MODEL_DIM; c++) begin
-            for (k = 0; k < KERNEL_SIZE-1; k++) begin
-              att_hist[blk_idx][c][k] <= att_hist[blk_idx][c][k+1];
+            hist_head_idx = att_hist_head[blk_idx][c];
+            att_hist[blk_idx][c][hist_head_idx] <= x_base[c];
+            if (KERNEL_SIZE > 1) begin
+              if (hist_head_idx == (KERNEL_SIZE - 1)) begin
+                att_hist_head[blk_idx][c] <= '0;
+              end else begin
+                att_hist_head[blk_idx][c] <= hist_head_idx + 1;
+              end
             end
-            att_hist[blk_idx][c][KERNEL_SIZE-1] <= x_base[c];
           end
 
-          state <= S_FFN;
+          state <= S_FFN_PRE;
         end
 
-        S_FFN: begin
+        S_FFN_PRE: begin
           for (c = 0; c < MODEL_DIM; c++) begin
             x_base[c] = work_vec[c];
           end
 
           for (c = 0; c < MODEL_DIM; c++) begin
             acc = 64'sd0;
+            hist_head_idx = ffn_hist_head[blk_idx][c];
             for (k = 0; k < KERNEL_SIZE; k++) begin
-              acc = acc + $signed(ffn_hist[blk_idx][c][k]) * $signed(ffn_ts_w(blk_idx, c, k));
+              hist_rd_idx = hist_head_idx + k;
+              if (hist_rd_idx >= KERNEL_SIZE) begin
+                hist_rd_idx = hist_rd_idx - KERNEL_SIZE;
+              end
+              acc = acc + $signed(ffn_hist[blk_idx][c][hist_rd_idx]) * $signed(ffn_ts_w(blk_idx, c, k));
             end
             exp_acc = RES_EXP + ffn_ts_w_exp(blk_idx);
             b_aligned = requant_pow2_signed($signed(ffn_ts_b(blk_idx, c)), ffn_ts_b_exp(blk_idx), exp_acc, 32);
@@ -681,13 +699,17 @@ module rwkvcnn_top (
             if (k_ffn[o] < 0) begin
               k_ffn[o] = 32'sd0;
             end else if ($signed(k_ffn[o]) > qmax_signed64(RES_BITS)) begin
-              k_ffn[o] = qmax_signed64(RES_BITS)[31:0];
+              k_ffn[o] = qmax_signed64(RES_BITS);
             end
 
             prod = $signed(k_ffn[o]) * $signed(k_ffn[o]);
             k_sq[o] = requant_pow2_signed(prod, RES_EXP + RES_EXP, RES_EXP, RES_BITS);
           end
 
+          state <= S_FFN_POST;
+        end
+
+        S_FFN_POST: begin
           for (o = 0; o < MODEL_DIM; o++) begin
             acc = 64'sd0;
             for (i = 0; i < HIDDEN_SZ; i++) begin
@@ -708,17 +730,22 @@ module rwkvcnn_top (
           end
 
           for (c = 0; c < MODEL_DIM; c++) begin
-            for (k = 0; k < KERNEL_SIZE-1; k++) begin
-              ffn_hist[blk_idx][c][k] <= ffn_hist[blk_idx][c][k+1];
+            hist_head_idx = ffn_hist_head[blk_idx][c];
+            ffn_hist[blk_idx][c][hist_head_idx] <= x_base[c];
+            if (KERNEL_SIZE > 1) begin
+              if (hist_head_idx == (KERNEL_SIZE - 1)) begin
+                ffn_hist_head[blk_idx][c] <= '0;
+              end else begin
+                ffn_hist_head[blk_idx][c] <= hist_head_idx + 1;
+              end
             end
-            ffn_hist[blk_idx][c][KERNEL_SIZE-1] <= x_base[c];
           end
 
           if (blk_idx == (LAYER_NUM - 1)) begin
             state <= S_OP;
           end else begin
             blk_idx <= blk_idx + 1'b1;
-            state <= S_ATT;
+            state <= S_ATT_PRE;
           end
         end
 
@@ -726,10 +753,10 @@ module rwkvcnn_top (
           for (o = 0; o < OUT_DIM; o++) begin
             acc = 64'sd0;
             for (i = 0; i < MODEL_DIM; i++) begin
-              acc = acc + $signed(work_vec[i]) * $signed(OUTPUT_PROJ_W_FLAT[o*MODEL_DIM + i]);
+              acc = acc + $signed(work_vec[i]) * $signed(rom_read(ROM_ID_OUTPUT_PROJ_W, o*MODEL_DIM + i));
             end
             exp_acc = RES_EXP + OUTPUT_PROJ_W_EXP;
-            b_aligned = requant_pow2_signed($signed(OUTPUT_PROJ_B_FLAT[o]), OUTPUT_PROJ_B_EXP, exp_acc, 32);
+            b_aligned = requant_pow2_signed($signed(rom_read(ROM_ID_OUTPUT_PROJ_B, o)), OUTPUT_PROJ_B_EXP, exp_acc, 32);
             acc = acc + $signed(b_aligned);
             out_vec[o] <= requant_pow2_signed(acc, exp_acc, IO_EXP_OUT, IO_OUT_BITS);
           end

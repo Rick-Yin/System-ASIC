@@ -1,0 +1,13 @@
+flow/yosys/out/
+flow/yosys/reports/
+flow/yosys/__pycache__/
+vsrc/Joint-CFR-DPD/tb/top/build/
+vsrc/Joint-CFR-DPD/tb/top/logs/
+vsrc/Joint-CFR-DPD/tb/top/vectors/
+vsrc/Joint-CFR-DPD/tb/l0_ops/build/
+vsrc/Joint-CFR-DPD/tb/l0_ops/logs/
+vsrc/Joint-CFR-DPD/tb/l0_ops/vectors/
+psrc/__pycache__/
+psrc/tools/__pycache__/
+report/
+dc/runs/

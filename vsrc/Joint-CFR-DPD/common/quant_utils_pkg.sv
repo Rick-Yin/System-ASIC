@@ -178,6 +178,37 @@ package quant_utils_pkg;
     end
   endfunction
 
+  function automatic int wkv_lut_lookup_idx(
+    input logic signed [31:0] delta_i,
+    input logic signed [31:0] min_delta_i,
+    input logic signed [31:0] step_i,
+    input int lut_numel
+  );
+    int idx;
+    logic signed [63:0] q;
+    logic signed [63:0] num;
+    begin
+      if (lut_numel <= 0) begin
+        idx = 0;
+      end else begin
+        num = $signed(delta_i) - $signed(min_delta_i);
+        if (step_i == 0) begin
+          idx = 0;
+        end else begin
+          q = div_rne64(num, $signed(step_i));
+          idx = q;
+        end
+
+        if (idx < 0) begin
+          idx = 0;
+        end else if (idx >= lut_numel) begin
+          idx = lut_numel - 1;
+        end
+      end
+      wkv_lut_lookup_idx = idx;
+    end
+  endfunction
+
   function automatic logic signed [31:0] requant_pow2_signed(
     input logic signed [63:0] x,
     input int exp_in,
@@ -185,6 +216,7 @@ package quant_utils_pkg;
     input int bits
   );
     logic signed [63:0] y;
+    logic signed [63:0] y_shifted;
     int delta;
     begin
       delta = exp_in - exp_out;
@@ -192,7 +224,12 @@ package quant_utils_pkg;
         if (delta >= 62) begin
           y = (x < 0) ? qmin_signed64(bits) : qmax_signed64(bits);
         end else begin
-          y = x <<< delta;
+          y_shifted = x <<< delta;
+          if ((y_shifted >>> delta) != x) begin
+            y = (x < 0) ? qmin_signed64(bits) : qmax_signed64(bits);
+          end else begin
+            y = y_shifted;
+          end
         end
       end else if (delta < 0) begin
         y = rshift_rne64(x, -delta);
@@ -210,6 +247,7 @@ package quant_utils_pkg;
     input int bits
   );
     logic signed [63:0] y;
+    logic signed [63:0] y_shifted;
     int delta;
     begin
       delta = exp_in - exp_out;
@@ -217,7 +255,12 @@ package quant_utils_pkg;
         if (delta >= 62) begin
           y = (x < 0) ? 64'sd0 : $signed(qmax_unsigned64(bits));
         end else begin
-          y = x <<< delta;
+          y_shifted = x <<< delta;
+          if ((y_shifted >>> delta) != x) begin
+            y = (x < 0) ? 64'sd0 : $signed(qmax_unsigned64(bits));
+          end else begin
+            y = y_shifted;
+          end
         end
       end else if (delta < 0) begin
         y = rshift_rne64(x, -delta);

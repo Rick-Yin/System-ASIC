@@ -12,8 +12,8 @@
 ## 1. 基线快照（当前实现）
 
 ### 1.1 关键配置与维度
-- 时序目标：`CLK_PERIOD_NS=2.0`，输入/输出延时 0.20 ns，见 `dc/config_base.tcl`
-- 约束重点：`set_max_transition 0.15`，`set_max_fanout 8`，见 `dc/constraints_base.sdc`
+- 时序目标：`CLK_PERIOD_NS=2.0`，输入/输出延时 0.20 ns（本地仓库不再内置 DC 约束脚本）
+- 约束重点：`set_max_transition 0.15`，`set_max_fanout 8`（由外部 DC/PT 脚本管理）
 - 联合核维度：
   - `IN_DIM=2`
   - `MODEL_DIM=6`
@@ -143,7 +143,7 @@ A 线包含 3 个协同改造：
 ### 6.1 主要文件
 - `vsrc/Joint-CFR-DPD/top/rwkvcnn_top.sv`（核心重构）
 - `vsrc/Joint-CFR-DPD/common/quant_utils_pkg.sv`（必要时新增 helper，不破坏旧接口）
-- `dc/filelist_joint.f`（若新增模块需登记）
+- `flow/filelists/joint.f`（若新增模块需登记）
 
 ### 6.2 建议新增模块（可选）
 - `vsrc/Joint-CFR-DPD/core/exp_scheduler.sv`
@@ -178,10 +178,10 @@ A 线包含 3 个协同改造：
 ## 8. PPA验证计划
 
 ### 8.1 DC流程
-沿用既有 flow：
-- `dc/run_joint_dc.tcl`
-- `dc/config_base.tcl`
-- `dc/constraints_base.sdc`
+外部 DC/PT flow（本仓库仅保留本地 Yosys 预综合流）：
+- 外部服务器上的目标 `run_*.tcl`
+- 外部服务器上的约束与库配置
+- DC/PT 路径只做综合与时序分析；功能验证不再走 VCS 重跑
 
 ### 8.2 指标
 - 时序：WNS、TNS、violating paths

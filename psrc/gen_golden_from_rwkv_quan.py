@@ -1,23 +1,41 @@
 #!/usr/bin/env python3
-"""Generate golden vectors from RWKVCNN_Quan forward_int using manifest/bin tensors.
+"""Generate top-level packed vector golden from RWKVCNN_Quan forward_int.
 
-Outputs by default:
-  - golden/input_vectors.csv
-  - golden/golden_output.csv
-  - golden/meta.json
+Default outputs are packed one-bus-per-line hex vectors:
+  - vsrc/Joint-CFR-DPD/tb/top/vectors/input_packed.vec
+  - vsrc/Joint-CFR-DPD/tb/top/vectors/golden_output_packed.vec
+  - vsrc/Joint-CFR-DPD/tb/top/vectors/meta_top.json
 """
 
 from __future__ import annotations
 
-import argparse
 import csv
 import json
 import random
 import struct
 from copy import deepcopy
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Sequence, Tuple
+
+
+@dataclass(frozen=True)
+class TorchGoldenConfig:
+    manifest: Path = Path("vsrc/rom/manifest.json")
+    bin_dir: Path = Path("vsrc/rom/bin")
+    input_csv: Path | None = None
+    out_dir: Path = Path("vsrc/Joint-CFR-DPD/tb/top/vectors")
+    output_input_vec: Path | None = None
+    output_golden_vec: Path | None = None
+    output_meta_json: Path | None = None
+    frames: int = 256
+    mode: str = "random"
+    seed: int = 1
+    stateless: bool = False
+
+
+CONFIG = TorchGoldenConfig()
 
 
 def qmax_signed(bits: int) -> int:
@@ -63,6 +81,26 @@ def load_csv_int(path: Path) -> List[List[int]]:
             if vals:
                 rows.append(vals)
     return rows
+
+
+def to_u32(v: int) -> int:
+    return int(v) & 0xFFFF_FFFF
+
+
+def pack_row_to_bus(row: Sequence[int]) -> int:
+    bus = 0
+    for idx, v in enumerate(row):
+        bus |= (to_u32(v) << (32 * idx))
+    return int(bus)
+
+
+def save_packed_vec(path: Path, rows: Sequence[Sequence[int]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    width_hex = 8 * (len(rows[0]) if rows else 1)
+    with path.open("w", encoding="utf-8", newline="\n") as f:
+        for row in rows:
+            bus = pack_row_to_bus(row)
+            f.write(f"{bus:0{width_hex}X}\n")
 
 
 def parse_model_dims(tensors: List[Dict[str, Any]]) -> Dict[str, int]:
@@ -282,30 +320,17 @@ def inject_manifest_int_buffers(
     model._int_ready = True
 
 
-def resolve_outputs(args: argparse.Namespace) -> Tuple[Path, Path, Path]:
-    out_dir = Path(args.out_dir)
-    in_csv = Path(args.output_input_csv) if args.output_input_csv else out_dir / "input_vectors.csv"
-    out_csv = Path(args.output_golden_csv) if args.output_golden_csv else out_dir / "golden_output.csv"
-    meta_json = Path(args.output_meta_json) if args.output_meta_json else out_dir / "meta.json"
-    return in_csv, out_csv, meta_json
+def resolve_outputs(config: TorchGoldenConfig) -> Tuple[Path, Path, Path]:
+    out_dir = Path(config.out_dir)
+    in_vec = Path(config.output_input_vec) if config.output_input_vec else out_dir / "input_packed.vec"
+    out_vec = Path(config.output_golden_vec) if config.output_golden_vec else out_dir / "golden_output_packed.vec"
+    meta_json = Path(config.output_meta_json) if config.output_meta_json else out_dir / "meta_top.json"
+    return in_vec, out_vec, meta_json
 
 
-def main() -> None:
-    ap = argparse.ArgumentParser(description="Generate golden vectors from RWKVCNN_Quan.forward_int")
-    ap.add_argument("--manifest", type=Path, default=Path("vsrc/rom/manifest.json"))
-    ap.add_argument("--bin-dir", type=Path, default=Path("vsrc/rom/bin"))
-    ap.add_argument("--input-csv", type=Path, default=None, help="Optional integer input CSV to replay")
-
-    ap.add_argument("--out-dir", type=Path, default=Path("golden"))
-    ap.add_argument("--output-input-csv", type=Path, default=None)
-    ap.add_argument("--output-golden-csv", type=Path, default=None)
-    ap.add_argument("--output-meta-json", type=Path, default=None)
-
-    ap.add_argument("--frames", type=int, default=256)
-    ap.add_argument("--mode", choices=["random", "edge"], default="random")
-    ap.add_argument("--seed", type=int, default=1)
-    ap.add_argument("--stateless", action="store_true", help="Run per-frame T=1 calls")
-    args = ap.parse_args()
+def main(config: TorchGoldenConfig = CONFIG) -> None:
+    if config.mode not in {"random", "edge"}:
+        raise SystemExit(f"[ERR] unsupported mode in CONFIG.mode: {config.mode}")
 
     try:
         import torch
@@ -325,7 +350,7 @@ def main() -> None:
             f"Detail: {e}"
         )
 
-    manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
+    manifest = json.loads(config.manifest.read_text(encoding="utf-8"))
     tensors = manifest.get("tensors", [])
     if not isinstance(tensors, list) or len(tensors) == 0:
         raise SystemExit("[ERR] manifest has no tensors")
@@ -335,7 +360,7 @@ def main() -> None:
     for t in tensors:
         name = t["name"]
         numel = int(t["numel"])
-        bin_file = args.bin_dir / str(t["bin_file"])
+        bin_file = config.bin_dir / str(t["bin_file"])
         if not bin_file.exists():
             raise SystemExit(f"[ERR] missing tensor bin: {bin_file}")
         tensor_vals[name] = read_int32_le(bin_file, numel)
@@ -358,15 +383,15 @@ def main() -> None:
     in_dim = int(dims["IN_DIM"])
     out_dim = int(dims["OUT_DIM"])
 
-    if args.input_csv is not None:
-        in_rows = load_csv_int(args.input_csv)
+    if config.input_csv is not None:
+        in_rows = load_csv_int(config.input_csv)
         if len(in_rows) == 0:
-            raise SystemExit(f"[ERR] empty input csv: {args.input_csv}")
+            raise SystemExit(f"[ERR] empty input csv: {config.input_csv}")
         for i, row in enumerate(in_rows):
             if len(row) != in_dim:
                 raise SystemExit(f"[ERR] input row {i} width mismatch: got {len(row)} expect {in_dim}")
     else:
-        in_rows = build_input_rows(args.mode, int(args.frames), in_dim, in_bits, int(args.seed))
+        in_rows = build_input_rows(config.mode, int(config.frames), in_dim, in_bits, int(config.seed))
 
     if len(in_rows) == 0:
         raise SystemExit("[ERR] no input rows generated")
@@ -377,7 +402,7 @@ def main() -> None:
     exp_out_runtime: int | None = None
 
     with torch.no_grad():
-        if args.stateless:
+        if config.stateless:
             for row in in_rows:
                 x_i = torch.tensor(row, dtype=torch.int32).reshape(1, 1, in_dim)
                 x_f = x_i.to(torch.float32) * scale_in
@@ -401,25 +426,25 @@ def main() -> None:
         if len(row) != out_dim:
             raise SystemExit(f"[ERR] output row {i} width mismatch: got {len(row)} expect {out_dim}")
 
-    output_input_csv, output_golden_csv, output_meta_json = resolve_outputs(args)
-    save_csv_int(output_input_csv, in_rows)
-    save_csv_int(output_golden_csv, out_rows)
+    output_input_vec, output_golden_vec, output_meta_json = resolve_outputs(config)
+    save_packed_vec(output_input_vec, in_rows)
+    save_packed_vec(output_golden_vec, out_rows)
 
     meta = {
         "generator": "psrc/gen_golden_from_rwkv_quan.py",
         "source": "RWKVCNN_Quan.forward_int",
         "timestamp_utc": datetime.now(timezone.utc).isoformat(),
-        "manifest_path": str(args.manifest),
-        "bin_dir": str(args.bin_dir),
+        "manifest_path": str(config.manifest),
+        "bin_dir": str(config.bin_dir),
         "manifest_generated_at_utc": manifest.get("generated_at_utc"),
         "frames": len(in_rows),
-        "mode": "replay" if args.input_csv is not None else args.mode,
-        "seed": int(args.seed),
-        "stateful": (not bool(args.stateless)),
-        "input_csv": str(args.input_csv) if args.input_csv is not None else None,
+        "mode": "replay" if config.input_csv is not None else config.mode,
+        "seed": int(config.seed),
+        "stateful": (not bool(config.stateless)),
+        "input_csv": str(config.input_csv) if config.input_csv is not None else None,
         "outputs": {
-            "input_csv": str(output_input_csv),
-            "golden_csv": str(output_golden_csv),
+            "input_vec": str(output_input_vec),
+            "golden_vec": str(output_golden_vec),
             "meta_json": str(output_meta_json),
         },
         "model_dims": dims,
@@ -436,8 +461,8 @@ def main() -> None:
     output_meta_json.parent.mkdir(parents=True, exist_ok=True)
     output_meta_json.write_text(json.dumps(meta, indent=2), encoding="utf-8")
 
-    print(f"[OK] inputs : {output_input_csv} rows={len(in_rows)} dim={in_dim}")
-    print(f"[OK] golden : {output_golden_csv} rows={len(out_rows)} dim={out_dim}")
+    print(f"[OK] input_vec  : {output_input_vec} rows={len(in_rows)} dim={in_dim}")
+    print(f"[OK] golden_vec : {output_golden_vec} rows={len(out_rows)} dim={out_dim}")
     print(f"[OK] meta   : {output_meta_json}")
     print(
         "[INFO] "
