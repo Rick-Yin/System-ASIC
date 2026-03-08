@@ -138,31 +138,10 @@ def write_csv(path: pathlib.Path, rows: List[QorRow]) -> None:
             )
 
 
-def write_md(path: pathlib.Path, rows: List[QorRow], top_module: str) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    lines = [
-        f"# OSS Synthesis QoR Summary ({top_module})",
-        "",
-        "| clock_ns | status | mode | total_cells | total_area | $mul | $div | $mux* | report_dir |",
-        "|---:|:---:|:---:|---:|---:|---:|---:|---:|---|",
-    ]
-    for r in rows:
-        lines.append(
-            f"| {r.clock_ns} | {r.status} | {r.mode} | {r.total_cells} | {r.total_area} | {r.mul_cells} | {r.div_cells} | {r.mux_cells} | `{r.report_dir}` |"
-        )
-    if not rows:
-        lines.append("| n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a |")
-    lines.append("")
-    lines.append("`$mux* = $mux + $pmux + $bmux + $bwmux`")
-    lines.append("")
-    path.write_text("\n".join(lines), encoding="utf-8")
-
-
 def main() -> None:
     parser = argparse.ArgumentParser(description="Summarize Yosys clock-sweep QoR reports.")
     parser.add_argument("--reports-dir", required=True, help="Run report directory (contains clk_*ns/).")
     parser.add_argument("--output-csv", required=True, help="Output CSV path.")
-    parser.add_argument("--output-md", required=True, help="Output markdown path.")
     parser.add_argument("--top-module", default="top", help="Top module name for display.")
     parser.add_argument("--mode", default="mapped", choices=["frontend", "mapped"], help="Run mode for summary context.")
     args = parser.parse_args()
@@ -170,11 +149,9 @@ def main() -> None:
     reports_dir = pathlib.Path(args.reports_dir)
     rows = collect_rows(reports_dir, args.mode)
     write_csv(pathlib.Path(args.output_csv), rows)
-    write_md(pathlib.Path(args.output_md), rows, args.top_module)
 
     print(f"[OSS-QOR] rows: {len(rows)}")
     print(f"[OSS-QOR] csv: {args.output_csv}")
-    print(f"[OSS-QOR] md: {args.output_md}")
 
 
 if __name__ == "__main__":

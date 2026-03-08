@@ -13,6 +13,7 @@ import csv
 import json
 import random
 import struct
+import argparse
 from copy import deepcopy
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -473,4 +474,26 @@ def main(config: TorchGoldenConfig = CONFIG) -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Generate top-level packed input/golden vectors.")
+    parser.add_argument("--out-dir", type=Path, default=CONFIG.out_dir, help="Output directory for generated vectors.")
+    parser.add_argument("--input-csv", type=Path, default=None, help="Optional replay CSV input.")
+    parser.add_argument("--frames", type=int, default=CONFIG.frames, help="Frame count for random generation.")
+    parser.add_argument("--mode", type=str, default=CONFIG.mode, help="Input generation mode.")
+    parser.add_argument("--seed", type=int, default=CONFIG.seed, help="Random seed.")
+    parser.add_argument("--stateless", action="store_true", help="Generate stateless outputs.")
+    args = parser.parse_args()
+    main(
+        TorchGoldenConfig(
+            manifest=CONFIG.manifest,
+            bin_dir=CONFIG.bin_dir,
+            input_csv=args.input_csv,
+            out_dir=args.out_dir,
+            output_input_vec=CONFIG.output_input_vec,
+            output_golden_vec=CONFIG.output_golden_vec,
+            output_meta_json=CONFIG.output_meta_json,
+            frames=args.frames,
+            mode=args.mode,
+            seed=args.seed,
+            stateless=args.stateless,
+        )
+    )

@@ -9,9 +9,10 @@ MODE=""
 CLOCKS_CSV="2.0,2.5,3.0"
 LIBERTY_PATH="${OSS_LIBERTY:-$DEFAULT_LIBERTY}"
 RUN_TAG=""
+REPORT_ROOT=""
 ALLOW_UNSUPPORTED_YOSYS=0
 
-MIGO_TOP="MIGO_method_migo_n_65_q_bit_8_wp_pi_0_2_width_pi_0_02_alpha_p_0_1_alpha_s_0_01_lam1_0_01_lam2_0_1_e_topk_1_e_d_max_2_e_e_max_0"
+MIGO_TOP="MIGO_method_migo_n_161_q_bit_8_wp_pi_0_047_width_pi_0_031_alpha_p_0_1_alpha_s_0_1_lam1_1_2_lam2_1_e_topk_4_e_d_max_2_e_e_max_4"
 
 usage() {
   cat <<'EOF'
@@ -24,6 +25,7 @@ Options:
   --clocks <csv>                  Clock sweep in ns, e.g. 2.0,2.5,3.0
   --liberty <path>                Liberty .lib path
   --tag <name>                    Output tag (default: <flow>_<utc timestamp>)
+  --report-root <path>            Root directory for generated reports/artifacts
   --allow-unsupported-yosys       Skip SystemVerilog capability probe
   -h, --help                      Show help
 
@@ -54,6 +56,10 @@ parse_args() {
         ;;
       --tag)
         RUN_TAG="${2:-}"
+        shift 2
+        ;;
+      --report-root)
+        REPORT_ROOT="${2:-}"
         shift 2
         ;;
       --allow-unsupported-yosys)
@@ -219,10 +225,12 @@ main() {
   if [[ -z "$RUN_TAG" ]]; then
     RUN_TAG="${FLOW}_${MODE}_$(date -u +%Y%m%dT%H%M%SZ)"
   fi
+  if [[ -z "$REPORT_ROOT" ]]; then
+    REPORT_ROOT="$ROOT_DIR/report/yosys"
+  fi
 
-  local out_root="$ROOT_DIR/flow/yosys/out/$RUN_TAG"
-  local rpt_root="$ROOT_DIR/flow/yosys/reports/$RUN_TAG"
-  mkdir -p "$out_root" "$rpt_root"
+  local run_root="$REPORT_ROOT/$RUN_TAG"
+  mkdir -p "$run_root"
 
   echo "[OSS] flow=$FLOW top=$top_module"
   echo "[OSS] mode=$MODE"
@@ -230,25 +238,23 @@ main() {
     echo "[OSS] liberty=$LIBERTY_PATH"
   fi
   echo "[OSS] clocks_ns=$CLOCKS_CSV"
-  echo "[OSS] out_dir=$out_root"
-  echo "[OSS] report_dir=$rpt_root"
+  echo "[OSS] report_root=$run_root"
 
   local fail_count=0
-  local clk clk_tag case_out case_rpt abc_ps
+  local clk clk_tag case_root abc_ps
   local ys_file log_file stat_file netlist_file json_file status_file abs_filelist
   for clk in "${CLOCKS_NS[@]}"; do
     clk_tag="$(printf '%s' "$clk" | tr '.' 'p')"
-    case_out="$out_root/clk_${clk_tag}ns"
-    case_rpt="$rpt_root/clk_${clk_tag}ns"
-    mkdir -p "$case_out" "$case_rpt"
+    case_root="$run_root/clk_${clk_tag}ns"
+    mkdir -p "$case_root"
 
-    ys_file="$case_rpt/run.ys"
-    log_file="$case_rpt/yosys.log"
-    stat_file="$case_rpt/stat.rpt"
-    netlist_file="$case_out/${top_module}_syn.v"
-    json_file="$case_out/${top_module}_syn.json"
-    status_file="$case_rpt/status.txt"
-    abs_filelist="$case_rpt/rtl_abs.f"
+    ys_file="$case_root/run.ys"
+    log_file="$case_root/yosys.log"
+    stat_file="$case_root/stat.rpt"
+    netlist_file="$case_root/${top_module}_syn.v"
+    json_file="$case_root/${top_module}_syn.json"
+    status_file="$case_root/status.txt"
+    abs_filelist="$case_root/rtl_abs.f"
     printf "%s\n" "${rtl_abs_files[@]}" >"$abs_filelist"
 
     {
@@ -295,20 +301,18 @@ main() {
   done
 
   python3 "$ROOT_DIR/flow/yosys/oss_synth_qor_summary.py" \
-    --reports-dir "$rpt_root" \
-    --output-csv "$rpt_root/qor_summary.csv" \
-    --output-md "$rpt_root/qor_summary.md" \
+    --reports-dir "$run_root" \
+    --output-csv "$run_root/qor_summary.csv" \
     --top-module "$top_module" \
     --mode "$MODE"
 
   if [[ "$fail_count" -ne 0 ]]; then
-    echo "[OSS][ERR] $fail_count run(s) failed in mode=$MODE. See reports under: $rpt_root"
+    echo "[OSS][ERR] $fail_count run(s) failed in mode=$MODE. See reports under: $run_root"
     exit 3
   fi
 
   echo "[OSS][OK] Sweep finished (mode=$MODE). Summary:"
-  echo "  - $rpt_root/qor_summary.md"
-  echo "  - $rpt_root/qor_summary.csv"
+  echo "  - $run_root/qor_summary.csv"
 }
 
 main "$@"

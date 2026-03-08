@@ -18,12 +18,15 @@ module tb_l0_requant_pow2_signed;
 
   integer exp_in_i;
   integer exp_out_i;
+  reg [1023:0] vector_path;
 
   initial begin
     case_cnt = 0;
     mismatches = 0;
+    vector_path = "vsrc/Joint-CFR-DPD/tb/l0_ops/vectors/requant_pow2_signed.vec";
+    void'($value$plusargs("VECTOR_FILE=%s", vector_path));
 
-    fd = $fopen("vsrc/Joint-CFR-DPD/tb/l0_ops/vectors/requant_pow2_signed.vec", "r");
+    fd = $fopen(vector_path, "r");
     if (fd == 0) begin
       $display("[L0][FAIL] op=requant_pow2_signed cannot open vector file");
       $finish;

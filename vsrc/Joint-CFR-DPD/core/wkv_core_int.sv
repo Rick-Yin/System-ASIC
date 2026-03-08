@@ -40,24 +40,9 @@ module wkv_core_int #(
   integer idx;
 
   function automatic logic signed [31:0] lut_lookup(input logic signed [31:0] delta_i);
-    logic signed [63:0] num;
-    logic signed [63:0] q;
     integer id;
     begin
-      num = $signed(delta_i) - $signed(min_delta_i);
-      if (step_i == 0) begin
-        id = 0;
-      end else begin
-        q = div_rne64(num, $signed(step_i));
-        id = q;
-      end
-
-      if (id < 0) begin
-        id = 0;
-      end else if (id > (LUT_SIZE - 1)) begin
-        id = LUT_SIZE - 1;
-      end
-
+      id = wkv_lut_lookup_idx(delta_i, min_delta_i, step_i, LUT_SIZE);
       lut_lookup = lut[id];
     end
   endfunction

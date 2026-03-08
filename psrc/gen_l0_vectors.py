@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import random
+import argparse
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -364,4 +365,21 @@ def main(config: L0VectorConfig = CONFIG) -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Generate L0 vector files.")
+    parser.add_argument("--out-dir", type=Path, default=CONFIG.out_dir, help="Output vector directory.")
+    args = parser.parse_args()
+    main(
+        L0VectorConfig(
+            seed=CONFIG.seed,
+            out_dir=args.out_dir,
+            sat_random=CONFIG.sat_random,
+            rshift_random=CONFIG.rshift_random,
+            div_random=CONFIG.div_random,
+            requant_random=CONFIG.requant_random,
+            hsig_random=CONFIG.hsig_random,
+            wkv_random=CONFIG.wkv_random,
+            wkv_lut_numel=CONFIG.wkv_lut_numel,
+            wkv_lut_bias=CONFIG.wkv_lut_bias,
+            wkv_lut_step=CONFIG.wkv_lut_step,
+        )
+    )

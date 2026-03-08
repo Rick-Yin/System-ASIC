@@ -16,12 +16,15 @@ module tb_l0_hardsigmoid_int_default;
   logic [31:0] got;
 
   integer exp_x_i;
+  reg [1023:0] vector_path;
 
   initial begin
     case_cnt = 0;
     mismatches = 0;
+    vector_path = "vsrc/Joint-CFR-DPD/tb/l0_ops/vectors/hardsigmoid_int_default.vec";
+    void'($value$plusargs("VECTOR_FILE=%s", vector_path));
 
-    fd = $fopen("vsrc/Joint-CFR-DPD/tb/l0_ops/vectors/hardsigmoid_int_default.vec", "r");
+    fd = $fopen(vector_path, "r");
     if (fd == 0) begin
       $display("[L0][FAIL] op=hardsigmoid_int_default cannot open vector file");
       $finish;

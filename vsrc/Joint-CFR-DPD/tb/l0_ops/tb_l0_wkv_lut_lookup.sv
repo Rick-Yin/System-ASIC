@@ -23,6 +23,7 @@ module tb_l0_wkv_lut_lookup;
   logic [31:0] idx_u;
   logic signed [31:0] val;
   integer i;
+  reg [1023:0] vector_path;
 
   initial begin
     for (i = 0; i < LUT_NUMEL; i++) begin
@@ -31,8 +32,10 @@ module tb_l0_wkv_lut_lookup;
 
     case_cnt = 0;
     mismatches = 0;
+    vector_path = "vsrc/Joint-CFR-DPD/tb/l0_ops/vectors/wkv_lut_lookup.vec";
+    void'($value$plusargs("VECTOR_FILE=%s", vector_path));
 
-    fd = $fopen("vsrc/Joint-CFR-DPD/tb/l0_ops/vectors/wkv_lut_lookup.vec", "r");
+    fd = $fopen(vector_path, "r");
     if (fd == 0) begin
       $display("[L0][FAIL] op=wkv_lut_lookup cannot open vector file");
       $finish;

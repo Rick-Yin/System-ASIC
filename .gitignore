@@ -7,10 +7,15 @@ vsrc/Joint-CFR-DPD/tb/top/vectors/
 vsrc/Joint-CFR-DPD/tb/l0_ops/build/
 vsrc/Joint-CFR-DPD/tb/l0_ops/logs/
 vsrc/Joint-CFR-DPD/tb/l0_ops/vectors/
+dc/designs/migo/tb/build/
+dc/designs/migo/tb/logs/
 psrc/__pycache__/
 psrc/tools/__pycache__/
+**/__pycache__/
+*.pyc
 report/
 dc/runs/
 data/BER-SNR/
 data/HPA/
 data/linear_backend_exchange/
+msrc/.vscode/

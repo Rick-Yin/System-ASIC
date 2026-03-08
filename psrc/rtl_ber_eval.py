@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import argparse
+import csv
 import json
 from pathlib import Path
 from typing import List
@@ -77,22 +79,75 @@ def load_packed_vec(path: Path, dims: int) -> List[List[int]]:
     return rows
 
 
-def main() -> None:
-    if not MANIFEST.exists():
-        raise SystemExit(f"missing manifest: {MANIFEST}")
-    if not REF_VEC.exists():
-        raise SystemExit(f"missing REF_VEC in script config: {REF_VEC}")
-    if not RTL_VEC.exists():
-        raise SystemExit(f"missing RTL_VEC in script config: {RTL_VEC}")
+def write_csv_summary(
+    path: Path,
+    rows: int,
+    dims: int,
+    bits: int,
+    bit_errors: int,
+    bit_total: int,
+    ber: float,
+    vector_mismatch: int,
+    vector_mismatch_ratio: float,
+    mae: float,
+    max_abs_err: int,
+) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(
+            [
+                "rows",
+                "dims",
+                "bits_per_component",
+                "bit_errors",
+                "bit_total",
+                "ber",
+                "vector_mismatch",
+                "vector_mismatch_ratio",
+                "mae",
+                "max_abs_err",
+            ]
+        )
+        writer.writerow(
+            [
+                rows,
+                dims,
+                bits,
+                bit_errors,
+                bit_total,
+                f"{ber:.6e}",
+                vector_mismatch,
+                f"{vector_mismatch_ratio:.6e}",
+                f"{mae:.6f}",
+                max_abs_err,
+            ]
+        )
 
-    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Evaluate BER/MAE between packed vectors.")
+    parser.add_argument("--manifest", type=Path, default=MANIFEST, help="Manifest JSON path.")
+    parser.add_argument("--ref", type=Path, default=REF_VEC, help="Golden packed vector path.")
+    parser.add_argument("--rtl", type=Path, default=RTL_VEC, help="RTL packed vector path.")
+    parser.add_argument("--output-csv", type=Path, default=None, help="Optional CSV summary path.")
+    args = parser.parse_args()
+
+    if not args.manifest.exists():
+        raise SystemExit(f"missing manifest: {args.manifest}")
+    if not args.ref.exists():
+        raise SystemExit(f"missing REF_VEC in script config: {args.ref}")
+    if not args.rtl.exists():
+        raise SystemExit(f"missing RTL_VEC in script config: {args.rtl}")
+
+    manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
     dims = parse_model_dims(manifest["tensors"])
     out_dim = int(dims["OUT_DIM"])
     io = manifest.get("io", {})
     bits_per_component = int(io.get("out_bits", DEFAULT_BITS_PER_COMPONENT))
 
-    ref = load_packed_vec(REF_VEC, out_dim)
-    rtl = load_packed_vec(RTL_VEC, out_dim)
+    ref = load_packed_vec(args.ref, out_dim)
+    rtl = load_packed_vec(args.rtl, out_dim)
 
     if len(ref) != len(rtl):
         raise SystemExit(f"row count mismatch: ref={len(ref)} rtl={len(rtl)}")
@@ -130,6 +185,22 @@ def main() -> None:
     print(f"bit_errors={bit_err} bit_total={bit_tot} BER={ber:.6e}")
     print(f"vector_mismatch={vec_mismatch}/{vec_total} ratio={vec_mismatch_ratio:.6e}")
     print(f"MAE={mae:.6f} max_abs_err={max_abs_err}")
+
+    if args.output_csv is not None:
+        write_csv_summary(
+            args.output_csv,
+            vec_total,
+            out_dim,
+            bits_per_component,
+            bit_err,
+            bit_tot,
+            ber,
+            vec_mismatch,
+            vec_mismatch_ratio,
+            mae,
+            max_abs_err,
+        )
+        print(f"csv={args.output_csv}")
 
 
 if __name__ == "__main__":

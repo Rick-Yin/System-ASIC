@@ -194,6 +194,10 @@ package quant_utils_pkg;
         num = $signed(delta_i) - $signed(min_delta_i);
         if (step_i == 0) begin
           idx = 0;
+        end else if (step_i == 1) begin
+          idx = num;
+        end else if (step_i == -1) begin
+          idx = -num;
         end else begin
           q = div_rne64(num, $signed(step_i));
           idx = q;

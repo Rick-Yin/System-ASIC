@@ -8,6 +8,7 @@ module tb_l0_div_rne64;
   integer scan_rc;
   integer case_cnt;
   integer mismatches;
+  reg [1023:0] vector_path;
 
   logic [63:0] x_u;
   logic [63:0] d_u;
@@ -17,8 +18,10 @@ module tb_l0_div_rne64;
   initial begin
     case_cnt = 0;
     mismatches = 0;
+    vector_path = "vsrc/Joint-CFR-DPD/tb/l0_ops/vectors/div_rne64.vec";
+    void'($value$plusargs("VECTOR_FILE=%s", vector_path));
 
-    fd = $fopen("vsrc/Joint-CFR-DPD/tb/l0_ops/vectors/div_rne64.vec", "r");
+    fd = $fopen(vector_path, "r");
     if (fd == 0) begin
       $display("[L0][FAIL] op=div_rne64 cannot open vector file");
       $finish;

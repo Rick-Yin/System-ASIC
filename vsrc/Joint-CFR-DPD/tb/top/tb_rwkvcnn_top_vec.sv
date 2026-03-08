@@ -7,7 +7,8 @@ module tb_rwkvcnn_top_vec;
   localparam int OUTW = OUT_DIM * 32;
   localparam int MAX_FRAMES = 200000;
   localparam int TIMEOUT_CYCLES = 4000000;
-  localparam int MAX_LATENCY_CYCLES = 12;
+  localparam int STAGES_PER_BLOCK = 10;
+  localparam int MAX_LATENCY_CYCLES = 1 + (LAYER_NUM * STAGES_PER_BLOCK) + 2;
 
   logic clk;
   logic rst_n;
@@ -37,6 +38,9 @@ module tb_rwkvcnn_top_vec;
   integer issue_cycle [0:MAX_FRAMES-1];
   integer latency_cycles;
   integer cycles;
+  reg [1023:0] input_vec_path;
+  reg [1023:0] golden_vec_path;
+  reg [1023:0] output_vec_path;
 
   rwkvcnn_top dut (
     .clk(clk),
@@ -66,19 +70,26 @@ module tb_rwkvcnn_top_vec;
     latency_violations = 0;
     cycles = 0;
 
-    in_fd = $fopen("vsrc/Joint-CFR-DPD/tb/top/vectors/input_packed.vec", "r");
+    input_vec_path = "vsrc/Joint-CFR-DPD/tb/top/vectors/input_packed.vec";
+    golden_vec_path = "vsrc/Joint-CFR-DPD/tb/top/vectors/golden_output_packed.vec";
+    output_vec_path = "vsrc/Joint-CFR-DPD/tb/top/logs/rtl_output_packed.vec";
+    void'($value$plusargs("INPUT_VEC_FILE=%s", input_vec_path));
+    void'($value$plusargs("GOLDEN_VEC_FILE=%s", golden_vec_path));
+    void'($value$plusargs("OUTPUT_VEC_FILE=%s", output_vec_path));
+
+    in_fd = $fopen(input_vec_path, "r");
     if (in_fd == 0) begin
       $display("[TOP][FAIL] cannot open input vector file");
       $finish;
     end
 
-    exp_fd = $fopen("vsrc/Joint-CFR-DPD/tb/top/vectors/golden_output_packed.vec", "r");
+    exp_fd = $fopen(golden_vec_path, "r");
     if (exp_fd == 0) begin
       $display("[TOP][FAIL] cannot open golden output vector file");
       $finish;
     end
 
-    out_fd = $fopen("vsrc/Joint-CFR-DPD/tb/top/logs/rtl_output_packed.vec", "w");
+    out_fd = $fopen(output_vec_path, "w");
     if (out_fd == 0) begin
       $display("[TOP][FAIL] cannot open rtl output dump file");
       $finish;

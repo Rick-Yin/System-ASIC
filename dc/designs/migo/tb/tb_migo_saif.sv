@@ -25,7 +25,7 @@ module tb_migo_saif;
   string output_path;
   string saif_path;
 
-  MIGO_method_migo_n_65_q_bit_8_wp_pi_0_2_width_pi_0_02_alpha_p_0_1_alpha_s_0_01_lam1_0_01_lam2_0_1_e_topk_1_e_d_max_2_e_e_max_0 u_dut (
+  MIGO_method_migo_n_161_q_bit_8_wp_pi_0_047_width_pi_0_031_alpha_p_0_1_alpha_s_0_1_lam1_1_2_lam2_1_e_topk_4_e_d_max_2_e_e_max_4 u_dut (
     .clk(clk),
     .rst_n(rst_n),
     .in_valid(in_valid),

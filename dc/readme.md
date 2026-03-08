@@ -139,6 +139,36 @@ migo_clk2p0_YYYYMMDDTHHMMSSZ
 
 那就需要把实际 tag 名字传给 PT。
 
+### 2.5) MIGO：本地 `iverilog` 快速功能回归
+
+如果你只是想快速确认 `migo` RTL + testbench 在开源仿真器下可跑通，可以直接执行：
+
+```bash
+bash dc/designs/migo/tb/run_migo_iverilog.sh
+```
+
+输出位置：
+
+- 编译日志：`report/migo/logs/iverilog_compile.log`
+- 仿真日志：`report/migo/logs/tb_migo_saif.log`
+- 输出向量：`report/migo/build/migo_output.vec`
+
+### 2.6) 清理本地生成文件
+
+如果你想清掉本地仿真 / Yosys / 报表产物，执行：
+
+```bash
+bash clean_generated.sh
+```
+
+会删除：
+
+- `flow/yosys/out/`
+- `flow/yosys/reports/`
+- `vsrc/Joint-CFR-DPD/tb/*/{build,logs,vectors}`
+- `dc/designs/migo/tb/{build,logs}`
+- `report/`
+
 ### 3) Joint-CFR：先跑 DC
 
 ```bash
