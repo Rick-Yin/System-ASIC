@@ -8,6 +8,7 @@ module tb_l0_div_rne64;
   integer scan_rc;
   integer case_cnt;
   integer mismatches;
+  integer plusargs_rc;
   reg [1023:0] vector_path;
 
   logic [63:0] x_u;
@@ -19,7 +20,7 @@ module tb_l0_div_rne64;
     case_cnt = 0;
     mismatches = 0;
     vector_path = "vsrc/Joint-CFR-DPD/tb/l0_ops/vectors/div_rne64.vec";
-    void'($value$plusargs("VECTOR_FILE=%s", vector_path));
+    plusargs_rc = $value$plusargs("VECTOR_FILE=%s", vector_path);
 
     fd = $fopen(vector_path, "r");
     if (fd == 0) begin

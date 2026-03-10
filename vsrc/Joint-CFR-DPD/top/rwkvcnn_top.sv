@@ -59,9 +59,103 @@ module rwkvcnn_top (
     end
   end
 
+`define DECL_ROM_FLAT(SIG, ROM_ID_PARAM, NUMEL_PARAM) \
+  wire signed [((NUMEL_PARAM) * 32) - 1:0] SIG; \
+  rwkv_rom_flat #(.ROM_ID(ROM_ID_PARAM), .LEN(NUMEL_PARAM)) SIG``_inst ( \
+    .data(SIG) \
+  );
+
+`define DECL_ROM_SCALAR(SIG, ROM_ID_PARAM) \
+  wire signed [31:0] SIG; \
+  rwkv_rom #(.ROM_ID(ROM_ID_PARAM)) SIG``_inst ( \
+    .addr(16'd0), \
+    .rdata(SIG) \
+  );
+
+  `DECL_ROM_FLAT(input_proj_w_rom, ROM_ID_INPUT_PROJ_W, INPUT_PROJ_W_NUMEL)
+  `DECL_ROM_FLAT(input_proj_b_rom, ROM_ID_INPUT_PROJ_B, INPUT_PROJ_B_NUMEL)
+  `DECL_ROM_FLAT(blocks_0_att_time_shift_w_rom, ROM_ID_BLOCKS_0_ATT_TIME_SHIFT_W, BLOCKS_0_ATT_TIME_SHIFT_W_NUMEL)
+  `DECL_ROM_FLAT(blocks_1_att_time_shift_w_rom, ROM_ID_BLOCKS_1_ATT_TIME_SHIFT_W, BLOCKS_1_ATT_TIME_SHIFT_W_NUMEL)
+  `DECL_ROM_FLAT(blocks_0_att_time_shift_b_rom, ROM_ID_BLOCKS_0_ATT_TIME_SHIFT_B, BLOCKS_0_ATT_TIME_SHIFT_B_NUMEL)
+  `DECL_ROM_FLAT(blocks_1_att_time_shift_b_rom, ROM_ID_BLOCKS_1_ATT_TIME_SHIFT_B, BLOCKS_1_ATT_TIME_SHIFT_B_NUMEL)
+  `DECL_ROM_FLAT(blocks_0_att_time_mix_k_rom, ROM_ID_BLOCKS_0_ATT_TIME_MIX_K, BLOCKS_0_ATT_TIME_MIX_K_NUMEL)
+  `DECL_ROM_FLAT(blocks_1_att_time_mix_k_rom, ROM_ID_BLOCKS_1_ATT_TIME_MIX_K, BLOCKS_1_ATT_TIME_MIX_K_NUMEL)
+  `DECL_ROM_FLAT(blocks_0_att_time_mix_v_rom, ROM_ID_BLOCKS_0_ATT_TIME_MIX_V, BLOCKS_0_ATT_TIME_MIX_V_NUMEL)
+  `DECL_ROM_FLAT(blocks_1_att_time_mix_v_rom, ROM_ID_BLOCKS_1_ATT_TIME_MIX_V, BLOCKS_1_ATT_TIME_MIX_V_NUMEL)
+  `DECL_ROM_FLAT(blocks_0_att_time_mix_r_rom, ROM_ID_BLOCKS_0_ATT_TIME_MIX_R, BLOCKS_0_ATT_TIME_MIX_R_NUMEL)
+  `DECL_ROM_FLAT(blocks_1_att_time_mix_r_rom, ROM_ID_BLOCKS_1_ATT_TIME_MIX_R, BLOCKS_1_ATT_TIME_MIX_R_NUMEL)
+  `DECL_ROM_SCALAR(blocks_0_att_one_tm_rom, ROM_ID_BLOCKS_0_ATT_ONE_TM)
+  `DECL_ROM_SCALAR(blocks_1_att_one_tm_rom, ROM_ID_BLOCKS_1_ATT_ONE_TM)
+  `DECL_ROM_FLAT(blocks_0_att_key_w_rom, ROM_ID_BLOCKS_0_ATT_KEY_W, BLOCKS_0_ATT_KEY_W_NUMEL)
+  `DECL_ROM_FLAT(blocks_1_att_key_w_rom, ROM_ID_BLOCKS_1_ATT_KEY_W, BLOCKS_1_ATT_KEY_W_NUMEL)
+  `DECL_ROM_FLAT(blocks_0_att_value_w_rom, ROM_ID_BLOCKS_0_ATT_VALUE_W, BLOCKS_0_ATT_VALUE_W_NUMEL)
+  `DECL_ROM_FLAT(blocks_1_att_value_w_rom, ROM_ID_BLOCKS_1_ATT_VALUE_W, BLOCKS_1_ATT_VALUE_W_NUMEL)
+  `DECL_ROM_FLAT(blocks_0_att_receptance_w_rom, ROM_ID_BLOCKS_0_ATT_RECEPTANCE_W, BLOCKS_0_ATT_RECEPTANCE_W_NUMEL)
+  `DECL_ROM_FLAT(blocks_1_att_receptance_w_rom, ROM_ID_BLOCKS_1_ATT_RECEPTANCE_W, BLOCKS_1_ATT_RECEPTANCE_W_NUMEL)
+  `DECL_ROM_FLAT(blocks_0_att_output_w_rom, ROM_ID_BLOCKS_0_ATT_OUTPUT_W, BLOCKS_0_ATT_OUTPUT_W_NUMEL)
+  `DECL_ROM_FLAT(blocks_1_att_output_w_rom, ROM_ID_BLOCKS_1_ATT_OUTPUT_W, BLOCKS_1_ATT_OUTPUT_W_NUMEL)
+  `DECL_ROM_FLAT(blocks_0_att_time_first_rom, ROM_ID_BLOCKS_0_ATT_TIME_FIRST, BLOCKS_0_ATT_TIME_FIRST_NUMEL)
+  `DECL_ROM_FLAT(blocks_1_att_time_first_rom, ROM_ID_BLOCKS_1_ATT_TIME_FIRST, BLOCKS_1_ATT_TIME_FIRST_NUMEL)
+  `DECL_ROM_FLAT(blocks_0_att_time_decay_wexp_rom, ROM_ID_BLOCKS_0_ATT_TIME_DECAY_WEXP, BLOCKS_0_ATT_TIME_DECAY_WEXP_NUMEL)
+  `DECL_ROM_FLAT(blocks_1_att_time_decay_wexp_rom, ROM_ID_BLOCKS_1_ATT_TIME_DECAY_WEXP, BLOCKS_1_ATT_TIME_DECAY_WEXP_NUMEL)
+  `DECL_ROM_FLAT(blocks_0_ffn_time_shift_w_rom, ROM_ID_BLOCKS_0_FFN_TIME_SHIFT_W, BLOCKS_0_FFN_TIME_SHIFT_W_NUMEL)
+  `DECL_ROM_FLAT(blocks_1_ffn_time_shift_w_rom, ROM_ID_BLOCKS_1_FFN_TIME_SHIFT_W, BLOCKS_1_FFN_TIME_SHIFT_W_NUMEL)
+  `DECL_ROM_FLAT(blocks_0_ffn_time_shift_b_rom, ROM_ID_BLOCKS_0_FFN_TIME_SHIFT_B, BLOCKS_0_FFN_TIME_SHIFT_B_NUMEL)
+  `DECL_ROM_FLAT(blocks_1_ffn_time_shift_b_rom, ROM_ID_BLOCKS_1_FFN_TIME_SHIFT_B, BLOCKS_1_FFN_TIME_SHIFT_B_NUMEL)
+  `DECL_ROM_FLAT(blocks_0_ffn_time_mix_k_rom, ROM_ID_BLOCKS_0_FFN_TIME_MIX_K, BLOCKS_0_FFN_TIME_MIX_K_NUMEL)
+  `DECL_ROM_FLAT(blocks_1_ffn_time_mix_k_rom, ROM_ID_BLOCKS_1_FFN_TIME_MIX_K, BLOCKS_1_FFN_TIME_MIX_K_NUMEL)
+  `DECL_ROM_FLAT(blocks_0_ffn_time_mix_r_rom, ROM_ID_BLOCKS_0_FFN_TIME_MIX_R, BLOCKS_0_FFN_TIME_MIX_R_NUMEL)
+  `DECL_ROM_FLAT(blocks_1_ffn_time_mix_r_rom, ROM_ID_BLOCKS_1_FFN_TIME_MIX_R, BLOCKS_1_FFN_TIME_MIX_R_NUMEL)
+  `DECL_ROM_SCALAR(blocks_0_ffn_one_tm_rom, ROM_ID_BLOCKS_0_FFN_ONE_TM)
+  `DECL_ROM_SCALAR(blocks_1_ffn_one_tm_rom, ROM_ID_BLOCKS_1_FFN_ONE_TM)
+  `DECL_ROM_FLAT(blocks_0_ffn_key_w_rom, ROM_ID_BLOCKS_0_FFN_KEY_W, BLOCKS_0_FFN_KEY_W_NUMEL)
+  `DECL_ROM_FLAT(blocks_1_ffn_key_w_rom, ROM_ID_BLOCKS_1_FFN_KEY_W, BLOCKS_1_FFN_KEY_W_NUMEL)
+  `DECL_ROM_FLAT(blocks_0_ffn_receptance_w_rom, ROM_ID_BLOCKS_0_FFN_RECEPTANCE_W, BLOCKS_0_FFN_RECEPTANCE_W_NUMEL)
+  `DECL_ROM_FLAT(blocks_1_ffn_receptance_w_rom, ROM_ID_BLOCKS_1_FFN_RECEPTANCE_W, BLOCKS_1_FFN_RECEPTANCE_W_NUMEL)
+  `DECL_ROM_FLAT(blocks_0_ffn_value_w_rom, ROM_ID_BLOCKS_0_FFN_VALUE_W, BLOCKS_0_FFN_VALUE_W_NUMEL)
+  `DECL_ROM_FLAT(blocks_1_ffn_value_w_rom, ROM_ID_BLOCKS_1_FFN_VALUE_W, BLOCKS_1_FFN_VALUE_W_NUMEL)
+  `DECL_ROM_FLAT(output_proj_w_rom, ROM_ID_OUTPUT_PROJ_W, OUTPUT_PROJ_W_NUMEL)
+  `DECL_ROM_FLAT(output_proj_b_rom, ROM_ID_OUTPUT_PROJ_B, OUTPUT_PROJ_B_NUMEL)
+  `DECL_ROM_FLAT(wkv_lut_rom, ROM_ID_WKV_LUT, WKV_LUT_NUMEL)
+  `DECL_ROM_SCALAR(wkv_min_delta_i_rom, ROM_ID_WKV_MIN_DELTA_I)
+  `DECL_ROM_SCALAR(wkv_step_i_rom, ROM_ID_WKV_STEP_I)
+  `DECL_ROM_SCALAR(wkv_e_frac_rom, ROM_ID_WKV_E_FRAC)
+  `DECL_ROM_SCALAR(wkv_log_exp_rom, ROM_ID_WKV_LOG_EXP)
+
+`undef DECL_ROM_FLAT
+`undef DECL_ROM_SCALAR
+
   function automatic logic signed [31:0] in_word(input logic signed [IN_DIM*32-1:0] bus, input int idx);
     begin
       in_word = bus[idx*32 +: 32];
+    end
+  endfunction
+
+  function automatic logic signed [31:0] input_proj_w_word(input int o, input int i);
+    int idx;
+    begin
+      idx = o*IN_DIM + i;
+      input_proj_w_word = input_proj_w_rom[idx*32 +: 32];
+    end
+  endfunction
+
+  function automatic logic signed [31:0] input_proj_b_word(input int o);
+    begin
+      input_proj_b_word = input_proj_b_rom[o*32 +: 32];
+    end
+  endfunction
+
+  function automatic logic signed [31:0] output_proj_w_word(input int o, input int i);
+    int idx;
+    begin
+      idx = o*MODEL_DIM + i;
+      output_proj_w_word = output_proj_w_rom[idx*32 +: 32];
+    end
+  endfunction
+
+  function automatic logic signed [31:0] output_proj_b_word(input int o);
+    begin
+      output_proj_b_word = output_proj_b_rom[o*32 +: 32];
     end
   endfunction
 
@@ -70,9 +164,9 @@ module rwkvcnn_top (
     begin
       idx = c*KERNEL_SIZE + k;
       if (blk == 0) begin
-        att_ts_w = rom_read(ROM_ID_BLOCKS_0_ATT_TIME_SHIFT_W, idx);
+        att_ts_w = blocks_0_att_time_shift_w_rom[idx*32 +: 32];
       end else begin
-        att_ts_w = rom_read(ROM_ID_BLOCKS_1_ATT_TIME_SHIFT_W, idx);
+        att_ts_w = blocks_1_att_time_shift_w_rom[idx*32 +: 32];
       end
     end
   endfunction
@@ -80,9 +174,9 @@ module rwkvcnn_top (
   function automatic logic signed [31:0] att_ts_b(input int blk, input int c);
     begin
       if (blk == 0) begin
-        att_ts_b = rom_read(ROM_ID_BLOCKS_0_ATT_TIME_SHIFT_B, c);
+        att_ts_b = blocks_0_att_time_shift_b_rom[c*32 +: 32];
       end else begin
-        att_ts_b = rom_read(ROM_ID_BLOCKS_1_ATT_TIME_SHIFT_B, c);
+        att_ts_b = blocks_1_att_time_shift_b_rom[c*32 +: 32];
       end
     end
   endfunction
@@ -110,9 +204,9 @@ module rwkvcnn_top (
   function automatic logic signed [31:0] att_tm_k(input int blk, input int c);
     begin
       if (blk == 0) begin
-        att_tm_k = rom_read(ROM_ID_BLOCKS_0_ATT_TIME_MIX_K, c);
+        att_tm_k = blocks_0_att_time_mix_k_rom[c*32 +: 32];
       end else begin
-        att_tm_k = rom_read(ROM_ID_BLOCKS_1_ATT_TIME_MIX_K, c);
+        att_tm_k = blocks_1_att_time_mix_k_rom[c*32 +: 32];
       end
     end
   endfunction
@@ -120,9 +214,9 @@ module rwkvcnn_top (
   function automatic logic signed [31:0] att_tm_v(input int blk, input int c);
     begin
       if (blk == 0) begin
-        att_tm_v = rom_read(ROM_ID_BLOCKS_0_ATT_TIME_MIX_V, c);
+        att_tm_v = blocks_0_att_time_mix_v_rom[c*32 +: 32];
       end else begin
-        att_tm_v = rom_read(ROM_ID_BLOCKS_1_ATT_TIME_MIX_V, c);
+        att_tm_v = blocks_1_att_time_mix_v_rom[c*32 +: 32];
       end
     end
   endfunction
@@ -130,9 +224,9 @@ module rwkvcnn_top (
   function automatic logic signed [31:0] att_tm_r(input int blk, input int c);
     begin
       if (blk == 0) begin
-        att_tm_r = rom_read(ROM_ID_BLOCKS_0_ATT_TIME_MIX_R, c);
+        att_tm_r = blocks_0_att_time_mix_r_rom[c*32 +: 32];
       end else begin
-        att_tm_r = rom_read(ROM_ID_BLOCKS_1_ATT_TIME_MIX_R, c);
+        att_tm_r = blocks_1_att_time_mix_r_rom[c*32 +: 32];
       end
     end
   endfunction
@@ -140,9 +234,9 @@ module rwkvcnn_top (
   function automatic logic signed [31:0] att_one_tm(input int blk);
     begin
       if (blk == 0) begin
-        att_one_tm = rom_read(ROM_ID_BLOCKS_0_ATT_ONE_TM, 0);
+        att_one_tm = blocks_0_att_one_tm_rom;
       end else begin
-        att_one_tm = rom_read(ROM_ID_BLOCKS_1_ATT_ONE_TM, 0);
+        att_one_tm = blocks_1_att_one_tm_rom;
       end
     end
   endfunction
@@ -162,9 +256,9 @@ module rwkvcnn_top (
     begin
       idx = o*MODEL_DIM + i;
       if (blk == 0) begin
-        att_key_w = rom_read(ROM_ID_BLOCKS_0_ATT_KEY_W, idx);
+        att_key_w = blocks_0_att_key_w_rom[idx*32 +: 32];
       end else begin
-        att_key_w = rom_read(ROM_ID_BLOCKS_1_ATT_KEY_W, idx);
+        att_key_w = blocks_1_att_key_w_rom[idx*32 +: 32];
       end
     end
   endfunction
@@ -174,9 +268,9 @@ module rwkvcnn_top (
     begin
       idx = o*MODEL_DIM + i;
       if (blk == 0) begin
-        att_value_w = rom_read(ROM_ID_BLOCKS_0_ATT_VALUE_W, idx);
+        att_value_w = blocks_0_att_value_w_rom[idx*32 +: 32];
       end else begin
-        att_value_w = rom_read(ROM_ID_BLOCKS_1_ATT_VALUE_W, idx);
+        att_value_w = blocks_1_att_value_w_rom[idx*32 +: 32];
       end
     end
   endfunction
@@ -186,9 +280,9 @@ module rwkvcnn_top (
     begin
       idx = o*MODEL_DIM + i;
       if (blk == 0) begin
-        att_receptance_w = rom_read(ROM_ID_BLOCKS_0_ATT_RECEPTANCE_W, idx);
+        att_receptance_w = blocks_0_att_receptance_w_rom[idx*32 +: 32];
       end else begin
-        att_receptance_w = rom_read(ROM_ID_BLOCKS_1_ATT_RECEPTANCE_W, idx);
+        att_receptance_w = blocks_1_att_receptance_w_rom[idx*32 +: 32];
       end
     end
   endfunction
@@ -198,9 +292,9 @@ module rwkvcnn_top (
     begin
       idx = o*MODEL_DIM + i;
       if (blk == 0) begin
-        att_output_w = rom_read(ROM_ID_BLOCKS_0_ATT_OUTPUT_W, idx);
+        att_output_w = blocks_0_att_output_w_rom[idx*32 +: 32];
       end else begin
-        att_output_w = rom_read(ROM_ID_BLOCKS_1_ATT_OUTPUT_W, idx);
+        att_output_w = blocks_1_att_output_w_rom[idx*32 +: 32];
       end
     end
   endfunction
@@ -248,9 +342,9 @@ module rwkvcnn_top (
   function automatic logic signed [31:0] att_time_first(input int blk, input int c);
     begin
       if (blk == 0) begin
-        att_time_first = rom_read(ROM_ID_BLOCKS_0_ATT_TIME_FIRST, c);
+        att_time_first = blocks_0_att_time_first_rom[c*32 +: 32];
       end else begin
-        att_time_first = rom_read(ROM_ID_BLOCKS_1_ATT_TIME_FIRST, c);
+        att_time_first = blocks_1_att_time_first_rom[c*32 +: 32];
       end
     end
   endfunction
@@ -258,9 +352,9 @@ module rwkvcnn_top (
   function automatic logic signed [31:0] att_time_decay(input int blk, input int c);
     begin
       if (blk == 0) begin
-        att_time_decay = rom_read(ROM_ID_BLOCKS_0_ATT_TIME_DECAY_WEXP, c);
+        att_time_decay = blocks_0_att_time_decay_wexp_rom[c*32 +: 32];
       end else begin
-        att_time_decay = rom_read(ROM_ID_BLOCKS_1_ATT_TIME_DECAY_WEXP, c);
+        att_time_decay = blocks_1_att_time_decay_wexp_rom[c*32 +: 32];
       end
     end
   endfunction
@@ -270,9 +364,9 @@ module rwkvcnn_top (
     begin
       idx = c*KERNEL_SIZE + k;
       if (blk == 0) begin
-        ffn_ts_w = rom_read(ROM_ID_BLOCKS_0_FFN_TIME_SHIFT_W, idx);
+        ffn_ts_w = blocks_0_ffn_time_shift_w_rom[idx*32 +: 32];
       end else begin
-        ffn_ts_w = rom_read(ROM_ID_BLOCKS_1_FFN_TIME_SHIFT_W, idx);
+        ffn_ts_w = blocks_1_ffn_time_shift_w_rom[idx*32 +: 32];
       end
     end
   endfunction
@@ -280,9 +374,9 @@ module rwkvcnn_top (
   function automatic logic signed [31:0] ffn_ts_b(input int blk, input int c);
     begin
       if (blk == 0) begin
-        ffn_ts_b = rom_read(ROM_ID_BLOCKS_0_FFN_TIME_SHIFT_B, c);
+        ffn_ts_b = blocks_0_ffn_time_shift_b_rom[c*32 +: 32];
       end else begin
-        ffn_ts_b = rom_read(ROM_ID_BLOCKS_1_FFN_TIME_SHIFT_B, c);
+        ffn_ts_b = blocks_1_ffn_time_shift_b_rom[c*32 +: 32];
       end
     end
   endfunction
@@ -310,9 +404,9 @@ module rwkvcnn_top (
   function automatic logic signed [31:0] ffn_tm_k(input int blk, input int c);
     begin
       if (blk == 0) begin
-        ffn_tm_k = rom_read(ROM_ID_BLOCKS_0_FFN_TIME_MIX_K, c);
+        ffn_tm_k = blocks_0_ffn_time_mix_k_rom[c*32 +: 32];
       end else begin
-        ffn_tm_k = rom_read(ROM_ID_BLOCKS_1_FFN_TIME_MIX_K, c);
+        ffn_tm_k = blocks_1_ffn_time_mix_k_rom[c*32 +: 32];
       end
     end
   endfunction
@@ -320,9 +414,9 @@ module rwkvcnn_top (
   function automatic logic signed [31:0] ffn_tm_r(input int blk, input int c);
     begin
       if (blk == 0) begin
-        ffn_tm_r = rom_read(ROM_ID_BLOCKS_0_FFN_TIME_MIX_R, c);
+        ffn_tm_r = blocks_0_ffn_time_mix_r_rom[c*32 +: 32];
       end else begin
-        ffn_tm_r = rom_read(ROM_ID_BLOCKS_1_FFN_TIME_MIX_R, c);
+        ffn_tm_r = blocks_1_ffn_time_mix_r_rom[c*32 +: 32];
       end
     end
   endfunction
@@ -330,9 +424,9 @@ module rwkvcnn_top (
   function automatic logic signed [31:0] ffn_one_tm(input int blk);
     begin
       if (blk == 0) begin
-        ffn_one_tm = rom_read(ROM_ID_BLOCKS_0_FFN_ONE_TM, 0);
+        ffn_one_tm = blocks_0_ffn_one_tm_rom;
       end else begin
-        ffn_one_tm = rom_read(ROM_ID_BLOCKS_1_FFN_ONE_TM, 0);
+        ffn_one_tm = blocks_1_ffn_one_tm_rom;
       end
     end
   endfunction
@@ -352,9 +446,9 @@ module rwkvcnn_top (
     begin
       idx = o*MODEL_DIM + i;
       if (blk == 0) begin
-        ffn_key_w = rom_read(ROM_ID_BLOCKS_0_FFN_KEY_W, idx);
+        ffn_key_w = blocks_0_ffn_key_w_rom[idx*32 +: 32];
       end else begin
-        ffn_key_w = rom_read(ROM_ID_BLOCKS_1_FFN_KEY_W, idx);
+        ffn_key_w = blocks_1_ffn_key_w_rom[idx*32 +: 32];
       end
     end
   endfunction
@@ -364,9 +458,9 @@ module rwkvcnn_top (
     begin
       idx = o*MODEL_DIM + i;
       if (blk == 0) begin
-        ffn_receptance_w = rom_read(ROM_ID_BLOCKS_0_FFN_RECEPTANCE_W, idx);
+        ffn_receptance_w = blocks_0_ffn_receptance_w_rom[idx*32 +: 32];
       end else begin
-        ffn_receptance_w = rom_read(ROM_ID_BLOCKS_1_FFN_RECEPTANCE_W, idx);
+        ffn_receptance_w = blocks_1_ffn_receptance_w_rom[idx*32 +: 32];
       end
     end
   endfunction
@@ -376,9 +470,9 @@ module rwkvcnn_top (
     begin
       idx = o*HIDDEN_SZ + i;
       if (blk == 0) begin
-        ffn_value_w = rom_read(ROM_ID_BLOCKS_0_FFN_VALUE_W, idx);
+        ffn_value_w = blocks_0_ffn_value_w_rom[idx*32 +: 32];
       end else begin
-        ffn_value_w = rom_read(ROM_ID_BLOCKS_1_FFN_VALUE_W, idx);
+        ffn_value_w = blocks_1_ffn_value_w_rom[idx*32 +: 32];
       end
     end
   endfunction
@@ -418,11 +512,11 @@ module rwkvcnn_top (
     begin
       idx = wkv_lut_lookup_idx(
         delta_i,
-        rom_read(ROM_ID_WKV_MIN_DELTA_I, 0),
-        rom_read(ROM_ID_WKV_STEP_I, 0),
+        wkv_min_delta_i_rom,
+        wkv_step_i_rom,
         WKV_LUT_NUMEL
       );
-      wkv_lut_lookup = rom_read(ROM_ID_WKV_LUT, idx);
+      wkv_lut_lookup = wkv_lut_rom[idx*32 +: 32];
     end
   endfunction
 
@@ -523,10 +617,10 @@ module rwkvcnn_top (
           for (o = 0; o < MODEL_DIM; o++) begin
             acc = 64'sd0;
             for (i = 0; i < IN_DIM; i++) begin
-              acc = acc + $signed(in_vec[i]) * $signed(rom_read(ROM_ID_INPUT_PROJ_W, o*IN_DIM + i));
+              acc = acc + $signed(in_vec[i]) * $signed(input_proj_w_word(o, i));
             end
             exp_acc = IO_EXP_IN + INPUT_PROJ_W_EXP;
-            b_aligned = requant_pow2_signed($signed(rom_read(ROM_ID_INPUT_PROJ_B, o)), INPUT_PROJ_B_EXP, exp_acc, 32);
+            b_aligned = requant_pow2_signed($signed(input_proj_b_word(o)), INPUT_PROJ_B_EXP, exp_acc, 32);
             acc = acc + $signed(b_aligned);
             work_vec[o] <= requant_pow2_signed(acc, exp_acc, RES_EXP, RES_BITS);
           end
@@ -579,7 +673,7 @@ module rwkvcnn_top (
             for (i = 0; i < MODEL_DIM; i++) begin
               acc = acc + $signed(xk[i]) * $signed(att_key_w(blk_idx, o, i));
             end
-            k_att[o] = requant_pow2_signed(acc, RES_EXP + att_key_w_exp(blk_idx), rom_read(ROM_ID_WKV_LOG_EXP, 0), K_BITS);
+            k_att[o] = requant_pow2_signed(acc, RES_EXP + att_key_w_exp(blk_idx), wkv_log_exp_rom, K_BITS);
 
             acc = 64'sd0;
             for (i = 0; i < MODEL_DIM; i++) begin
@@ -618,11 +712,11 @@ module rwkvcnn_top (
             aa = aa_state[blk_idx][c];
             bb = bb_state[blk_idx][c];
 
-            t1 = rshift_rne64(aa * e1, rom_read(ROM_ID_WKV_E_FRAC, 0));
+            t1 = rshift_rne64(aa * e1, wkv_e_frac_rom);
             t2 = $signed(v_att[c]) * e2;
             aa = sat_signed64(t1 + t2, A_BITS);
 
-            t1 = rshift_rne64(bb * e1, rom_read(ROM_ID_WKV_E_FRAC, 0));
+            t1 = rshift_rne64(bb * e1, wkv_e_frac_rom);
             t2 = e2;
             bb = $signed(sat_unsigned64(t1 + t2, B_BITS));
 
@@ -635,11 +729,11 @@ module rwkvcnn_top (
             e1n = $signed(wkv_lut_lookup(ww2 - p2));
             e2n = $signed(wkv_lut_lookup(k_att[c] - p2));
 
-            t1 = rshift_rne64(aa * e1n, rom_read(ROM_ID_WKV_E_FRAC, 0));
+            t1 = rshift_rne64(aa * e1n, wkv_e_frac_rom);
             t2 = $signed(v_att[c]) * e2n;
             att_aa_next[c] = sat_signed64(t1 + t2, A_BITS);
 
-            t1 = rshift_rne64(bb * e1n, rom_read(ROM_ID_WKV_E_FRAC, 0));
+            t1 = rshift_rne64(bb * e1n, wkv_e_frac_rom);
             t2 = e2n;
             att_bb_next[c] = $signed(sat_unsigned64(t1 + t2, B_BITS));
             att_pp_next[c] = p2;
@@ -798,10 +892,10 @@ module rwkvcnn_top (
           for (o = 0; o < OUT_DIM; o++) begin
             acc = 64'sd0;
             for (i = 0; i < MODEL_DIM; i++) begin
-              acc = acc + $signed(work_vec[i]) * $signed(rom_read(ROM_ID_OUTPUT_PROJ_W, o*MODEL_DIM + i));
+              acc = acc + $signed(work_vec[i]) * $signed(output_proj_w_word(o, i));
             end
             exp_acc = RES_EXP + OUTPUT_PROJ_W_EXP;
-            b_aligned = requant_pow2_signed($signed(rom_read(ROM_ID_OUTPUT_PROJ_B, o)), OUTPUT_PROJ_B_EXP, exp_acc, 32);
+            b_aligned = requant_pow2_signed($signed(output_proj_b_word(o)), OUTPUT_PROJ_B_EXP, exp_acc, 32);
             acc = acc + $signed(b_aligned);
             out_vec[o] <= requant_pow2_signed(acc, exp_acc, IO_EXP_OUT, IO_OUT_BITS);
           end

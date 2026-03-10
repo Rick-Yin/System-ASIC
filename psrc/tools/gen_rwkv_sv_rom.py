@@ -160,8 +160,68 @@ def emit_tensor_map(tensors: List[Dict[str, Any]], out_path: pathlib.Path) -> No
     out_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def emit_rom_bank(out_path: pathlib.Path) -> None:
-    lines = [
+def emit_rom_bank(tensors: List[Dict[str, Any]], tensor_vals: Dict[str, List[int]], out_path: pathlib.Path) -> None:
+    lines: List[str] = []
+    lines.extend([
+        "module rwkv_rom #(",
+        "  parameter int ROM_ID = 0",
+        ")(",
+        "  input  logic [15:0] addr,",
+        "  output logic signed [31:0] rdata",
+        ");",
+        "  import rwkvcnn_pkg::*;",
+        "",
+        "  generate",
+    ])
+
+    first = True
+    for tensor in tensors:
+        sid = sanitize(tensor["name"])
+        sv_vals = [sv_int32(v) for v in tensor_vals[tensor["name"]]]
+        branch = "if" if first else "else if"
+        first = False
+        lines.append(f"    {branch} (ROM_ID == ROM_ID_{sid}) begin : gen_{sid.lower()}")
+        lines.append("      always_comb begin")
+        lines.append("        rdata = 32'sd0;")
+        lines.append(f"        if (addr < {sid}_NUMEL) begin")
+        lines.append("          case (addr)")
+        for vidx, value in enumerate(sv_vals):
+            lines.append(f"            16'd{vidx}: rdata = {value};")
+        lines.append("            default: rdata = 32'sd0;")
+        lines.append("          endcase")
+        lines.append("        end")
+        lines.append("      end")
+        lines.append("    end")
+
+    lines.extend([
+        "    else begin : gen_default",
+        "      always_comb begin",
+        "        rdata = 32'sd0;",
+        "      end",
+        "    end",
+        "  endgenerate",
+        "",
+        "endmodule",
+        "",
+        "module rwkv_rom_flat #(",
+        "  parameter int ROM_ID = 0,",
+        "  parameter int LEN = 1",
+        ")(",
+        "  output wire signed [LEN*32-1:0] data",
+        ");",
+        "  genvar idx;",
+        "  generate",
+        "    for (idx = 0; idx < LEN; idx++) begin : gen_words",
+        "      localparam logic [15:0] ADDR = idx;",
+        "      rwkv_rom #(.ROM_ID(ROM_ID)) u_rom (",
+        "        .addr(ADDR),",
+        "        .rdata(data[idx*32 +: 32])",
+        "      );",
+        "    end",
+        "  endgenerate",
+        "",
+        "endmodule",
+        "",
         "module rwkv_rom_bank (",
         "  input  logic [7:0] rom_id,",
         "  input  logic [15:0] addr,",
@@ -174,7 +234,7 @@ def emit_rom_bank(out_path: pathlib.Path) -> None:
         "  end",
         "",
         "endmodule",
-    ]
+    ])
     out_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
@@ -196,7 +256,7 @@ def main() -> None:
 
     emit_pkg(manifest, tensors, tensor_vals, OUT_PKG_PATH)
     emit_tensor_map(tensors, OUT_MAP_PATH)
-    emit_rom_bank(OUT_ROM_PATH)
+    emit_rom_bank(tensors, tensor_vals, OUT_ROM_PATH)
 
     print(f"[OK] Generated {OUT_PKG_PATH}")
     print(f"[OK] Generated {OUT_MAP_PATH}")

@@ -1,0 +1,197 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: yosys
+Source: http://www.clifford.at/yosys/
+
+Files: *
+Copyright: 2012-2019 Clifford Wolf <clifford@clifford.at>
+License: ISC
+
+Files: backends/btor/btor.cc
+Copyright: 2012 Clifford Wolf <clifford@clifford.at>
+           2014 Ahmed Irfan <irfan@fbk.eu>
+License: ISC
+
+Files: passes/cmds/tee.cc passes/tests/test_cell.cc passes/cmds/logcmd.cc
+       passes/cmds/write_file.cc passes/cmds/trace.cc
+       passes/tests/test_abcloop.cc
+Copyright: 2012-2014 Clifford Wolf <clifford@clifford.at>
+           2014 Johann Glaser <Johann.Glaser@gmx.at>
+License: ISC
+
+Files: backends/protobuf/protobuf.cc
+Copyright: 2012 Clifford Wolf <clifford@clifford.at>
+           2018 Serge Bazanski <q3k@symbioticeda.com>
+License: ISC
+
+Files: passes/techmap/dff2dffs.cc
+       techlibs/ecp5/arith_map.v
+       techlibs/ecp5/synth_ecp5.cc
+       techlibs/ecp5/ecp5_ffinit.cc
+       techlibs/gowin/arith_map.v
+Copyright: 2012 Clifford Wolf <clifford@clifford.at>
+           2018-2019 David Shah <dave@ds0.me>
+License: ISC
+
+Files: frontends/aiger/aigerparse.*
+Copyright: 2012 Clifford Wolf <clifford@clifford.at>
+           2012 Eddie Hung <eddie@fpgeh.com>
+License: ISC
+
+Files: frontends/ast/ast.cc
+       passes/hierarchy/hierarchy.cc
+Copyright: 2012 Clifford Wolf <clifford@clifford.at>
+           2018 Ruben Undheim <ruben.undheim@gmail.com>
+License: ISC
+
+Files: passes/opt/muxpack.cc
+Copyright: 2012 Clifford Wolf <clifford@clifford.at>
+           2019 Eddie Hung <eddie@fpgeh.com>
+License: ISC
+
+Files: passes/cmds/bugpoint.cc
+       passes/equiv/equiv_opt.cc
+       passes/opt/opt_lut.cc
+       passes/techmap/flowmap.cc
+Copyright: 2018 whitequark <whitequark@whitequark.org>
+License: ISC
+
+Files: passes/techmap/extract_reduce.cc
+       techlibs/coolrunner2/*
+Copyright: 2017 Robert Ou <rqou@robertou.com>
+License: ISC
+
+Files: techlibs/anlogic/anlogic_determine_init.c
+       techlibs/anlogic/anlogic_eqn.cc
+       techlibs/anlogic/arith_map.v
+       techlibs/anlogic/synth_anlogic.cc
+       techlibs/gowin/determine_init.cc
+Copyright: 2012,2018 Clifford Wolf <clifford@clifford.at
+           2018 Icenowy Zheng <icenowy@aosc.io>
+           2018 Miodrag Milanovic <miodrag@symbioticeda.com>
+License: ISC
+
+Files: misc/yosys.proto
+Copyright:  2018 Serge Bazanski <q3k@symbioticeda.com>
+License: ISC
+
+Files: libs/minisat/*
+Copyright: 2003-2006, Niklas Een, Niklas Sorensson
+           2006-2012  Niklas Sorensson
+License: MIT
+
+Files: libs/sha1/*
+Copyright: Steve Reid <steve@edmweb.com>
+           Bruce Guenter <bruce@untroubled.org>
+           Volker Grabsch <vog@notjusthosting.com>
+License: Public-Domain
+ These files are in the public domain.
+
+Files: misc/launcher.c
+Copyright: 2016 Jason R Coombs <jaraco@jaraco.com>
+License: MIT
+
+Files: manual/CHAPTER_StateOfTheArt/simlib_hana.v
+       tests/hana/hana_vlib.v
+Copyright: 2009-2010 Parvez Ahmad <parvez_ahmad@yahoo.co.uk>
+License: GPL-3+
+
+Files: passes/fsm/fsm_export.cc
+Copyright: 2012 Clifford Wolf <clifford@clifford.at>
+           2012 Martin Schmölzer <martin@schmoelzer.at>
+License: ISC
+
+Files: tests/memories/amber23_sram_byte_en.v
+Copyright: 2010 Conor Santifort <csantifort.amber@gmail.com>
+           2010 OPENCORES.ORG
+License: LGPL-2.1+
+
+Files: debian/*
+Copyright: 2014-2016,2018-2019 Ruben Undheim <ruben.undheim@gmail.com>
+           2016 Sebastian Kuzminsky <seb@highlab.com>
+License: GPL-2+
+
+
+License: ISC
+ Permission to use, copy, modify, and/or distribute this software for any   
+ purpose with or without fee is hereby granted, provided that the above     
+ copyright notice and this permission notice appear in all copies.          
+ .                                                                          
+ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES   
+ WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF           
+ MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR    
+ ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES     
+ WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN      
+ ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF    
+ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.             
+
+License: GPL-2+
+ This package is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
+ .
+ This package is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ .
+ You should have received a copy of the GNU General Public License
+ along with this program. If not, see <http://www.gnu.org/licenses/>
+ .
+ On Debian systems, the complete text of the GNU General
+ Public License version 2 can be found in "/usr/share/common-licenses/GPL-2".
+
+License: GPL-3+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 3 of the License, or
+ (at your option) any later version.
+ .
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ .
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ .
+ On Debian systems, the complete text of the GNU General
+ Public License version 3 can be found in "/usr/share/common-licenses/GPL-3".
+
+License: LGPL-2.1+
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either version 2.1
+ og the License, or (at your option) any later version.
+ .
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU 
+ Lesser General Public License for more details.
+ .
+ You should have received a copy of the GNU Lesser General Public
+ License along with this library; if not, write to the 
+ Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ Boston, MA 02110-1301, USA.
+ .
+ On Debian Systems, the full text of the license can be found on
+ /usr/share/common-licenses/LGPL-2.1
+
+License: MIT
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ .
+ The above copyright notice and this permission notice shall be included in
+ all copies or substantial portions of the Software.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.

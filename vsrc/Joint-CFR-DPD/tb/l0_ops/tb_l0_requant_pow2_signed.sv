@@ -8,6 +8,7 @@ module tb_l0_requant_pow2_signed;
   integer scan_rc;
   integer case_cnt;
   integer mismatches;
+  integer plusargs_rc;
 
   logic [63:0] x_u;
   logic [31:0] exp_in_u;
@@ -24,7 +25,7 @@ module tb_l0_requant_pow2_signed;
     case_cnt = 0;
     mismatches = 0;
     vector_path = "vsrc/Joint-CFR-DPD/tb/l0_ops/vectors/requant_pow2_signed.vec";
-    void'($value$plusargs("VECTOR_FILE=%s", vector_path));
+    plusargs_rc = $value$plusargs("VECTOR_FILE=%s", vector_path);
 
     fd = $fopen(vector_path, "r");
     if (fd == 0) begin

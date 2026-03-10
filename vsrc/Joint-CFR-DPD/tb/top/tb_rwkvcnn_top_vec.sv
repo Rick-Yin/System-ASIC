@@ -28,6 +28,7 @@ module tb_rwkvcnn_top_vec;
   integer exp_fd;
   integer out_fd;
   integer scan_rc;
+  integer plusargs_rc;
 
   integer input_frames;
   integer expect_frames;
@@ -73,9 +74,9 @@ module tb_rwkvcnn_top_vec;
     input_vec_path = "vsrc/Joint-CFR-DPD/tb/top/vectors/input_packed.vec";
     golden_vec_path = "vsrc/Joint-CFR-DPD/tb/top/vectors/golden_output_packed.vec";
     output_vec_path = "vsrc/Joint-CFR-DPD/tb/top/logs/rtl_output_packed.vec";
-    void'($value$plusargs("INPUT_VEC_FILE=%s", input_vec_path));
-    void'($value$plusargs("GOLDEN_VEC_FILE=%s", golden_vec_path));
-    void'($value$plusargs("OUTPUT_VEC_FILE=%s", output_vec_path));
+    plusargs_rc = $value$plusargs("INPUT_VEC_FILE=%s", input_vec_path);
+    plusargs_rc = $value$plusargs("GOLDEN_VEC_FILE=%s", golden_vec_path);
+    plusargs_rc = $value$plusargs("OUTPUT_VEC_FILE=%s", output_vec_path);
 
     in_fd = $fopen(input_vec_path, "r");
     if (in_fd == 0) begin

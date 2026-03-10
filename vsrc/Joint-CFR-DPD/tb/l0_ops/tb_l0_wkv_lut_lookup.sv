@@ -10,6 +10,7 @@ module tb_l0_wkv_lut_lookup;
   integer scan_rc;
   integer case_cnt;
   integer mismatches;
+  integer plusargs_rc;
 
   logic signed [31:0] lut [0:LUT_NUMEL-1];
 
@@ -33,7 +34,7 @@ module tb_l0_wkv_lut_lookup;
     case_cnt = 0;
     mismatches = 0;
     vector_path = "vsrc/Joint-CFR-DPD/tb/l0_ops/vectors/wkv_lut_lookup.vec";
-    void'($value$plusargs("VECTOR_FILE=%s", vector_path));
+    plusargs_rc = $value$plusargs("VECTOR_FILE=%s", vector_path);
 
     fd = $fopen(vector_path, "r");
     if (fd == 0) begin

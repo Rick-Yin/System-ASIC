@@ -11,6 +11,8 @@ LIBERTY_PATH="${OSS_LIBERTY:-$DEFAULT_LIBERTY}"
 RUN_TAG=""
 REPORT_ROOT=""
 ALLOW_UNSUPPORTED_YOSYS=0
+SV_FRONTEND=""
+SV2V_BIN=""
 
 MIGO_TOP="MIGO_method_migo_n_161_q_bit_8_wp_pi_0_047_width_pi_0_031_alpha_p_0_1_alpha_s_0_1_lam1_1_2_lam2_1_e_topk_4_e_d_max_2_e_e_max_4"
 
@@ -79,6 +81,10 @@ parse_args() {
   done
 }
 
+yosys_has_slang_command() {
+  yosys -q -p "plugin -i slang; help read_slang" >/dev/null 2>&1
+}
+
 probe_yosys_sv_support() {
   local probe_sv
   probe_sv="$(mktemp /tmp/yosys_probe_XXXXXX.sv)"
@@ -102,6 +108,48 @@ SV
   fi
   rm -f "$probe_sv"
   [[ "$ok" -eq 1 ]]
+}
+
+find_sv2v_bin() {
+  if [[ -n "${SV2V_BIN:-}" && -x "${SV2V_BIN}" ]]; then
+    printf '%s\n' "$SV2V_BIN"
+    return 0
+  fi
+  if command -v sv2v >/dev/null 2>&1; then
+    command -v sv2v
+    return 0
+  fi
+  local repo_sv2v="$ROOT_DIR/tools/sv2v/sv2v-Linux/sv2v"
+  if [[ -x "$repo_sv2v" ]]; then
+    printf '%s\n' "$repo_sv2v"
+    return 0
+  fi
+  return 1
+}
+
+detect_sv_frontend() {
+  if [[ "$ALLOW_UNSUPPORTED_YOSYS" -eq 0 ]]; then
+    if probe_yosys_sv_support; then
+      SV_FRONTEND="slang"
+      return 0
+    fi
+  elif yosys_has_slang_command; then
+    SV_FRONTEND="slang"
+    return 0
+  fi
+
+  if SV2V_BIN="$(find_sv2v_bin)"; then
+    SV_FRONTEND="sv2v"
+    return 0
+  fi
+
+  return 1
+}
+
+prepare_sv2v_bundle() {
+  local output_v="$1"
+  shift
+  "$SV2V_BIN" "$@" >"$output_v"
 }
 
 collect_rtl_files() {
@@ -191,12 +239,10 @@ main() {
     exit 2
   fi
 
-  if [[ "$ALLOW_UNSUPPORTED_YOSYS" -eq 0 ]]; then
-    if ! probe_yosys_sv_support; then
-      echo "[OSS][ERR] Installed yosys cannot parse required SystemVerilog features via slang frontend."
-      echo "[OSS][ERR] Ensure plugin load works: 'yosys -p \"plugin -i slang; help read_slang\"'."
-      exit 2
-    fi
+  if ! detect_sv_frontend; then
+    echo "[OSS][ERR] Installed yosys cannot parse required SystemVerilog features via slang frontend."
+    echo "[OSS][ERR] Install a yosys slang plugin, or provide sv2v in PATH, or place it at $ROOT_DIR/tools/sv2v/sv2v-Linux/sv2v."
+    exit 2
   fi
 
   normalize_clock_list "$CLOCKS_CSV"
@@ -230,10 +276,17 @@ main() {
   fi
 
   local run_root="$REPORT_ROOT/$RUN_TAG"
+  local sv2v_bundle=""
   mkdir -p "$run_root"
+
+  if [[ "$SV_FRONTEND" == "sv2v" ]]; then
+    sv2v_bundle="$run_root/${top_module}_sv2v.v"
+    prepare_sv2v_bundle "$sv2v_bundle" "${rtl_abs_files[@]}"
+  fi
 
   echo "[OSS] flow=$FLOW top=$top_module"
   echo "[OSS] mode=$MODE"
+  echo "[OSS] sv_frontend=$SV_FRONTEND"
   if [[ "$MODE" == "mapped" ]]; then
     echo "[OSS] liberty=$LIBERTY_PATH"
   fi
@@ -258,11 +311,17 @@ main() {
     printf "%s\n" "${rtl_abs_files[@]}" >"$abs_filelist"
 
     {
-      echo "plugin -i slang"
+      if [[ "$SV_FRONTEND" == "slang" ]]; then
+        echo "plugin -i slang"
+      fi
       if [[ "$MODE" == "mapped" ]]; then
         echo "read_liberty -lib $LIBERTY_PATH"
       fi
-      echo "read_slang -f $abs_filelist"
+      if [[ "$SV_FRONTEND" == "slang" ]]; then
+        echo "read_slang -f $abs_filelist"
+      else
+        echo "read_verilog $sv2v_bundle"
+      fi
       echo "hierarchy -check -top $top_module"
       if [[ "$MODE" == "mapped" ]]; then
         echo "proc"
