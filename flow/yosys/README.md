@@ -44,6 +44,13 @@ Custom Liberty for mapped mode:
 bash flow/yosys/run_presynth.sh --flow migo --mode mapped --clocks 2.0 --liberty /abs/path/to/library.lib
 ```
 
+Resume mapped from an existing frontend run root:
+
+```bash
+bash flow/yosys/run_presynth.sh --flow joint --mode frontend --clocks 2.0 --report-root report/yosys --tag joint_frontend
+bash flow/yosys/run_presynth.sh --flow joint --mode mapped --clocks 2.0 --report-root report/yosys --tag joint_mapped --resume-from-frontend report/yosys/joint_frontend
+```
+
 ## Outputs
 
 - All generated artifacts go under:
@@ -52,6 +59,7 @@ bash flow/yosys/run_presynth.sh --flow migo --mode mapped --clocks 2.0 --liberty
   - `report/yosys/<tag>/clk_*ns/run.ys`
   - `report/yosys/<tag>/clk_*ns/yosys.log`
   - `report/yosys/<tag>/clk_*ns/stat.rpt`
+  - `report/yosys/<tag>/clk_*ns/checkpoint.il` (`frontend` mode; reusable by `mapped --resume-from-frontend`)
   - `report/yosys/<tag>/clk_*ns/*_syn.v`
   - `report/yosys/<tag>/clk_*ns/*_syn.json`
 - Summary:

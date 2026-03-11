@@ -33,6 +33,32 @@ This flow will:
   - `report/joint_top/logs/rtl_output_packed.vec`
 - Report BER/MAE CSV to `report/joint_top/rtl_ber_eval.csv`
 
+Profiles:
+
+```bash
+TOP_PROFILE=smoke bash vsrc/Joint-CFR-DPD/tb/top/run_top_iverilog.sh report/joint_top_smoke
+TOP_PROFILE=medium bash vsrc/Joint-CFR-DPD/tb/top/run_top_iverilog.sh report/joint_top_medium
+TOP_PROFILE=full bash vsrc/Joint-CFR-DPD/tb/top/run_top_iverilog.sh report/joint_top_full
+```
+
+Run the new validation bundle:
+
+```bash
+bash vsrc/Joint-CFR-DPD/tb/top/run_top_validation.sh report/joint_top_validation
+```
+
+This runs:
+- `linear_engine_rom` directed unit regression
+- `div_rne_su` directed unit regression
+- `rwkvcnn_top` smoke / medium / full vector regressions
+- stage coverage and richer timeout/state diagnostics inside `tb_rwkvcnn_top_vec.sv`
+
+Useful overrides:
+
+```bash
+TOP_PROFILE=smoke TOP_MAX_FRAME_LATENCY=2000 TOP_TIMEOUT_CYCLES=20000 bash vsrc/Joint-CFR-DPD/tb/top/run_top_iverilog.sh report/joint_top_debug
+```
+
 ## L0 operator regression
 
 ```bash
@@ -55,7 +81,7 @@ Default mapping library:
 bash run_all_mapped.sh
 ```
 
-This writes all local regression and Yosys outputs under `report/<tag>/`.
+This writes all local regression outputs plus Yosys `frontend` checkpoints and `mapped` results under `report/<tag>/`.
 
 ## External DC/PT
 

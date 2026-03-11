@@ -13,6 +13,7 @@ REPORT_ROOT=""
 ALLOW_UNSUPPORTED_YOSYS=0
 SV_FRONTEND=""
 SV2V_BIN=""
+RESUME_FRONTEND_ROOT=""
 
 MIGO_TOP="MIGO_method_migo_n_161_q_bit_8_wp_pi_0_047_width_pi_0_031_alpha_p_0_1_alpha_s_0_1_lam1_1_2_lam2_1_e_topk_4_e_d_max_2_e_e_max_4"
 
@@ -28,6 +29,7 @@ Options:
   --liberty <path>                Liberty .lib path
   --tag <name>                    Output tag (default: <flow>_<utc timestamp>)
   --report-root <path>            Root directory for generated reports/artifacts
+  --resume-from-frontend <path>   Reuse clk_*ns/checkpoint.il from a prior frontend run root
   --allow-unsupported-yosys       Skip SystemVerilog capability probe
   -h, --help                      Show help
 
@@ -62,6 +64,10 @@ parse_args() {
         ;;
       --report-root)
         REPORT_ROOT="${2:-}"
+        shift 2
+        ;;
+      --resume-from-frontend)
+        RESUME_FRONTEND_ROOT="${2:-}"
         shift 2
         ;;
       --allow-unsupported-yosys)
@@ -229,6 +235,11 @@ main() {
     exit 2
   fi
 
+  if [[ -n "$RESUME_FRONTEND_ROOT" && "$MODE" != "mapped" ]]; then
+    echo "[OSS][ERR] --resume-from-frontend is only supported with --mode mapped"
+    exit 2
+  fi
+
   if [[ "$MODE" == "mapped" && ! -f "$LIBERTY_PATH" ]]; then
     echo "[OSS][ERR] Liberty file not found: $LIBERTY_PATH"
     exit 2
@@ -239,33 +250,40 @@ main() {
     exit 2
   fi
 
-  if ! detect_sv_frontend; then
-    echo "[OSS][ERR] Installed yosys cannot parse required SystemVerilog features via slang frontend."
-    echo "[OSS][ERR] Install a yosys slang plugin, or provide sv2v in PATH, or place it at $ROOT_DIR/tools/sv2v/sv2v-Linux/sv2v."
-    exit 2
-  fi
-
   normalize_clock_list "$CLOCKS_CSV"
 
-  mapfile -t rtl_rel_files < <(collect_rtl_files "$rtl_filelist")
-  if [[ "${#rtl_rel_files[@]}" -eq 0 ]]; then
-    echo "[OSS][ERR] Empty filelist: $rtl_filelist"
-    exit 2
-  fi
-
-  local missing=0
   local rtl_abs_files=()
-  local rel abs
-  for rel in "${rtl_rel_files[@]}"; do
-    abs="$ROOT_DIR/$rel"
-    rtl_abs_files+=("$abs")
-    if [[ ! -f "$abs" ]]; then
-      echo "[OSS][ERR] Missing RTL from filelist: $rel"
-      missing=1
+  if [[ -z "$RESUME_FRONTEND_ROOT" ]]; then
+    if ! detect_sv_frontend; then
+      echo "[OSS][ERR] Installed yosys cannot parse required SystemVerilog features via slang frontend."
+      echo "[OSS][ERR] Install a yosys slang plugin, or provide sv2v in PATH, or place it at $ROOT_DIR/tools/sv2v/sv2v-Linux/sv2v."
+      exit 2
     fi
-  done
-  if [[ "$missing" -ne 0 ]]; then
-    exit 2
+
+    mapfile -t rtl_rel_files < <(collect_rtl_files "$rtl_filelist")
+    if [[ "${#rtl_rel_files[@]}" -eq 0 ]]; then
+      echo "[OSS][ERR] Empty filelist: $rtl_filelist"
+      exit 2
+    fi
+
+    local missing=0
+    local rel abs
+    for rel in "${rtl_rel_files[@]}"; do
+      abs="$ROOT_DIR/$rel"
+      rtl_abs_files+=("$abs")
+      if [[ ! -f "$abs" ]]; then
+        echo "[OSS][ERR] Missing RTL from filelist: $rel"
+        missing=1
+      fi
+    done
+    if [[ "$missing" -ne 0 ]]; then
+      exit 2
+    fi
+  else
+    if [[ ! -d "$RESUME_FRONTEND_ROOT" ]]; then
+      echo "[OSS][ERR] Frontend run root not found: $RESUME_FRONTEND_ROOT"
+      exit 2
+    fi
   fi
 
   if [[ -z "$RUN_TAG" ]]; then
@@ -279,14 +297,29 @@ main() {
   local sv2v_bundle=""
   mkdir -p "$run_root"
 
-  if [[ "$SV_FRONTEND" == "sv2v" ]]; then
+  if [[ -n "$RESUME_FRONTEND_ROOT" ]]; then
+    local run_root_abs resume_root_abs
+    run_root_abs="$(python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$run_root")"
+    resume_root_abs="$(python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$RESUME_FRONTEND_ROOT")"
+    if [[ "$run_root_abs" == "$resume_root_abs" ]]; then
+      echo "[OSS][ERR] Mapped output root must differ from --resume-from-frontend root"
+      echo "[OSS][ERR] Use a different --tag or --report-root for the mapped run"
+      exit 2
+    fi
+  fi
+
+  if [[ -z "$RESUME_FRONTEND_ROOT" && "$SV_FRONTEND" == "sv2v" ]]; then
     sv2v_bundle="$run_root/${top_module}_sv2v.v"
     prepare_sv2v_bundle "$sv2v_bundle" "${rtl_abs_files[@]}"
   fi
 
   echo "[OSS] flow=$FLOW top=$top_module"
   echo "[OSS] mode=$MODE"
-  echo "[OSS] sv_frontend=$SV_FRONTEND"
+  if [[ -n "$RESUME_FRONTEND_ROOT" ]]; then
+    echo "[OSS] resume_from_frontend=$RESUME_FRONTEND_ROOT"
+  else
+    echo "[OSS] sv_frontend=$SV_FRONTEND"
+  fi
   if [[ "$MODE" == "mapped" ]]; then
     echo "[OSS] liberty=$LIBERTY_PATH"
   fi
@@ -295,7 +328,7 @@ main() {
 
   local fail_count=0
   local clk clk_tag case_root abc_ps
-  local ys_file log_file stat_file netlist_file json_file status_file abs_filelist
+  local ys_file log_file stat_file netlist_file json_file status_file abs_filelist checkpoint_file frontend_case_root frontend_checkpoint
   for clk in "${CLOCKS_NS[@]}"; do
     clk_tag="$(printf '%s' "$clk" | tr '.' 'p')"
     case_root="$run_root/clk_${clk_tag}ns"
@@ -308,24 +341,42 @@ main() {
     json_file="$case_root/${top_module}_syn.json"
     status_file="$case_root/status.txt"
     abs_filelist="$case_root/rtl_abs.f"
-    printf "%s\n" "${rtl_abs_files[@]}" >"$abs_filelist"
+    checkpoint_file="$case_root/checkpoint.il"
+    if [[ -z "$RESUME_FRONTEND_ROOT" ]]; then
+      printf "%s\n" "${rtl_abs_files[@]}" >"$abs_filelist"
+    fi
+    if [[ -n "$RESUME_FRONTEND_ROOT" ]]; then
+      frontend_case_root="$RESUME_FRONTEND_ROOT/clk_${clk_tag}ns"
+      frontend_checkpoint="$frontend_case_root/checkpoint.il"
+      if [[ ! -f "$frontend_checkpoint" ]]; then
+        printf '[OSS][ERR] Missing frontend checkpoint for clk=%sns: %s\n' "$clk" "$frontend_checkpoint" >"$log_file"
+        echo "fail" >"$status_file"
+        echo "[OSS][FAIL] clk=${clk}ns (missing checkpoint: $frontend_checkpoint)"
+        fail_count=$((fail_count + 1))
+        continue
+      fi
+    fi
 
     {
-      if [[ "$SV_FRONTEND" == "slang" ]]; then
+      if [[ -z "$RESUME_FRONTEND_ROOT" && "$SV_FRONTEND" == "slang" ]]; then
         echo "plugin -i slang"
       fi
       if [[ "$MODE" == "mapped" ]]; then
         echo "read_liberty -lib $LIBERTY_PATH"
       fi
-      if [[ "$SV_FRONTEND" == "slang" ]]; then
+      if [[ -n "$RESUME_FRONTEND_ROOT" ]]; then
+        echo "read_ilang $frontend_checkpoint"
+      elif [[ "$SV_FRONTEND" == "slang" ]]; then
         echo "read_slang -f $abs_filelist"
       else
         echo "read_verilog $sv2v_bundle"
       fi
       echo "hierarchy -check -top $top_module"
       if [[ "$MODE" == "mapped" ]]; then
-        echo "proc"
-        echo "opt"
+        if [[ -z "$RESUME_FRONTEND_ROOT" ]]; then
+          echo "proc"
+          echo "opt"
+        fi
         echo "fsm"
         echo "opt"
         echo "memory"
@@ -345,6 +396,7 @@ main() {
         echo "clean"
         echo "tee -o $stat_file stat -top $top_module"
         echo "check"
+        echo "write_ilang $checkpoint_file"
       fi
       echo "write_json $json_file"
     } >"$ys_file"

@@ -44,7 +44,7 @@ module dwconv1d_timeshift #(
         for (c = 0; c < C; c++) begin
           acc = 64'sd0;
           for (i = 0; i < K; i++) begin
-            acc = acc + $signed(hist[c][i]) * $signed(w[c][i]);
+            acc = acc + (hist[c][i] * w[c][i]);
           end
           b_align = requant_pow2_signed($signed(b[c]), $signed(b_exp), exp_acc, 32);
           acc = acc + $signed(b_align);

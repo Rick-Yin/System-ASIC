@@ -47,3 +47,8 @@ csv=/home/System-ASIC/report/full_rerun_20260310T052244Z/joint_top/rtl_ber_eval.
 [OSS] liberty=/home/System-ASIC/lib/gscl45nm/gscl45nm.lib
 [OSS] clocks_ns=2.0
 [OSS] report_root=/home/System-ASIC/report/full_rerun_20260310T052244Z/yosys/joint_mapped
+/home/System-ASIC/flow/yosys/run_presynth.sh: line 299: 392976 Killed                  yosys -s "$ys_file" > "$log_file" 2>&1
+[OSS][FAIL] clk=2.0ns (log: /home/System-ASIC/report/full_rerun_20260310T052244Z/yosys/joint_mapped/clk_2p0ns/yosys.log)
+[OSS-QOR] rows: 1
+[OSS-QOR] csv: /home/System-ASIC/report/full_rerun_20260310T052244Z/yosys/joint_mapped/qor_summary.csv
+[OSS][ERR] 1 run(s) failed in mode=mapped. See reports under: /home/System-ASIC/report/full_rerun_20260310T052244Z/yosys/joint_mapped

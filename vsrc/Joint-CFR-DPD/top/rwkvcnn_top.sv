@@ -11,25 +11,49 @@ module rwkvcnn_top (
   import rwkvcnn_pkg::*;
   import quant_utils_pkg::*;
 
-  typedef enum logic [3:0] {
-    S_IDLE    = 4'd0,
-    S_IP      = 4'd1,
-    S_ATT_TS  = 4'd2,
-    S_ATT_QKV = 4'd3,
-    S_ATT_GATE = 4'd4,
-    S_ATT_WKV = 4'd5,
-    S_ATT_DIV = 4'd6,
-    S_ATT_OUT = 4'd7,
-    S_FFN_TS  = 4'd8,
-    S_FFN_KEY = 4'd9,
-    S_FFN_VAL = 4'd10,
-    S_FFN_OUT = 4'd11,
-    S_OP      = 4'd12,
-    S_OUT     = 4'd13
+  typedef enum logic [4:0] {
+    S_IDLE        = 5'd0,
+    S_IP          = 5'd1,
+    S_IP_WAIT     = 5'd2,
+    S_ATT_TS      = 5'd3,
+    S_ATT_QK      = 5'd4,
+    S_ATT_QK_WAIT = 5'd5,
+    S_ATT_QV      = 5'd6,
+    S_ATT_QV_WAIT = 5'd7,
+    S_ATT_QR      = 5'd8,
+    S_ATT_QR_WAIT = 5'd9,
+    S_ATT_GATE    = 5'd10,
+    S_ATT_WKV     = 5'd11,
+    S_ATT_DIV     = 5'd12,
+    S_ATT_OUT     = 5'd13,
+    S_ATT_OUT_WAIT = 5'd14,
+    S_FFN_TS      = 5'd15,
+    S_FFN_KEY     = 5'd16,
+    S_FFN_KEY_WAIT = 5'd17,
+    S_FFN_VAL     = 5'd18,
+    S_FFN_VAL_WAIT = 5'd19,
+    S_FFN_REC     = 5'd20,
+    S_FFN_REC_WAIT = 5'd21,
+    S_FFN_OUT     = 5'd22,
+    S_OP          = 5'd23,
+    S_OP_WAIT     = 5'd24,
+    S_OUT         = 5'd25
   } state_t;
 
-  state_t state;
   localparam int KERNEL_HEAD_W = (KERNEL_SIZE <= 1) ? 1 : $clog2(KERNEL_SIZE);
+  localparam int LINEAR_MAX_DIM = HIDDEN_SZ;
+  localparam logic [3:0] LIN_NONE      = 4'd0;
+  localparam logic [3:0] LIN_IP        = 4'd1;
+  localparam logic [3:0] LIN_ATT_KEY   = 4'd2;
+  localparam logic [3:0] LIN_ATT_VALUE = 4'd3;
+  localparam logic [3:0] LIN_ATT_REC   = 4'd4;
+  localparam logic [3:0] LIN_ATT_OUT   = 4'd5;
+  localparam logic [3:0] LIN_FFN_KEY   = 4'd6;
+  localparam logic [3:0] LIN_FFN_VAL   = 4'd7;
+  localparam logic [3:0] LIN_FFN_REC   = 4'd8;
+  localparam logic [3:0] LIN_OP        = 4'd9;
+
+  state_t state;
   logic [$clog2(LAYER_NUM)-1:0] blk_idx;
 
   logic signed [31:0] in_vec [0:IN_DIM-1];
@@ -66,14 +90,12 @@ module rwkvcnn_top (
   );
 
 `define DECL_ROM_SCALAR(SIG, ROM_ID_PARAM) \
-  wire signed [31:0] SIG; \
+  logic signed [31:0] SIG; \
   rwkv_rom #(.ROM_ID(ROM_ID_PARAM)) SIG``_inst ( \
     .addr(16'd0), \
     .rdata(SIG) \
   );
 
-  `DECL_ROM_FLAT(input_proj_w_rom, ROM_ID_INPUT_PROJ_W, INPUT_PROJ_W_NUMEL)
-  `DECL_ROM_FLAT(input_proj_b_rom, ROM_ID_INPUT_PROJ_B, INPUT_PROJ_B_NUMEL)
   `DECL_ROM_FLAT(blocks_0_att_time_shift_w_rom, ROM_ID_BLOCKS_0_ATT_TIME_SHIFT_W, BLOCKS_0_ATT_TIME_SHIFT_W_NUMEL)
   `DECL_ROM_FLAT(blocks_1_att_time_shift_w_rom, ROM_ID_BLOCKS_1_ATT_TIME_SHIFT_W, BLOCKS_1_ATT_TIME_SHIFT_W_NUMEL)
   `DECL_ROM_FLAT(blocks_0_att_time_shift_b_rom, ROM_ID_BLOCKS_0_ATT_TIME_SHIFT_B, BLOCKS_0_ATT_TIME_SHIFT_B_NUMEL)
@@ -86,14 +108,6 @@ module rwkvcnn_top (
   `DECL_ROM_FLAT(blocks_1_att_time_mix_r_rom, ROM_ID_BLOCKS_1_ATT_TIME_MIX_R, BLOCKS_1_ATT_TIME_MIX_R_NUMEL)
   `DECL_ROM_SCALAR(blocks_0_att_one_tm_rom, ROM_ID_BLOCKS_0_ATT_ONE_TM)
   `DECL_ROM_SCALAR(blocks_1_att_one_tm_rom, ROM_ID_BLOCKS_1_ATT_ONE_TM)
-  `DECL_ROM_FLAT(blocks_0_att_key_w_rom, ROM_ID_BLOCKS_0_ATT_KEY_W, BLOCKS_0_ATT_KEY_W_NUMEL)
-  `DECL_ROM_FLAT(blocks_1_att_key_w_rom, ROM_ID_BLOCKS_1_ATT_KEY_W, BLOCKS_1_ATT_KEY_W_NUMEL)
-  `DECL_ROM_FLAT(blocks_0_att_value_w_rom, ROM_ID_BLOCKS_0_ATT_VALUE_W, BLOCKS_0_ATT_VALUE_W_NUMEL)
-  `DECL_ROM_FLAT(blocks_1_att_value_w_rom, ROM_ID_BLOCKS_1_ATT_VALUE_W, BLOCKS_1_ATT_VALUE_W_NUMEL)
-  `DECL_ROM_FLAT(blocks_0_att_receptance_w_rom, ROM_ID_BLOCKS_0_ATT_RECEPTANCE_W, BLOCKS_0_ATT_RECEPTANCE_W_NUMEL)
-  `DECL_ROM_FLAT(blocks_1_att_receptance_w_rom, ROM_ID_BLOCKS_1_ATT_RECEPTANCE_W, BLOCKS_1_ATT_RECEPTANCE_W_NUMEL)
-  `DECL_ROM_FLAT(blocks_0_att_output_w_rom, ROM_ID_BLOCKS_0_ATT_OUTPUT_W, BLOCKS_0_ATT_OUTPUT_W_NUMEL)
-  `DECL_ROM_FLAT(blocks_1_att_output_w_rom, ROM_ID_BLOCKS_1_ATT_OUTPUT_W, BLOCKS_1_ATT_OUTPUT_W_NUMEL)
   `DECL_ROM_FLAT(blocks_0_att_time_first_rom, ROM_ID_BLOCKS_0_ATT_TIME_FIRST, BLOCKS_0_ATT_TIME_FIRST_NUMEL)
   `DECL_ROM_FLAT(blocks_1_att_time_first_rom, ROM_ID_BLOCKS_1_ATT_TIME_FIRST, BLOCKS_1_ATT_TIME_FIRST_NUMEL)
   `DECL_ROM_FLAT(blocks_0_att_time_decay_wexp_rom, ROM_ID_BLOCKS_0_ATT_TIME_DECAY_WEXP, BLOCKS_0_ATT_TIME_DECAY_WEXP_NUMEL)
@@ -108,19 +122,106 @@ module rwkvcnn_top (
   `DECL_ROM_FLAT(blocks_1_ffn_time_mix_r_rom, ROM_ID_BLOCKS_1_FFN_TIME_MIX_R, BLOCKS_1_FFN_TIME_MIX_R_NUMEL)
   `DECL_ROM_SCALAR(blocks_0_ffn_one_tm_rom, ROM_ID_BLOCKS_0_FFN_ONE_TM)
   `DECL_ROM_SCALAR(blocks_1_ffn_one_tm_rom, ROM_ID_BLOCKS_1_FFN_ONE_TM)
-  `DECL_ROM_FLAT(blocks_0_ffn_key_w_rom, ROM_ID_BLOCKS_0_FFN_KEY_W, BLOCKS_0_FFN_KEY_W_NUMEL)
-  `DECL_ROM_FLAT(blocks_1_ffn_key_w_rom, ROM_ID_BLOCKS_1_FFN_KEY_W, BLOCKS_1_FFN_KEY_W_NUMEL)
-  `DECL_ROM_FLAT(blocks_0_ffn_receptance_w_rom, ROM_ID_BLOCKS_0_FFN_RECEPTANCE_W, BLOCKS_0_FFN_RECEPTANCE_W_NUMEL)
-  `DECL_ROM_FLAT(blocks_1_ffn_receptance_w_rom, ROM_ID_BLOCKS_1_FFN_RECEPTANCE_W, BLOCKS_1_FFN_RECEPTANCE_W_NUMEL)
-  `DECL_ROM_FLAT(blocks_0_ffn_value_w_rom, ROM_ID_BLOCKS_0_FFN_VALUE_W, BLOCKS_0_FFN_VALUE_W_NUMEL)
-  `DECL_ROM_FLAT(blocks_1_ffn_value_w_rom, ROM_ID_BLOCKS_1_FFN_VALUE_W, BLOCKS_1_FFN_VALUE_W_NUMEL)
-  `DECL_ROM_FLAT(output_proj_w_rom, ROM_ID_OUTPUT_PROJ_W, OUTPUT_PROJ_W_NUMEL)
-  `DECL_ROM_FLAT(output_proj_b_rom, ROM_ID_OUTPUT_PROJ_B, OUTPUT_PROJ_B_NUMEL)
   `DECL_ROM_FLAT(wkv_lut_rom, ROM_ID_WKV_LUT, WKV_LUT_NUMEL)
   `DECL_ROM_SCALAR(wkv_min_delta_i_rom, ROM_ID_WKV_MIN_DELTA_I)
   `DECL_ROM_SCALAR(wkv_step_i_rom, ROM_ID_WKV_STEP_I)
   `DECL_ROM_SCALAR(wkv_e_frac_rom, ROM_ID_WKV_E_FRAC)
   `DECL_ROM_SCALAR(wkv_log_exp_rom, ROM_ID_WKV_LOG_EXP)
+
+  logic signed [31:0] input_proj_w_data;
+  logic signed [31:0] input_proj_b_data;
+  logic signed [31:0] blocks_0_att_key_w_data;
+  logic signed [31:0] blocks_1_att_key_w_data;
+  logic signed [31:0] blocks_0_att_value_w_data;
+  logic signed [31:0] blocks_1_att_value_w_data;
+  logic signed [31:0] blocks_0_att_receptance_w_data;
+  logic signed [31:0] blocks_1_att_receptance_w_data;
+  logic signed [31:0] blocks_0_att_output_w_data;
+  logic signed [31:0] blocks_1_att_output_w_data;
+  logic signed [31:0] blocks_0_ffn_key_w_data;
+  logic signed [31:0] blocks_1_ffn_key_w_data;
+  logic signed [31:0] blocks_0_ffn_receptance_w_data;
+  logic signed [31:0] blocks_1_ffn_receptance_w_data;
+  logic signed [31:0] blocks_0_ffn_value_w_data;
+  logic signed [31:0] blocks_1_ffn_value_w_data;
+  logic signed [31:0] output_proj_w_data;
+  logic signed [31:0] output_proj_b_data;
+
+  logic [15:0] lin_w_addr;
+  logic [15:0] lin_b_addr;
+
+  rwkv_rom #(.ROM_ID(ROM_ID_INPUT_PROJ_W)) u_input_proj_w (
+    .addr((lin_stage == LIN_IP) ? lin_w_addr : 16'd0),
+    .rdata(input_proj_w_data)
+  );
+  rwkv_rom #(.ROM_ID(ROM_ID_INPUT_PROJ_B)) u_input_proj_b (
+    .addr((lin_stage == LIN_IP) ? lin_b_addr : 16'd0),
+    .rdata(input_proj_b_data)
+  );
+  rwkv_rom #(.ROM_ID(ROM_ID_BLOCKS_0_ATT_KEY_W)) u_blocks_0_att_key_w (
+    .addr((lin_stage == LIN_ATT_KEY) ? lin_w_addr : 16'd0),
+    .rdata(blocks_0_att_key_w_data)
+  );
+  rwkv_rom #(.ROM_ID(ROM_ID_BLOCKS_1_ATT_KEY_W)) u_blocks_1_att_key_w (
+    .addr((lin_stage == LIN_ATT_KEY) ? lin_w_addr : 16'd0),
+    .rdata(blocks_1_att_key_w_data)
+  );
+  rwkv_rom #(.ROM_ID(ROM_ID_BLOCKS_0_ATT_VALUE_W)) u_blocks_0_att_value_w (
+    .addr((lin_stage == LIN_ATT_VALUE) ? lin_w_addr : 16'd0),
+    .rdata(blocks_0_att_value_w_data)
+  );
+  rwkv_rom #(.ROM_ID(ROM_ID_BLOCKS_1_ATT_VALUE_W)) u_blocks_1_att_value_w (
+    .addr((lin_stage == LIN_ATT_VALUE) ? lin_w_addr : 16'd0),
+    .rdata(blocks_1_att_value_w_data)
+  );
+  rwkv_rom #(.ROM_ID(ROM_ID_BLOCKS_0_ATT_RECEPTANCE_W)) u_blocks_0_att_receptance_w (
+    .addr((lin_stage == LIN_ATT_REC) ? lin_w_addr : 16'd0),
+    .rdata(blocks_0_att_receptance_w_data)
+  );
+  rwkv_rom #(.ROM_ID(ROM_ID_BLOCKS_1_ATT_RECEPTANCE_W)) u_blocks_1_att_receptance_w (
+    .addr((lin_stage == LIN_ATT_REC) ? lin_w_addr : 16'd0),
+    .rdata(blocks_1_att_receptance_w_data)
+  );
+  rwkv_rom #(.ROM_ID(ROM_ID_BLOCKS_0_ATT_OUTPUT_W)) u_blocks_0_att_output_w (
+    .addr((lin_stage == LIN_ATT_OUT) ? lin_w_addr : 16'd0),
+    .rdata(blocks_0_att_output_w_data)
+  );
+  rwkv_rom #(.ROM_ID(ROM_ID_BLOCKS_1_ATT_OUTPUT_W)) u_blocks_1_att_output_w (
+    .addr((lin_stage == LIN_ATT_OUT) ? lin_w_addr : 16'd0),
+    .rdata(blocks_1_att_output_w_data)
+  );
+  rwkv_rom #(.ROM_ID(ROM_ID_BLOCKS_0_FFN_KEY_W)) u_blocks_0_ffn_key_w (
+    .addr((lin_stage == LIN_FFN_KEY) ? lin_w_addr : 16'd0),
+    .rdata(blocks_0_ffn_key_w_data)
+  );
+  rwkv_rom #(.ROM_ID(ROM_ID_BLOCKS_1_FFN_KEY_W)) u_blocks_1_ffn_key_w (
+    .addr((lin_stage == LIN_FFN_KEY) ? lin_w_addr : 16'd0),
+    .rdata(blocks_1_ffn_key_w_data)
+  );
+  rwkv_rom #(.ROM_ID(ROM_ID_BLOCKS_0_FFN_RECEPTANCE_W)) u_blocks_0_ffn_receptance_w (
+    .addr((lin_stage == LIN_FFN_REC) ? lin_w_addr : 16'd0),
+    .rdata(blocks_0_ffn_receptance_w_data)
+  );
+  rwkv_rom #(.ROM_ID(ROM_ID_BLOCKS_1_FFN_RECEPTANCE_W)) u_blocks_1_ffn_receptance_w (
+    .addr((lin_stage == LIN_FFN_REC) ? lin_w_addr : 16'd0),
+    .rdata(blocks_1_ffn_receptance_w_data)
+  );
+  rwkv_rom #(.ROM_ID(ROM_ID_BLOCKS_0_FFN_VALUE_W)) u_blocks_0_ffn_value_w (
+    .addr((lin_stage == LIN_FFN_VAL) ? lin_w_addr : 16'd0),
+    .rdata(blocks_0_ffn_value_w_data)
+  );
+  rwkv_rom #(.ROM_ID(ROM_ID_BLOCKS_1_FFN_VALUE_W)) u_blocks_1_ffn_value_w (
+    .addr((lin_stage == LIN_FFN_VAL) ? lin_w_addr : 16'd0),
+    .rdata(blocks_1_ffn_value_w_data)
+  );
+  rwkv_rom #(.ROM_ID(ROM_ID_OUTPUT_PROJ_W)) u_output_proj_w (
+    .addr((lin_stage == LIN_OP) ? lin_w_addr : 16'd0),
+    .rdata(output_proj_w_data)
+  );
+  rwkv_rom #(.ROM_ID(ROM_ID_OUTPUT_PROJ_B)) u_output_proj_b (
+    .addr((lin_stage == LIN_OP) ? lin_b_addr : 16'd0),
+    .rdata(output_proj_b_data)
+  );
 
 `undef DECL_ROM_FLAT
 `undef DECL_ROM_SCALAR
@@ -128,34 +229,6 @@ module rwkvcnn_top (
   function automatic logic signed [31:0] in_word(input logic signed [IN_DIM*32-1:0] bus, input int idx);
     begin
       in_word = bus[idx*32 +: 32];
-    end
-  endfunction
-
-  function automatic logic signed [31:0] input_proj_w_word(input int o, input int i);
-    int idx;
-    begin
-      idx = o*IN_DIM + i;
-      input_proj_w_word = input_proj_w_rom[idx*32 +: 32];
-    end
-  endfunction
-
-  function automatic logic signed [31:0] input_proj_b_word(input int o);
-    begin
-      input_proj_b_word = input_proj_b_rom[o*32 +: 32];
-    end
-  endfunction
-
-  function automatic logic signed [31:0] output_proj_w_word(input int o, input int i);
-    int idx;
-    begin
-      idx = o*MODEL_DIM + i;
-      output_proj_w_word = output_proj_w_rom[idx*32 +: 32];
-    end
-  endfunction
-
-  function automatic logic signed [31:0] output_proj_b_word(input int o);
-    begin
-      output_proj_b_word = output_proj_b_rom[o*32 +: 32];
     end
   endfunction
 
@@ -247,54 +320,6 @@ module rwkvcnn_top (
         att_tm_exp = BLOCKS_0_ATT_TIME_MIX_K_EXP;
       end else begin
         att_tm_exp = BLOCKS_1_ATT_TIME_MIX_K_EXP;
-      end
-    end
-  endfunction
-
-  function automatic logic signed [31:0] att_key_w(input int blk, input int o, input int i);
-    int idx;
-    begin
-      idx = o*MODEL_DIM + i;
-      if (blk == 0) begin
-        att_key_w = blocks_0_att_key_w_rom[idx*32 +: 32];
-      end else begin
-        att_key_w = blocks_1_att_key_w_rom[idx*32 +: 32];
-      end
-    end
-  endfunction
-
-  function automatic logic signed [31:0] att_value_w(input int blk, input int o, input int i);
-    int idx;
-    begin
-      idx = o*MODEL_DIM + i;
-      if (blk == 0) begin
-        att_value_w = blocks_0_att_value_w_rom[idx*32 +: 32];
-      end else begin
-        att_value_w = blocks_1_att_value_w_rom[idx*32 +: 32];
-      end
-    end
-  endfunction
-
-  function automatic logic signed [31:0] att_receptance_w(input int blk, input int o, input int i);
-    int idx;
-    begin
-      idx = o*MODEL_DIM + i;
-      if (blk == 0) begin
-        att_receptance_w = blocks_0_att_receptance_w_rom[idx*32 +: 32];
-      end else begin
-        att_receptance_w = blocks_1_att_receptance_w_rom[idx*32 +: 32];
-      end
-    end
-  endfunction
-
-  function automatic logic signed [31:0] att_output_w(input int blk, input int o, input int i);
-    int idx;
-    begin
-      idx = o*MODEL_DIM + i;
-      if (blk == 0) begin
-        att_output_w = blocks_0_att_output_w_rom[idx*32 +: 32];
-      end else begin
-        att_output_w = blocks_1_att_output_w_rom[idx*32 +: 32];
       end
     end
   endfunction
@@ -441,42 +466,6 @@ module rwkvcnn_top (
     end
   endfunction
 
-  function automatic logic signed [31:0] ffn_key_w(input int blk, input int o, input int i);
-    int idx;
-    begin
-      idx = o*MODEL_DIM + i;
-      if (blk == 0) begin
-        ffn_key_w = blocks_0_ffn_key_w_rom[idx*32 +: 32];
-      end else begin
-        ffn_key_w = blocks_1_ffn_key_w_rom[idx*32 +: 32];
-      end
-    end
-  endfunction
-
-  function automatic logic signed [31:0] ffn_receptance_w(input int blk, input int o, input int i);
-    int idx;
-    begin
-      idx = o*MODEL_DIM + i;
-      if (blk == 0) begin
-        ffn_receptance_w = blocks_0_ffn_receptance_w_rom[idx*32 +: 32];
-      end else begin
-        ffn_receptance_w = blocks_1_ffn_receptance_w_rom[idx*32 +: 32];
-      end
-    end
-  endfunction
-
-  function automatic logic signed [31:0] ffn_value_w(input int blk, input int o, input int i);
-    int idx;
-    begin
-      idx = o*HIDDEN_SZ + i;
-      if (blk == 0) begin
-        ffn_value_w = blocks_0_ffn_value_w_rom[idx*32 +: 32];
-      end else begin
-        ffn_value_w = blocks_1_ffn_value_w_rom[idx*32 +: 32];
-      end
-    end
-  endfunction
-
   function automatic int ffn_key_w_exp(input int blk);
     begin
       if (blk == 0) begin
@@ -531,13 +520,15 @@ module rwkvcnn_top (
   logic signed [31:0] r_att [0:MODEL_DIM-1];
   logic signed [31:0] gate_att [0:MODEL_DIM-1];
   logic signed [31:0] y_wkv [0:MODEL_DIM-1];
-  logic signed [31:0] mul_att [0:MODEL_DIM-1];
   logic signed [31:0] att_out [0:MODEL_DIM-1];
   logic signed [31:0] att_pp_next [0:MODEL_DIM-1];
   logic signed [63:0] att_aa_div [0:MODEL_DIM-1];
   logic signed [63:0] att_bb_div [0:MODEL_DIM-1];
   logic signed [63:0] att_aa_next [0:MODEL_DIM-1];
   logic signed [63:0] att_bb_next [0:MODEL_DIM-1];
+  logic signed [A_BITS-1:0] att_div_x [0:MODEL_DIM-1];
+  logic [B_BITS-1:0] att_div_d [0:MODEL_DIM-1];
+  logic signed [31:0] att_div_q [0:MODEL_DIM-1];
 
   logic signed [31:0] k_ffn [0:HIDDEN_SZ-1];
   logic signed [31:0] k_sq [0:HIDDEN_SZ-1];
@@ -545,6 +536,7 @@ module rwkvcnn_top (
   logic signed [31:0] gate_in_ffn [0:MODEL_DIM-1];
   logic signed [31:0] gate_ffn [0:MODEL_DIM-1];
   logic signed [31:0] ffn_out [0:MODEL_DIM-1];
+  logic signed [31:0] mul_att_pre [0:MODEL_DIM-1];
 
   logic signed [63:0] acc;
   logic signed [63:0] prod;
@@ -556,8 +548,6 @@ module rwkvcnn_top (
   logic signed [63:0] e2n;
   logic signed [63:0] t1;
   logic signed [63:0] t2;
-  logic signed [63:0] yi;
-  logic signed [63:0] bb_safe;
 
   logic signed [31:0] ww;
   logic signed [31:0] p;
@@ -573,6 +563,300 @@ module rwkvcnn_top (
   integer exp_acc;
   integer hist_head_idx;
   integer hist_rd_idx;
+
+  logic [3:0] lin_stage;
+  logic lin_start;
+  logic lin_bias_en;
+  logic [15:0] lin_in_dim;
+  logic [15:0] lin_out_dim;
+  logic signed [31:0] lin_exp_x;
+  logic signed [31:0] lin_exp_out;
+  logic signed [31:0] lin_w_exp;
+  logic signed [31:0] lin_b_exp;
+  logic [7:0] lin_out_bits;
+  logic signed [31:0] lin_x_vec [0:LINEAR_MAX_DIM-1];
+  logic signed [LINEAR_MAX_DIM*32-1:0] lin_y_bus;
+  logic signed [31:0] lin_w_data;
+  logic signed [31:0] lin_b_data;
+  logic lin_busy;
+  logic lin_done;
+
+  function automatic logic signed [31:0] lin_y_word(input int idx);
+    begin
+      lin_y_word = lin_y_bus[idx*32 +: 32];
+    end
+  endfunction
+
+  always_comb begin
+    for (int idx = 0; idx < MODEL_DIM; idx++) begin
+      mul_att_pre[idx] = requant_pow2_signed(
+        $signed(y_wkv[idx]) * $signed(gate_att[idx]),
+        (EXP_V - GATE_BITS),
+        EXP_MUL,
+        MUL_BITS
+      );
+    end
+  end
+
+  always_comb begin
+    lin_stage = LIN_NONE;
+    lin_start = 1'b0;
+    lin_bias_en = 1'b0;
+    lin_in_dim = 16'd0;
+    lin_out_dim = 16'd0;
+    lin_exp_x = 32'sd0;
+    lin_exp_out = 32'sd0;
+    lin_w_exp = 32'sd0;
+    lin_b_exp = 32'sd0;
+    lin_out_bits = 8'd0;
+
+    case (state)
+      S_IP, S_IP_WAIT: begin
+        lin_stage = LIN_IP;
+        lin_start = (state == S_IP);
+        lin_bias_en = 1'b1;
+        lin_in_dim = IN_DIM;
+        lin_out_dim = MODEL_DIM;
+        lin_exp_x = IO_EXP_IN;
+        lin_exp_out = RES_EXP;
+        lin_w_exp = INPUT_PROJ_W_EXP;
+        lin_b_exp = INPUT_PROJ_B_EXP;
+        lin_out_bits = RES_BITS;
+      end
+
+      S_ATT_QK, S_ATT_QK_WAIT: begin
+        lin_stage = LIN_ATT_KEY;
+        lin_start = (state == S_ATT_QK);
+        lin_in_dim = MODEL_DIM;
+        lin_out_dim = MODEL_DIM;
+        lin_exp_x = RES_EXP;
+        lin_exp_out = wkv_log_exp_rom;
+        lin_w_exp = att_key_w_exp(blk_idx);
+        lin_out_bits = K_BITS;
+      end
+
+      S_ATT_QV, S_ATT_QV_WAIT: begin
+        lin_stage = LIN_ATT_VALUE;
+        lin_start = (state == S_ATT_QV);
+        lin_in_dim = MODEL_DIM;
+        lin_out_dim = MODEL_DIM;
+        lin_exp_x = RES_EXP;
+        lin_exp_out = EXP_V;
+        lin_w_exp = att_value_w_exp(blk_idx);
+        lin_out_bits = V_BITS;
+      end
+
+      S_ATT_QR, S_ATT_QR_WAIT: begin
+        lin_stage = LIN_ATT_REC;
+        lin_start = (state == S_ATT_QR);
+        lin_in_dim = MODEL_DIM;
+        lin_out_dim = MODEL_DIM;
+        lin_exp_x = RES_EXP;
+        lin_exp_out = EXP_R;
+        lin_w_exp = att_receptance_w_exp(blk_idx);
+        lin_out_bits = R_BITS;
+      end
+
+      S_ATT_OUT, S_ATT_OUT_WAIT: begin
+        lin_stage = LIN_ATT_OUT;
+        lin_start = (state == S_ATT_OUT);
+        lin_in_dim = MODEL_DIM;
+        lin_out_dim = MODEL_DIM;
+        lin_exp_x = EXP_MUL;
+        lin_exp_out = RES_EXP;
+        lin_w_exp = att_output_w_exp(blk_idx);
+        lin_out_bits = RES_BITS;
+      end
+
+      S_FFN_KEY, S_FFN_KEY_WAIT: begin
+        lin_stage = LIN_FFN_KEY;
+        lin_start = (state == S_FFN_KEY);
+        lin_in_dim = MODEL_DIM;
+        lin_out_dim = HIDDEN_SZ;
+        lin_exp_x = RES_EXP;
+        lin_exp_out = RES_EXP;
+        lin_w_exp = ffn_key_w_exp(blk_idx);
+        lin_out_bits = RES_BITS;
+      end
+
+      S_FFN_VAL, S_FFN_VAL_WAIT: begin
+        lin_stage = LIN_FFN_VAL;
+        lin_start = (state == S_FFN_VAL);
+        lin_in_dim = HIDDEN_SZ;
+        lin_out_dim = MODEL_DIM;
+        lin_exp_x = RES_EXP;
+        lin_exp_out = RES_EXP;
+        lin_w_exp = ffn_value_w_exp(blk_idx);
+        lin_out_bits = RES_BITS;
+      end
+
+      S_FFN_REC, S_FFN_REC_WAIT: begin
+        lin_stage = LIN_FFN_REC;
+        lin_start = (state == S_FFN_REC);
+        lin_in_dim = MODEL_DIM;
+        lin_out_dim = MODEL_DIM;
+        lin_exp_x = RES_EXP;
+        lin_exp_out = RES_EXP;
+        lin_w_exp = ffn_receptance_w_exp(blk_idx);
+        lin_out_bits = RES_BITS;
+      end
+
+      S_OP, S_OP_WAIT: begin
+        lin_stage = LIN_OP;
+        lin_start = (state == S_OP);
+        lin_bias_en = 1'b1;
+        lin_in_dim = MODEL_DIM;
+        lin_out_dim = OUT_DIM;
+        lin_exp_x = RES_EXP;
+        lin_exp_out = IO_EXP_OUT;
+        lin_w_exp = OUTPUT_PROJ_W_EXP;
+        lin_b_exp = OUTPUT_PROJ_B_EXP;
+        lin_out_bits = IO_OUT_BITS;
+      end
+
+      default: begin
+      end
+    endcase
+  end
+
+  always_comb begin
+    for (int idx = 0; idx < LINEAR_MAX_DIM; idx++) begin
+      lin_x_vec[idx] = 32'sd0;
+    end
+
+    case (lin_stage)
+      LIN_IP: begin
+        for (int idx = 0; idx < IN_DIM; idx++) begin
+          lin_x_vec[idx] = in_vec[idx];
+        end
+      end
+      LIN_ATT_KEY: begin
+        for (int idx = 0; idx < MODEL_DIM; idx++) begin
+          lin_x_vec[idx] = xk[idx];
+        end
+      end
+      LIN_ATT_VALUE: begin
+        for (int idx = 0; idx < MODEL_DIM; idx++) begin
+          lin_x_vec[idx] = xv[idx];
+        end
+      end
+      LIN_ATT_REC: begin
+        for (int idx = 0; idx < MODEL_DIM; idx++) begin
+          lin_x_vec[idx] = xr[idx];
+        end
+      end
+      LIN_ATT_OUT: begin
+        for (int idx = 0; idx < MODEL_DIM; idx++) begin
+          lin_x_vec[idx] = mul_att_pre[idx];
+        end
+      end
+      LIN_FFN_KEY: begin
+        for (int idx = 0; idx < MODEL_DIM; idx++) begin
+          lin_x_vec[idx] = xk[idx];
+        end
+      end
+      LIN_FFN_VAL: begin
+        for (int idx = 0; idx < HIDDEN_SZ; idx++) begin
+          lin_x_vec[idx] = k_sq[idx];
+        end
+      end
+      LIN_FFN_REC: begin
+        for (int idx = 0; idx < MODEL_DIM; idx++) begin
+          lin_x_vec[idx] = xr[idx];
+        end
+      end
+      LIN_OP: begin
+        for (int idx = 0; idx < MODEL_DIM; idx++) begin
+          lin_x_vec[idx] = work_vec[idx];
+        end
+      end
+      default: begin
+      end
+    endcase
+  end
+
+  always_comb begin
+    lin_w_data = 32'sd0;
+    lin_b_data = 32'sd0;
+
+    case (lin_stage)
+      LIN_IP: begin
+        lin_w_data = input_proj_w_data;
+        lin_b_data = input_proj_b_data;
+      end
+      LIN_ATT_KEY: begin
+        lin_w_data = (blk_idx == 0) ? blocks_0_att_key_w_data : blocks_1_att_key_w_data;
+      end
+      LIN_ATT_VALUE: begin
+        lin_w_data = (blk_idx == 0) ? blocks_0_att_value_w_data : blocks_1_att_value_w_data;
+      end
+      LIN_ATT_REC: begin
+        lin_w_data = (blk_idx == 0) ? blocks_0_att_receptance_w_data : blocks_1_att_receptance_w_data;
+      end
+      LIN_ATT_OUT: begin
+        lin_w_data = (blk_idx == 0) ? blocks_0_att_output_w_data : blocks_1_att_output_w_data;
+      end
+      LIN_FFN_KEY: begin
+        lin_w_data = (blk_idx == 0) ? blocks_0_ffn_key_w_data : blocks_1_ffn_key_w_data;
+      end
+      LIN_FFN_VAL: begin
+        lin_w_data = (blk_idx == 0) ? blocks_0_ffn_value_w_data : blocks_1_ffn_value_w_data;
+      end
+      LIN_FFN_REC: begin
+        lin_w_data = (blk_idx == 0) ? blocks_0_ffn_receptance_w_data : blocks_1_ffn_receptance_w_data;
+      end
+      LIN_OP: begin
+        lin_w_data = output_proj_w_data;
+        lin_b_data = output_proj_b_data;
+      end
+      default: begin
+      end
+    endcase
+  end
+
+  linear_engine_rom #(
+    .MAX_IN_DIM(LINEAR_MAX_DIM),
+    .MAX_OUT_DIM(LINEAR_MAX_DIM)
+  ) u_linear_engine_rom (
+    .clk(clk),
+    .rst_n(rst_n),
+    .start(lin_start),
+    .x_vec(lin_x_vec),
+    .in_dim(lin_in_dim),
+    .out_dim(lin_out_dim),
+    .bias_en(lin_bias_en),
+    .exp_x(lin_exp_x),
+    .exp_out(lin_exp_out),
+    .w_exp(lin_w_exp),
+    .b_exp(lin_b_exp),
+    .out_bits(lin_out_bits),
+    .w_data(lin_w_data),
+    .b_data(lin_b_data),
+    .w_addr(lin_w_addr),
+    .b_addr(lin_b_addr),
+    .busy(lin_busy),
+    .done(lin_done),
+    .y_bus(lin_y_bus)
+  );
+
+  generate
+    for (genvar div_idx = 0; div_idx < MODEL_DIM; div_idx++) begin : gen_att_div
+      assign att_div_x[div_idx] = att_aa_div[div_idx][A_BITS-1:0];
+      assign att_div_d[div_idx] = (att_bb_div[div_idx][B_BITS-1:0] == {B_BITS{1'b0}})
+        ? {{(B_BITS-1){1'b0}}, 1'b1}
+        : att_bb_div[div_idx][B_BITS-1:0];
+
+      div_rne_su #(
+        .X_WIDTH(A_BITS),
+        .D_WIDTH(B_BITS),
+        .Q_WIDTH(32)
+      ) u_div_rne_su (
+        .x(att_div_x[div_idx]),
+        .d(att_div_d[div_idx]),
+        .q(att_div_q[div_idx])
+      );
+    end
+  endgenerate
 
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
@@ -614,18 +898,17 @@ module rwkvcnn_top (
         end
 
         S_IP: begin
-          for (o = 0; o < MODEL_DIM; o++) begin
-            acc = 64'sd0;
-            for (i = 0; i < IN_DIM; i++) begin
-              acc = acc + $signed(in_vec[i]) * $signed(input_proj_w_word(o, i));
+          state <= S_IP_WAIT;
+        end
+
+        S_IP_WAIT: begin
+          if (lin_done) begin
+            for (o = 0; o < MODEL_DIM; o++) begin
+              work_vec[o] <= lin_y_word(o);
             end
-            exp_acc = IO_EXP_IN + INPUT_PROJ_W_EXP;
-            b_aligned = requant_pow2_signed($signed(input_proj_b_word(o)), INPUT_PROJ_B_EXP, exp_acc, 32);
-            acc = acc + $signed(b_aligned);
-            work_vec[o] <= requant_pow2_signed(acc, exp_acc, RES_EXP, RES_BITS);
+            blk_idx <= '0;
+            state <= S_ATT_TS;
           end
-          blk_idx <= '0;
-          state <= S_ATT_TS;
         end
 
         S_ATT_TS: begin
@@ -664,31 +947,46 @@ module rwkvcnn_top (
             xr[c] = sat_signed32(rshift_rne64(prod, -att_tm_exp(blk_idx)), RES_BITS);
           end
 
-          state <= S_ATT_QKV;
+          state <= S_ATT_QK;
         end
 
-        S_ATT_QKV: begin
-          for (o = 0; o < MODEL_DIM; o++) begin
-            acc = 64'sd0;
-            for (i = 0; i < MODEL_DIM; i++) begin
-              acc = acc + $signed(xk[i]) * $signed(att_key_w(blk_idx, o, i));
-            end
-            k_att[o] = requant_pow2_signed(acc, RES_EXP + att_key_w_exp(blk_idx), wkv_log_exp_rom, K_BITS);
+        S_ATT_QK: begin
+          state <= S_ATT_QK_WAIT;
+        end
 
-            acc = 64'sd0;
-            for (i = 0; i < MODEL_DIM; i++) begin
-              acc = acc + $signed(xv[i]) * $signed(att_value_w(blk_idx, o, i));
+        S_ATT_QK_WAIT: begin
+          if (lin_done) begin
+            for (o = 0; o < MODEL_DIM; o++) begin
+              k_att[o] = lin_y_word(o);
             end
-            v_att[o] = requant_pow2_signed(acc, RES_EXP + att_value_w_exp(blk_idx), EXP_V, V_BITS);
-
-            acc = 64'sd0;
-            for (i = 0; i < MODEL_DIM; i++) begin
-              acc = acc + $signed(xr[i]) * $signed(att_receptance_w(blk_idx, o, i));
-            end
-            r_att[o] = requant_pow2_signed(acc, RES_EXP + att_receptance_w_exp(blk_idx), EXP_R, R_BITS);
+            state <= S_ATT_QV;
           end
+        end
 
-          state <= S_ATT_GATE;
+        S_ATT_QV: begin
+          state <= S_ATT_QV_WAIT;
+        end
+
+        S_ATT_QV_WAIT: begin
+          if (lin_done) begin
+            for (o = 0; o < MODEL_DIM; o++) begin
+              v_att[o] = lin_y_word(o);
+            end
+            state <= S_ATT_QR;
+          end
+        end
+
+        S_ATT_QR: begin
+          state <= S_ATT_QR_WAIT;
+        end
+
+        S_ATT_QR_WAIT: begin
+          if (lin_done) begin
+            for (o = 0; o < MODEL_DIM; o++) begin
+              r_att[o] = lin_y_word(o);
+            end
+            state <= S_ATT_GATE;
+          end
         end
 
         S_ATT_GATE: begin
@@ -744,9 +1042,7 @@ module rwkvcnn_top (
 
         S_ATT_DIV: begin
           for (c = 0; c < MODEL_DIM; c++) begin
-            bb_safe = (att_bb_div[c] <= 0) ? 64'sd1 : att_bb_div[c];
-            yi = div_rne64(att_aa_div[c], bb_safe);
-            y_wkv[c] = yi[31:0];
+            y_wkv[c] = att_div_q[c];
 
             pp_state[blk_idx][c] <= att_pp_next[c];
             aa_state[blk_idx][c] <= att_aa_next[c];
@@ -757,33 +1053,30 @@ module rwkvcnn_top (
         end
 
         S_ATT_OUT: begin
-          for (c = 0; c < MODEL_DIM; c++) begin
-            prod = $signed(y_wkv[c]) * $signed(gate_att[c]);
-            mul_att[c] = requant_pow2_signed(prod, (EXP_V - GATE_BITS), EXP_MUL, MUL_BITS);
-          end
+          state <= S_ATT_OUT_WAIT;
+        end
 
-          for (o = 0; o < MODEL_DIM; o++) begin
-            acc = 64'sd0;
-            for (i = 0; i < MODEL_DIM; i++) begin
-              acc = acc + $signed(mul_att[i]) * $signed(att_output_w(blk_idx, o, i));
+        S_ATT_OUT_WAIT: begin
+          if (lin_done) begin
+            for (o = 0; o < MODEL_DIM; o++) begin
+              att_out[o] = lin_y_word(o);
+              work_vec[o] <= sat_signed32($signed(work_vec[o]) + $signed(att_out[o]), RES_BITS);
             end
-            att_out[o] = requant_pow2_signed(acc, EXP_MUL + att_output_w_exp(blk_idx), RES_EXP, RES_BITS);
-            work_vec[o] <= sat_signed32($signed(work_vec[o]) + $signed(att_out[o]), RES_BITS);
-          end
 
-          for (c = 0; c < MODEL_DIM; c++) begin
-            hist_head_idx = att_hist_head[blk_idx][c];
-            att_hist[blk_idx][c][hist_head_idx] <= x_base[c];
-            if (KERNEL_SIZE > 1) begin
-              if (hist_head_idx == (KERNEL_SIZE - 1)) begin
-                att_hist_head[blk_idx][c] <= '0;
-              end else begin
-                att_hist_head[blk_idx][c] <= hist_head_idx + 1;
+            for (c = 0; c < MODEL_DIM; c++) begin
+              hist_head_idx = att_hist_head[blk_idx][c];
+              att_hist[blk_idx][c][hist_head_idx] <= x_base[c];
+              if (KERNEL_SIZE > 1) begin
+                if (hist_head_idx == (KERNEL_SIZE - 1)) begin
+                  att_hist_head[blk_idx][c] <= '0;
+                end else begin
+                  att_hist_head[blk_idx][c] <= hist_head_idx + 1;
+                end
               end
             end
-          end
 
-          state <= S_FFN_TS;
+            state <= S_FFN_TS;
+          end
         end
 
         S_FFN_TS: begin
@@ -822,42 +1115,52 @@ module rwkvcnn_top (
         end
 
         S_FFN_KEY: begin
-          for (o = 0; o < HIDDEN_SZ; o++) begin
-            acc = 64'sd0;
-            for (i = 0; i < MODEL_DIM; i++) begin
-              acc = acc + $signed(xk[i]) * $signed(ffn_key_w(blk_idx, o, i));
-            end
-            k_ffn[o] = requant_pow2_signed(acc, RES_EXP + ffn_key_w_exp(blk_idx), RES_EXP, RES_BITS);
+          state <= S_FFN_KEY_WAIT;
+        end
 
-            if (k_ffn[o] < 0) begin
-              k_ffn[o] = 32'sd0;
-            end else if ($signed(k_ffn[o]) > qmax_signed64(RES_BITS)) begin
-              k_ffn[o] = qmax_signed64(RES_BITS);
+        S_FFN_KEY_WAIT: begin
+          if (lin_done) begin
+            for (o = 0; o < HIDDEN_SZ; o++) begin
+              k_ffn[o] = lin_y_word(o);
+
+              if (k_ffn[o] < 0) begin
+                k_ffn[o] = 32'sd0;
+              end else if ($signed(k_ffn[o]) > qmax_signed64(RES_BITS)) begin
+                k_ffn[o] = qmax_signed64(RES_BITS);
+              end
+
+              prod = $signed(k_ffn[o]) * $signed(k_ffn[o]);
+              k_sq[o] = requant_pow2_signed(prod, RES_EXP + RES_EXP, RES_EXP, RES_BITS);
             end
 
-            prod = $signed(k_ffn[o]) * $signed(k_ffn[o]);
-            k_sq[o] = requant_pow2_signed(prod, RES_EXP + RES_EXP, RES_EXP, RES_BITS);
+            state <= S_FFN_VAL;
           end
-
-          state <= S_FFN_VAL;
         end
 
         S_FFN_VAL: begin
-          for (o = 0; o < MODEL_DIM; o++) begin
-            acc = 64'sd0;
-            for (i = 0; i < HIDDEN_SZ; i++) begin
-              acc = acc + $signed(k_sq[i]) * $signed(ffn_value_w(blk_idx, o, i));
-            end
-            kv_ffn[o] = requant_pow2_signed(acc, RES_EXP + ffn_value_w_exp(blk_idx), RES_EXP, RES_BITS);
+          state <= S_FFN_VAL_WAIT;
+        end
 
-            acc = 64'sd0;
-            for (i = 0; i < MODEL_DIM; i++) begin
-              acc = acc + $signed(xr[i]) * $signed(ffn_receptance_w(blk_idx, o, i));
+        S_FFN_VAL_WAIT: begin
+          if (lin_done) begin
+            for (o = 0; o < MODEL_DIM; o++) begin
+              kv_ffn[o] = lin_y_word(o);
             end
-            gate_in_ffn[o] = requant_pow2_signed(acc, RES_EXP + ffn_receptance_w_exp(blk_idx), RES_EXP, RES_BITS);
+            state <= S_FFN_REC;
           end
+        end
 
-          state <= S_FFN_OUT;
+        S_FFN_REC: begin
+          state <= S_FFN_REC_WAIT;
+        end
+
+        S_FFN_REC_WAIT: begin
+          if (lin_done) begin
+            for (o = 0; o < MODEL_DIM; o++) begin
+              gate_in_ffn[o] = lin_y_word(o);
+            end
+            state <= S_FFN_OUT;
+          end
         end
 
         S_FFN_OUT: begin
@@ -889,19 +1192,17 @@ module rwkvcnn_top (
         end
 
         S_OP: begin
-          for (o = 0; o < OUT_DIM; o++) begin
-            acc = 64'sd0;
-            for (i = 0; i < MODEL_DIM; i++) begin
-              acc = acc + $signed(work_vec[i]) * $signed(output_proj_w_word(o, i));
-            end
-            exp_acc = RES_EXP + OUTPUT_PROJ_W_EXP;
-            b_aligned = requant_pow2_signed($signed(output_proj_b_word(o)), OUTPUT_PROJ_B_EXP, exp_acc, 32);
-            acc = acc + $signed(b_aligned);
-            out_vec[o] <= requant_pow2_signed(acc, exp_acc, IO_EXP_OUT, IO_OUT_BITS);
-          end
+          state <= S_OP_WAIT;
+        end
 
-          out_valid_r <= 1'b1;
-          state <= S_OUT;
+        S_OP_WAIT: begin
+          if (lin_done) begin
+            for (o = 0; o < OUT_DIM; o++) begin
+              out_vec[o] <= lin_y_word(o);
+            end
+            out_valid_r <= 1'b1;
+            state <= S_OUT;
+          end
         end
 
         S_OUT: begin

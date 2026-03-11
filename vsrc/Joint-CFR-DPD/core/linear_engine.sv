@@ -58,7 +58,7 @@ module linear_engine #(
           if (idx < OUT_DIM) begin
             acc = 64'sd0;
             for (i = 0; i < IN_DIM; i++) begin
-              acc = acc + $signed(x_vec[i]) * $signed(w_mat[idx][i]);
+              acc = acc + (x_vec[i] * w_mat[idx][i]);
             end
             if (bias_en) begin
               b_align = requant_pow2_signed($signed(b_vec[idx]), $signed(b_exp), exp_acc, 32);
