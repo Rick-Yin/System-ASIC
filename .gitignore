@@ -13,7 +13,6 @@ psrc/__pycache__/
 psrc/tools/__pycache__/
 **/__pycache__/
 *.pyc
-report/
 dc/runs/
 data/BER-SNR/
 data/HPA/

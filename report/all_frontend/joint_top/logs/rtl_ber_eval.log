@@ -1,0 +1,5 @@
+rows=256 dims=2 bits=12
+bit_errors=0 bit_total=6144 BER=0.000000e+00
+vector_mismatch=0/256 ratio=0.000000e+00
+MAE=0.000000 max_abs_err=0
+csv=/home/System-ASIC/report/all_frontend/joint_top/rtl_ber_eval.csv

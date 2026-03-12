@@ -1,0 +1,33 @@
+timestamp_utc: 2026-03-12T17:54:02Z
+loadavg: 0.09 0.16 0.19 2/1289 89664
+meminfo_kb:
+MemTotal:       195424088 kB
+MemFree:        118225584 kB
+MemAvailable:   190851784 kB
+Active(anon):       3000 kB
+Inactive(anon):  1226748 kB
+SwapTotal:             0 kB
+SwapFree:              0 kB
+AnonPages:       1250392 kB
+CommitLimit:    97712044 kB
+Committed_AS:    7430532 kB
+pressure:
+cpu some avg10=0.12 avg60=0.02 avg300=0.00 total=49520000
+cpu full avg10=0.00 avg60=0.00 avg300=0.00 total=0
+memory some avg10=0.00 avg60=0.00 avg300=0.00 total=526156
+memory full avg10=0.00 avg60=0.00 avg300=0.00 total=525451
+io some avg10=0.00 avg60=0.00 avg300=0.00 total=37239285
+io full avg10=0.00 avg60=0.00 avg300=0.00 total=36880185
+root_status:
+Name:	time
+State:	S (sleeping)
+PPid:	89471
+VmHWM:	    1116 kB
+VmRSS:	    1116 kB
+Threads:	1
+process_tree:
+PID PPID RSS_KB %CPU STAT COMMAND
+  89672   89663  5644  0.0 R+   python3
+  89663   89661  4008  0.0 S+   bash
+  89661   89471  1116  0.0 S+   time
+descendant_total_rss_kb: 10768

@@ -1,0 +1,3 @@
+[TOP][CFG] frames=256 max_latency=861 trace=0 wave=0
+[TOP][COV] lin ip=256 att_key=512 att_value=512 att_rec=512 att_out=512 ffn_key=512 ffn_val=512 ffn_rec=512 op=256
+[TOP][PASS] frames=256 mismatches=0 latency_viol=0 max_latency=861 observed_max_latency=861 max_latency_idx=0

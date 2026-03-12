@@ -1,0 +1,4 @@
+stage_id: joint_top
+stage_label: Joint top regression
+cwd: /home/System-ASIC
+command: bash /home/System-ASIC/vsrc/Joint-CFR-DPD/tb/top/run_top_iverilog.sh /home/System-ASIC/report/all_frontend/joint_top
