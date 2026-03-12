@@ -1,20 +1,24 @@
-[ALL] run_root=/home/System-ASIC/report/full_rerun_20260310T052244Z
+nohup: ignoring input
+[ALL] run_root=/home/System-ASIC/report/all_mapped_20260311T174018Z
 [ALL] joint_clocks=2.0
 [ALL] migo_clocks=2.0
 [ALL] Joint top regression
-[OK] input_vec  : /home/System-ASIC/report/full_rerun_20260310T052244Z/joint_top/vectors/input_packed.vec rows=256 dim=2
-[OK] golden_vec : /home/System-ASIC/report/full_rerun_20260310T052244Z/joint_top/vectors/golden_output_packed.vec rows=256 dim=2
-[OK] meta   : /home/System-ASIC/report/full_rerun_20260310T052244Z/joint_top/vectors/meta_top.json
+[OK] input_vec  : /home/System-ASIC/report/all_mapped_20260311T174018Z/joint_top/vectors/input_packed.vec rows=256 dim=2
+[OK] golden_vec : /home/System-ASIC/report/all_mapped_20260311T174018Z/joint_top/vectors/golden_output_packed.vec rows=256 dim=2
+[OK] meta   : /home/System-ASIC/report/all_mapped_20260311T174018Z/joint_top/vectors/meta_top.json
 [INFO] mode=random seed=1 stateful=True in_bits=12 in_exp=-11 out_bits=12 out_exp=-11
-[TOP][PASS] frames=256 mismatches=0 latency_viol=0 max_latency=23
+[TOP][CFG] profile=full frames=256 mode=random seed=1 stateless=0 trace=0 wave=0
+[TOP][CFG] frames=256 max_latency=861 trace=0 wave=0
+[TOP][COV] lin ip=256 att_key=512 att_value=512 att_rec=512 att_out=512 ffn_key=512 ffn_val=512 ffn_rec=512 op=256
+[TOP][PASS] frames=256 mismatches=0 latency_viol=0 max_latency=861 observed_max_latency=861 max_latency_idx=0
 rows=256 dims=2 bits=12
 bit_errors=0 bit_total=6144 BER=0.000000e+00
 vector_mismatch=0/256 ratio=0.000000e+00
 MAE=0.000000 max_abs_err=0
-csv=/home/System-ASIC/report/full_rerun_20260310T052244Z/joint_top/rtl_ber_eval.csv
+csv=/home/System-ASIC/report/all_mapped_20260311T174018Z/joint_top/rtl_ber_eval.csv
 [TOP][OK] top vector regression passed
 [ALL] Joint L0 regression
-[L0][OK] generated vectors in /home/System-ASIC/report/full_rerun_20260310T052244Z/l0/vectors total_rows=29581
+[L0][OK] generated vectors in /home/System-ASIC/report/all_mapped_20260311T174018Z/l0/vectors total_rows=29581
 [L0][OK] div_rne64.vec: 3679
 [L0][OK] hardsigmoid_int_default.vec: 5326
 [L0][OK] requant_pow2_signed.vec: 8757
@@ -33,22 +37,33 @@ csv=/home/System-ASIC/report/full_rerun_20260310T052244Z/joint_top/rtl_ber_eval.
 [L0][PASS] op=hardsigmoid_int_default cases=5326 mismatches=0
 [L0][RUN] tb_l0_wkv_lut_lookup
 [L0][PASS] op=wkv_lut_lookup cases=5488 mismatches=0
-[L0][OK] wrote /home/System-ASIC/report/full_rerun_20260310T052244Z/l0/l0_equivalence_table.csv
-[L0][OK] wrote /home/System-ASIC/report/full_rerun_20260310T052244Z/l0/l0_equivalence_coverage.csv
+[L0][OK] wrote /home/System-ASIC/report/all_mapped_20260311T174018Z/l0/l0_equivalence_table.csv
+[L0][OK] wrote /home/System-ASIC/report/all_mapped_20260311T174018Z/l0/l0_equivalence_coverage.csv
 [L0][OK] all operator tests passed
 [ALL] MIGO regression
 [MIGO][PASS] sent=512 recv=512 flush=96
 [MIGO][OK] iverilog regression passed
-[MIGO][OK] output_vec=/home/System-ASIC/report/full_rerun_20260310T052244Z/migo/build/migo_output.vec
-[ALL] Joint mapped Yosys
+[MIGO][OK] output_vec=/home/System-ASIC/report/all_mapped_20260311T174018Z/migo/build/migo_output.vec
+[ALL] Joint frontend Yosys
+[OSS] flow=joint top=rwkvcnn_top
+[OSS] mode=frontend
+[OSS] sv_frontend=sv2v
+[OSS] clocks_ns=2.0
+[OSS] report_root=/home/System-ASIC/report/all_mapped_20260311T174018Z/yosys/joint_frontend
+[OSS][PASS] clk=2.0ns
+[OSS-QOR] rows: 1
+[OSS-QOR] csv: /home/System-ASIC/report/all_mapped_20260311T174018Z/yosys/joint_frontend/qor_summary.csv
+[OSS][OK] Sweep finished (mode=frontend). Summary:
+  - /home/System-ASIC/report/all_mapped_20260311T174018Z/yosys/joint_frontend/qor_summary.csv
+[ALL] Joint mapped Yosys (resume)
 [OSS] flow=joint top=rwkvcnn_top
 [OSS] mode=mapped
-[OSS] sv_frontend=sv2v
+[OSS] resume_from_frontend=/home/System-ASIC/report/all_mapped_20260311T174018Z/yosys/joint_frontend
 [OSS] liberty=/home/System-ASIC/lib/gscl45nm/gscl45nm.lib
 [OSS] clocks_ns=2.0
-[OSS] report_root=/home/System-ASIC/report/full_rerun_20260310T052244Z/yosys/joint_mapped
-/home/System-ASIC/flow/yosys/run_presynth.sh: line 299: 392976 Killed                  yosys -s "$ys_file" > "$log_file" 2>&1
-[OSS][FAIL] clk=2.0ns (log: /home/System-ASIC/report/full_rerun_20260310T052244Z/yosys/joint_mapped/clk_2p0ns/yosys.log)
+[OSS] report_root=/home/System-ASIC/report/all_mapped_20260311T174018Z/yosys/joint_mapped
+/home/System-ASIC/flow/yosys/run_presynth.sh: line 332: 84240 Killed                  yosys -s "$ys_file" > "$log_file" 2>&1
+[OSS][FAIL] clk=2.0ns (log: /home/System-ASIC/report/all_mapped_20260311T174018Z/yosys/joint_mapped/clk_2p0ns/yosys.log)
 [OSS-QOR] rows: 1
-[OSS-QOR] csv: /home/System-ASIC/report/full_rerun_20260310T052244Z/yosys/joint_mapped/qor_summary.csv
-[OSS][ERR] 1 run(s) failed in mode=mapped. See reports under: /home/System-ASIC/report/full_rerun_20260310T052244Z/yosys/joint_mapped
+[OSS-QOR] csv: /home/System-ASIC/report/all_mapped_20260311T174018Z/yosys/joint_mapped/qor_summary.csv
+[OSS][ERR] 1 run(s) failed in mode=mapped. See reports under: /home/System-ASIC/report/all_mapped_20260311T174018Z/yosys/joint_mapped
