@@ -1,16 +1,13 @@
-# Yosys Pre-Synthesis Flow
+# Yosys Frontend Flow
 
-This flow is for local `yosys` trend exploration (clock/area/cell-count sweeps), not signoff.
+This flow is for local `yosys` frontend trend exploration and checkpoint generation, not signoff.
 
 ## Requirements
 
 - `yosys` with `slang` frontend plugin (`plugin -i slang`, `read_slang`)
 - `python3`
-- Liberty `.lib` (required for `mapped` mode)
 
-Default Liberty in this repo:
-
-- `lib/gscl45nm/gscl45nm.lib`
+If `slang` is unavailable, the script can fall back to `sv2v` when present in `PATH` or under `tools/sv2v/sv2v-Linux/sv2v`.
 
 ## Run
 
@@ -20,35 +17,22 @@ Recommended env:
 source ~/tools/oss-cad-suite/environment
 ```
 
-`joint` mapped:
+`joint` frontend:
 
 ```bash
-bash flow/yosys/run_presynth.sh --flow joint --mode mapped --clocks 2.0
+bash flow/yosys/run_presynth.sh --flow joint --clocks 2.0
 ```
 
-`migo` mapped:
+`migo` frontend:
 
 ```bash
-bash flow/yosys/run_presynth.sh --flow migo --mode mapped --clocks 2.0
+bash flow/yosys/run_presynth.sh --flow migo --clocks 2.0
 ```
 
-Explicit mode selection:
+Custom report root and tag:
 
 ```bash
-bash flow/yosys/run_presynth.sh --flow joint --mode mapped --clocks 2.0 --report-root report/yosys
-```
-
-Custom Liberty for mapped mode:
-
-```bash
-bash flow/yosys/run_presynth.sh --flow migo --mode mapped --clocks 2.0 --liberty /abs/path/to/library.lib
-```
-
-Resume mapped from an existing frontend run root:
-
-```bash
-bash flow/yosys/run_presynth.sh --flow joint --mode frontend --clocks 2.0 --report-root report/yosys --tag joint_frontend
-bash flow/yosys/run_presynth.sh --flow joint --mode mapped --clocks 2.0 --report-root report/yosys --tag joint_mapped --resume-from-frontend report/yosys/joint_frontend
+bash flow/yosys/run_presynth.sh --flow joint --clocks 2.0 --report-root report/yosys --tag joint_frontend
 ```
 
 ## Outputs
@@ -59,16 +43,16 @@ bash flow/yosys/run_presynth.sh --flow joint --mode mapped --clocks 2.0 --report
   - `report/yosys/<tag>/clk_*ns/run.ys`
   - `report/yosys/<tag>/clk_*ns/yosys.log`
   - `report/yosys/<tag>/clk_*ns/stat.rpt`
-  - `report/yosys/<tag>/clk_*ns/checkpoint.il` (`frontend` mode; reusable by `mapped --resume-from-frontend`)
-  - `report/yosys/<tag>/clk_*ns/*_syn.v`
+  - `report/yosys/<tag>/clk_*ns/checkpoint.il`
   - `report/yosys/<tag>/clk_*ns/*_syn.json`
 - Summary:
   - `report/yosys/<tag>/qor_summary.csv`
 
 Summary CSV columns include:
 
-- `total_cells`, `total_area` (mapped mode mainly)
-- `$mul`, `$div`, `$mux*` counts (`$mux* = $mux + $pmux + $bmux + $bwmux`, useful in frontend mode)
+- `total_cells`
+- `$mul`, `$div`, `$mux*` counts (`$mux* = $mux + $pmux + $bmux + $bwmux`)
+- `total_area` is kept for CSV compatibility and is typically `n/a` in frontend runs
 
 ## Cleanup
 

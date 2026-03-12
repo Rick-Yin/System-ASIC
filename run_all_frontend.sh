@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-RUN_TAG="${1:-all_mapped_$(date -u +%Y%m%dT%H%M%SZ)}"
+RUN_TAG="${1:-all_frontend}"
 RUN_ROOT="$ROOT_DIR/report/$RUN_TAG"
 YOSYS_RUN_ROOT="$RUN_ROOT/yosys"
 MONITOR_ROOT="$RUN_ROOT/monitor"
@@ -437,36 +437,16 @@ run_stage "migo_tb" "MIGO regression" \
 run_stage "joint_frontend" "Joint frontend Yosys" \
   bash "$ROOT_DIR/flow/yosys/run_presynth.sh" \
   --flow joint \
-  --mode frontend \
   --clocks "$JOINT_CLOCKS" \
   --report-root "$YOSYS_RUN_ROOT" \
   --tag joint_frontend
 
-run_stage "joint_mapped" "Joint mapped Yosys (resume)" \
-  bash "$ROOT_DIR/flow/yosys/run_presynth.sh" \
-  --flow joint \
-  --mode mapped \
-  --clocks "$JOINT_CLOCKS" \
-  --report-root "$YOSYS_RUN_ROOT" \
-  --tag joint_mapped \
-  --resume-from-frontend "$YOSYS_RUN_ROOT/joint_frontend"
-
 run_stage "migo_frontend" "MIGO frontend Yosys" \
   bash "$ROOT_DIR/flow/yosys/run_presynth.sh" \
   --flow migo \
-  --mode frontend \
   --clocks "$MIGO_CLOCKS" \
   --report-root "$YOSYS_RUN_ROOT" \
   --tag migo_frontend
-
-run_stage "migo_mapped" "MIGO mapped Yosys (resume)" \
-  bash "$ROOT_DIR/flow/yosys/run_presynth.sh" \
-  --flow migo \
-  --mode mapped \
-  --clocks "$MIGO_CLOCKS" \
-  --report-root "$YOSYS_RUN_ROOT" \
-  --tag migo_mapped \
-  --resume-from-frontend "$YOSYS_RUN_ROOT/migo_frontend"
 
 echo "[ALL][OK] complete"
 echo "[ALL][OK] outputs under $RUN_ROOT"

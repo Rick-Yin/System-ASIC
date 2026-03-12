@@ -2,18 +2,14 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-DEFAULT_LIBERTY="$ROOT_DIR/lib/gscl45nm/gscl45nm.lib"
 
 FLOW="joint"
-MODE=""
 CLOCKS_CSV="2.0,2.5,3.0"
-LIBERTY_PATH="${OSS_LIBERTY:-$DEFAULT_LIBERTY}"
 RUN_TAG=""
 REPORT_ROOT=""
 ALLOW_UNSUPPORTED_YOSYS=0
 SV_FRONTEND=""
 SV2V_BIN=""
-RESUME_FRONTEND_ROOT=""
 
 MIGO_TOP="MIGO_method_migo_n_161_q_bit_8_wp_pi_0_047_width_pi_0_031_alpha_p_0_1_alpha_s_0_1_lam1_1_2_lam2_1_e_topk_4_e_d_max_2_e_e_max_4"
 
@@ -24,18 +20,15 @@ Usage:
 
 Options:
   --flow <joint|migo>             Design flow to run (default: joint)
-  --mode <frontend|mapped>        Run mode (default: joint->frontend, migo->mapped)
   --clocks <csv>                  Clock sweep in ns, e.g. 2.0,2.5,3.0
-  --liberty <path>                Liberty .lib path
-  --tag <name>                    Output tag (default: <flow>_<utc timestamp>)
+  --tag <name>                    Output tag (default: <flow>_frontend)
   --report-root <path>            Root directory for generated reports/artifacts
-  --resume-from-frontend <path>   Reuse clk_*ns/checkpoint.il from a prior frontend run root
   --allow-unsupported-yosys       Skip SystemVerilog capability probe
   -h, --help                      Show help
 
 Examples:
-  bash flow/yosys/run_presynth.sh --flow joint --mode frontend --clocks 2.0
-  bash flow/yosys/run_presynth.sh --flow migo --mode mapped --clocks 2.0,2.5,3.0
+  bash flow/yosys/run_presynth.sh --flow joint --clocks 2.0
+  bash flow/yosys/run_presynth.sh --flow migo --clocks 2.0,2.5,3.0
 EOF
 }
 
@@ -46,16 +39,8 @@ parse_args() {
         FLOW="${2:-}"
         shift 2
         ;;
-      --mode)
-        MODE="${2:-}"
-        shift 2
-        ;;
       --clocks)
         CLOCKS_CSV="${2:-}"
-        shift 2
-        ;;
-      --liberty)
-        LIBERTY_PATH="${2:-}"
         shift 2
         ;;
       --tag)
@@ -64,10 +49,6 @@ parse_args() {
         ;;
       --report-root)
         REPORT_ROOT="${2:-}"
-        shift 2
-        ;;
-      --resume-from-frontend)
-        RESUME_FRONTEND_ROOT="${2:-}"
         shift 2
         ;;
       --allow-unsupported-yosys)
@@ -165,14 +146,6 @@ collect_rtl_files() {
     | sed '/^$/d'
 }
 
-ns_to_ps() {
-  local clk_ns="$1"
-  python3 - "$clk_ns" <<'PY'
-import sys
-print(int(round(float(sys.argv[1]) * 1000.0)))
-PY
-}
-
 normalize_clock_list() {
   local raw="$1"
   local token
@@ -211,16 +184,10 @@ main() {
     joint)
       top_module="rwkvcnn_top"
       rtl_filelist="$ROOT_DIR/flow/filelists/joint.f"
-      if [[ -z "$MODE" ]]; then
-        MODE="frontend"
-      fi
       ;;
     migo)
       top_module="$MIGO_TOP"
       rtl_filelist="$ROOT_DIR/flow/filelists/migo.f"
-      if [[ -z "$MODE" ]]; then
-        MODE="mapped"
-      fi
       ;;
     *)
       echo "[OSS][ERR] Unsupported flow: $FLOW"
@@ -229,22 +196,6 @@ main() {
       ;;
   esac
 
-  if [[ "$MODE" != "frontend" && "$MODE" != "mapped" ]]; then
-    echo "[OSS][ERR] Unsupported mode: $MODE"
-    echo "[OSS][ERR] Use --mode frontend or --mode mapped"
-    exit 2
-  fi
-
-  if [[ -n "$RESUME_FRONTEND_ROOT" && "$MODE" != "mapped" ]]; then
-    echo "[OSS][ERR] --resume-from-frontend is only supported with --mode mapped"
-    exit 2
-  fi
-
-  if [[ "$MODE" == "mapped" && ! -f "$LIBERTY_PATH" ]]; then
-    echo "[OSS][ERR] Liberty file not found: $LIBERTY_PATH"
-    exit 2
-  fi
-
   if [[ ! -f "$rtl_filelist" ]]; then
     echo "[OSS][ERR] Missing filelist: $rtl_filelist"
     exit 2
@@ -252,42 +203,34 @@ main() {
 
   normalize_clock_list "$CLOCKS_CSV"
 
+  if ! detect_sv_frontend; then
+    echo "[OSS][ERR] Installed yosys cannot parse required SystemVerilog features via slang frontend."
+    echo "[OSS][ERR] Install a yosys slang plugin, or provide sv2v in PATH, or place it at $ROOT_DIR/tools/sv2v/sv2v-Linux/sv2v."
+    exit 2
+  fi
+
+  mapfile -t rtl_rel_files < <(collect_rtl_files "$rtl_filelist")
+  if [[ "${#rtl_rel_files[@]}" -eq 0 ]]; then
+    echo "[OSS][ERR] Empty filelist: $rtl_filelist"
+    exit 2
+  fi
+
   local rtl_abs_files=()
-  if [[ -z "$RESUME_FRONTEND_ROOT" ]]; then
-    if ! detect_sv_frontend; then
-      echo "[OSS][ERR] Installed yosys cannot parse required SystemVerilog features via slang frontend."
-      echo "[OSS][ERR] Install a yosys slang plugin, or provide sv2v in PATH, or place it at $ROOT_DIR/tools/sv2v/sv2v-Linux/sv2v."
-      exit 2
+  local rel abs missing=0
+  for rel in "${rtl_rel_files[@]}"; do
+    abs="$ROOT_DIR/$rel"
+    rtl_abs_files+=("$abs")
+    if [[ ! -f "$abs" ]]; then
+      echo "[OSS][ERR] Missing RTL from filelist: $rel"
+      missing=1
     fi
-
-    mapfile -t rtl_rel_files < <(collect_rtl_files "$rtl_filelist")
-    if [[ "${#rtl_rel_files[@]}" -eq 0 ]]; then
-      echo "[OSS][ERR] Empty filelist: $rtl_filelist"
-      exit 2
-    fi
-
-    local missing=0
-    local rel abs
-    for rel in "${rtl_rel_files[@]}"; do
-      abs="$ROOT_DIR/$rel"
-      rtl_abs_files+=("$abs")
-      if [[ ! -f "$abs" ]]; then
-        echo "[OSS][ERR] Missing RTL from filelist: $rel"
-        missing=1
-      fi
-    done
-    if [[ "$missing" -ne 0 ]]; then
-      exit 2
-    fi
-  else
-    if [[ ! -d "$RESUME_FRONTEND_ROOT" ]]; then
-      echo "[OSS][ERR] Frontend run root not found: $RESUME_FRONTEND_ROOT"
-      exit 2
-    fi
+  done
+  if [[ "$missing" -ne 0 ]]; then
+    exit 2
   fi
 
   if [[ -z "$RUN_TAG" ]]; then
-    RUN_TAG="${FLOW}_${MODE}_$(date -u +%Y%m%dT%H%M%SZ)"
+    RUN_TAG="${FLOW}_frontend"
   fi
   if [[ -z "$REPORT_ROOT" ]]; then
     REPORT_ROOT="$ROOT_DIR/report/yosys"
@@ -297,38 +240,20 @@ main() {
   local sv2v_bundle=""
   mkdir -p "$run_root"
 
-  if [[ -n "$RESUME_FRONTEND_ROOT" ]]; then
-    local run_root_abs resume_root_abs
-    run_root_abs="$(python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$run_root")"
-    resume_root_abs="$(python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$RESUME_FRONTEND_ROOT")"
-    if [[ "$run_root_abs" == "$resume_root_abs" ]]; then
-      echo "[OSS][ERR] Mapped output root must differ from --resume-from-frontend root"
-      echo "[OSS][ERR] Use a different --tag or --report-root for the mapped run"
-      exit 2
-    fi
-  fi
-
-  if [[ -z "$RESUME_FRONTEND_ROOT" && "$SV_FRONTEND" == "sv2v" ]]; then
+  if [[ "$SV_FRONTEND" == "sv2v" ]]; then
     sv2v_bundle="$run_root/${top_module}_sv2v.v"
     prepare_sv2v_bundle "$sv2v_bundle" "${rtl_abs_files[@]}"
   fi
 
   echo "[OSS] flow=$FLOW top=$top_module"
-  echo "[OSS] mode=$MODE"
-  if [[ -n "$RESUME_FRONTEND_ROOT" ]]; then
-    echo "[OSS] resume_from_frontend=$RESUME_FRONTEND_ROOT"
-  else
-    echo "[OSS] sv_frontend=$SV_FRONTEND"
-  fi
-  if [[ "$MODE" == "mapped" ]]; then
-    echo "[OSS] liberty=$LIBERTY_PATH"
-  fi
+  echo "[OSS] mode=frontend"
+  echo "[OSS] sv_frontend=$SV_FRONTEND"
   echo "[OSS] clocks_ns=$CLOCKS_CSV"
   echo "[OSS] report_root=$run_root"
 
   local fail_count=0
-  local clk clk_tag case_root abc_ps
-  local ys_file log_file stat_file netlist_file json_file status_file abs_filelist checkpoint_file frontend_case_root frontend_checkpoint
+  local clk clk_tag case_root
+  local ys_file log_file stat_file json_file status_file abs_filelist checkpoint_file
   for clk in "${CLOCKS_NS[@]}"; do
     clk_tag="$(printf '%s' "$clk" | tr '.' 'p')"
     case_root="$run_root/clk_${clk_tag}ns"
@@ -337,67 +262,26 @@ main() {
     ys_file="$case_root/run.ys"
     log_file="$case_root/yosys.log"
     stat_file="$case_root/stat.rpt"
-    netlist_file="$case_root/${top_module}_syn.v"
     json_file="$case_root/${top_module}_syn.json"
     status_file="$case_root/status.txt"
     abs_filelist="$case_root/rtl_abs.f"
     checkpoint_file="$case_root/checkpoint.il"
-    if [[ -z "$RESUME_FRONTEND_ROOT" ]]; then
-      printf "%s\n" "${rtl_abs_files[@]}" >"$abs_filelist"
-    fi
-    if [[ -n "$RESUME_FRONTEND_ROOT" ]]; then
-      frontend_case_root="$RESUME_FRONTEND_ROOT/clk_${clk_tag}ns"
-      frontend_checkpoint="$frontend_case_root/checkpoint.il"
-      if [[ ! -f "$frontend_checkpoint" ]]; then
-        printf '[OSS][ERR] Missing frontend checkpoint for clk=%sns: %s\n' "$clk" "$frontend_checkpoint" >"$log_file"
-        echo "fail" >"$status_file"
-        echo "[OSS][FAIL] clk=${clk}ns (missing checkpoint: $frontend_checkpoint)"
-        fail_count=$((fail_count + 1))
-        continue
-      fi
-    fi
+    printf "%s\n" "${rtl_abs_files[@]}" >"$abs_filelist"
 
     {
-      if [[ -z "$RESUME_FRONTEND_ROOT" && "$SV_FRONTEND" == "slang" ]]; then
+      if [[ "$SV_FRONTEND" == "slang" ]]; then
         echo "plugin -i slang"
-      fi
-      if [[ "$MODE" == "mapped" ]]; then
-        echo "read_liberty -lib $LIBERTY_PATH"
-      fi
-      if [[ -n "$RESUME_FRONTEND_ROOT" ]]; then
-        echo "read_ilang $frontend_checkpoint"
-      elif [[ "$SV_FRONTEND" == "slang" ]]; then
         echo "read_slang -f $abs_filelist"
       else
         echo "read_verilog $sv2v_bundle"
       fi
       echo "hierarchy -check -top $top_module"
-      if [[ "$MODE" == "mapped" ]]; then
-        if [[ -z "$RESUME_FRONTEND_ROOT" ]]; then
-          echo "proc"
-          echo "opt"
-        fi
-        echo "fsm"
-        echo "opt"
-        echo "memory"
-        echo "opt"
-        echo "techmap"
-        echo "opt"
-        abc_ps="$(ns_to_ps "$clk")"
-        echo "dfflibmap -liberty $LIBERTY_PATH"
-        echo "abc -liberty $LIBERTY_PATH -D $abc_ps"
-        echo "clean"
-        echo "tee -o $stat_file stat -liberty $LIBERTY_PATH -top $top_module"
-        echo "check"
-        echo "write_verilog -noattr $netlist_file"
-      else
-        echo "proc"
-        echo "opt"
-        echo "clean"
-        echo "tee -o $stat_file stat -top $top_module"
-        echo "check"
-        echo "write_ilang $checkpoint_file"
-      fi
+      echo "proc"
+      echo "opt"
+      echo "clean"
+      echo "tee -o $stat_file stat -top $top_module"
+      echo "check"
+      echo "write_ilang $checkpoint_file"
       echo "write_json $json_file"
     } >"$ys_file"
 
@@ -415,14 +299,14 @@ main() {
     --reports-dir "$run_root" \
     --output-csv "$run_root/qor_summary.csv" \
     --top-module "$top_module" \
-    --mode "$MODE"
+    --mode frontend
 
   if [[ "$fail_count" -ne 0 ]]; then
-    echo "[OSS][ERR] $fail_count run(s) failed in mode=$MODE. See reports under: $run_root"
+    echo "[OSS][ERR] $fail_count run(s) failed in mode=frontend. See reports under: $run_root"
     exit 3
   fi
 
-  echo "[OSS][OK] Sweep finished (mode=$MODE). Summary:"
+  echo "[OSS][OK] Sweep finished (mode=frontend). Summary:"
   echo "  - $run_root/qor_summary.csv"
 }
 

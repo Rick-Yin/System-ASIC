@@ -68,20 +68,18 @@ bash vsrc/Joint-CFR-DPD/tb/l0_ops/run_l0_iverilog.sh
 ## Local Yosys pre-synthesis
 
 ```bash
-bash flow/yosys/run_presynth.sh --flow joint --mode mapped --clocks 2.0
+bash flow/yosys/run_presynth.sh --flow joint --clocks 2.0
 ```
 
-Default mapping library:
-
-- `lib/gscl45nm/gscl45nm.lib`
+This generates frontend checkpoints and trend reports under `report/yosys/`.
 
 ## One-click local run
 
 ```bash
-bash run_all_mapped.sh
+bash run_all_frontend.sh
 ```
 
-This writes all local regression outputs plus Yosys `frontend` checkpoints and `mapped` results under `report/<tag>/`.
+This writes all local regression outputs plus Yosys frontend checkpoints under `report/<tag>/`.
 
 ## External DC/PT
 
