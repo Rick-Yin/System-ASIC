@@ -42,7 +42,7 @@ module linear_engine_rom #(
   logic signed [63:0] acc_sum;
   logic signed [31:0] b_align;
 
-  always_comb begin
+  always @* begin
     w_addr = (out_idx * in_dim) + in_idx;
     b_addr = out_idx;
     busy = processing;

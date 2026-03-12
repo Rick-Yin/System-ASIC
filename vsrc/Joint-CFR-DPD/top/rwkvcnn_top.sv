@@ -76,7 +76,7 @@ module rwkvcnn_top (
   assign in_ready = (state == S_IDLE);
   assign out_valid = out_valid_r;
 
-  always_comb begin
+  always @* begin
     out_data = '0;
     for (oi = 0; oi < OUT_DIM; oi++) begin
       out_data[oi*32 +: 32] = out_vec[oi];
@@ -149,6 +149,22 @@ module rwkvcnn_top (
 
   logic [15:0] lin_w_addr;
   logic [15:0] lin_b_addr;
+  logic [3:0] lin_stage;
+  logic lin_start;
+  logic lin_bias_en;
+  logic [15:0] lin_in_dim;
+  logic [15:0] lin_out_dim;
+  logic signed [31:0] lin_exp_x;
+  logic signed [31:0] lin_exp_out;
+  logic signed [31:0] lin_w_exp;
+  logic signed [31:0] lin_b_exp;
+  logic [7:0] lin_out_bits;
+  logic signed [31:0] lin_x_vec [0:LINEAR_MAX_DIM-1];
+  logic signed [LINEAR_MAX_DIM*32-1:0] lin_y_bus;
+  logic signed [31:0] lin_w_data;
+  logic signed [31:0] lin_b_data;
+  logic lin_busy;
+  logic lin_done;
 
   rwkv_rom #(.ROM_ID(ROM_ID_INPUT_PROJ_W)) u_input_proj_w (
     .addr((lin_stage == LIN_IP) ? lin_w_addr : 16'd0),
@@ -564,30 +580,13 @@ module rwkvcnn_top (
   integer hist_head_idx;
   integer hist_rd_idx;
 
-  logic [3:0] lin_stage;
-  logic lin_start;
-  logic lin_bias_en;
-  logic [15:0] lin_in_dim;
-  logic [15:0] lin_out_dim;
-  logic signed [31:0] lin_exp_x;
-  logic signed [31:0] lin_exp_out;
-  logic signed [31:0] lin_w_exp;
-  logic signed [31:0] lin_b_exp;
-  logic [7:0] lin_out_bits;
-  logic signed [31:0] lin_x_vec [0:LINEAR_MAX_DIM-1];
-  logic signed [LINEAR_MAX_DIM*32-1:0] lin_y_bus;
-  logic signed [31:0] lin_w_data;
-  logic signed [31:0] lin_b_data;
-  logic lin_busy;
-  logic lin_done;
-
   function automatic logic signed [31:0] lin_y_word(input int idx);
     begin
       lin_y_word = lin_y_bus[idx*32 +: 32];
     end
   endfunction
 
-  always_comb begin
+  always @* begin
     for (int idx = 0; idx < MODEL_DIM; idx++) begin
       mul_att_pre[idx] = requant_pow2_signed(
         $signed(y_wkv[idx]) * $signed(gate_att[idx]),
@@ -598,7 +597,7 @@ module rwkvcnn_top (
     end
   end
 
-  always_comb begin
+  always @* begin
     lin_stage = LIN_NONE;
     lin_start = 1'b0;
     lin_bias_en = 1'b0;
@@ -719,7 +718,7 @@ module rwkvcnn_top (
     endcase
   end
 
-  always_comb begin
+  always @* begin
     for (int idx = 0; idx < LINEAR_MAX_DIM; idx++) begin
       lin_x_vec[idx] = 32'sd0;
     end
@@ -775,7 +774,7 @@ module rwkvcnn_top (
     endcase
   end
 
-  always_comb begin
+  always @* begin
     lin_w_data = 32'sd0;
     lin_b_data = 32'sd0;
 
@@ -871,6 +870,32 @@ module rwkvcnn_top (
       end
       for (i = 0; i < MODEL_DIM; i++) begin
         work_vec[i] <= '0;
+        x_base[i] <= '0;
+        xx[i] <= '0;
+        xk[i] <= '0;
+        xv[i] <= '0;
+        xr[i] <= '0;
+        k_att[i] <= '0;
+        v_att[i] <= '0;
+        r_att[i] <= '0;
+        gate_att[i] <= '0;
+        y_wkv[i] <= '0;
+        att_out[i] <= '0;
+        att_pp_next[i] <= '0;
+        att_aa_div[i] <= '0;
+        att_bb_div[i] <= '0;
+        att_aa_next[i] <= '0;
+        att_bb_next[i] <= '0;
+      end
+      for (i = 0; i < HIDDEN_SZ; i++) begin
+        k_ffn[i] <= '0;
+        k_sq[i] <= '0;
+      end
+      for (i = 0; i < MODEL_DIM; i++) begin
+        kv_ffn[i] <= '0;
+        gate_in_ffn[i] <= '0;
+        gate_ffn[i] <= '0;
+        ffn_out[i] <= '0;
       end
       for (j = 0; j < LAYER_NUM; j++) begin
         for (i = 0; i < MODEL_DIM; i++) begin

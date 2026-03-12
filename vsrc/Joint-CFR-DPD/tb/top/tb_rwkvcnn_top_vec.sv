@@ -42,11 +42,16 @@ module tb_rwkvcnn_top_vec;
     (1 + (HIDDEN_SZ * MODEL_DIM)) +
     (1 + (MODEL_DIM * HIDDEN_SZ)) +
     (1 + (MODEL_DIM * MODEL_DIM));
-  localparam int BLOCK_MISC_CYCLES = 6;
-  localparam int BLOCK_CYCLES = ATT_LINEAR_CYCLES + FFN_LINEAR_CYCLES + BLOCK_MISC_CYCLES;
+  localparam int BLOCK_NONLINEAR_CYCLES = 6;
+  // Each block-local linear op spends one extra cycle in its *_WAIT state because
+  // lin_done is observed by the top-level FSM on the following clock edge.
+  localparam int BLOCK_LINEAR_WAIT_EXIT_CYCLES = 7;
+  localparam int BLOCK_CYCLES =
+    ATT_LINEAR_CYCLES + FFN_LINEAR_CYCLES + BLOCK_NONLINEAR_CYCLES + BLOCK_LINEAR_WAIT_EXIT_CYCLES;
   localparam int OP_LINEAR_CYCLES = 1 + (OUT_DIM * MODEL_DIM);
+  localparam int EDGE_WAIT_EXIT_CYCLES = 2;
   localparam int MAX_LATENCY_CYCLES =
-    1 + IP_LINEAR_CYCLES + (LAYER_NUM * BLOCK_CYCLES) + OP_LINEAR_CYCLES + 2;
+    1 + IP_LINEAR_CYCLES + (LAYER_NUM * BLOCK_CYCLES) + OP_LINEAR_CYCLES + EDGE_WAIT_EXIT_CYCLES;
 
   logic clk;
   logic rst_n;

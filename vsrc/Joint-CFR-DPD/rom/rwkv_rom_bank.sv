@@ -8,7 +8,7 @@ module rwkv_rom #(
 
   generate
     if (ROM_ID == ROM_ID_INPUT_PROJ_W) begin : gen_input_proj_w
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < INPUT_PROJ_W_NUMEL) begin
           case (addr)
@@ -30,7 +30,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_INPUT_PROJ_B) begin : gen_input_proj_b
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < INPUT_PROJ_B_NUMEL) begin
           case (addr)
@@ -46,7 +46,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_0_ATT_TIME_SHIFT_W) begin : gen_blocks_0_att_time_shift_w
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_0_ATT_TIME_SHIFT_W_NUMEL) begin
           case (addr)
@@ -80,7 +80,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_0_ATT_TIME_SHIFT_B) begin : gen_blocks_0_att_time_shift_b
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_0_ATT_TIME_SHIFT_B_NUMEL) begin
           case (addr)
@@ -96,7 +96,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_0_ATT_KEY_W) begin : gen_blocks_0_att_key_w
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_0_ATT_KEY_W_NUMEL) begin
           case (addr)
@@ -142,7 +142,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_0_ATT_VALUE_W) begin : gen_blocks_0_att_value_w
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_0_ATT_VALUE_W_NUMEL) begin
           case (addr)
@@ -188,7 +188,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_0_ATT_RECEPTANCE_W) begin : gen_blocks_0_att_receptance_w
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_0_ATT_RECEPTANCE_W_NUMEL) begin
           case (addr)
@@ -234,7 +234,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_0_ATT_OUTPUT_W) begin : gen_blocks_0_att_output_w
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_0_ATT_OUTPUT_W_NUMEL) begin
           case (addr)
@@ -280,7 +280,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_0_FFN_TIME_SHIFT_W) begin : gen_blocks_0_ffn_time_shift_w
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_0_FFN_TIME_SHIFT_W_NUMEL) begin
           case (addr)
@@ -314,7 +314,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_0_FFN_TIME_SHIFT_B) begin : gen_blocks_0_ffn_time_shift_b
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_0_FFN_TIME_SHIFT_B_NUMEL) begin
           case (addr)
@@ -330,7 +330,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_0_FFN_KEY_W) begin : gen_blocks_0_ffn_key_w
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_0_FFN_KEY_W_NUMEL) begin
           case (addr)
@@ -448,7 +448,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_0_FFN_RECEPTANCE_W) begin : gen_blocks_0_ffn_receptance_w
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_0_FFN_RECEPTANCE_W_NUMEL) begin
           case (addr)
@@ -494,7 +494,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_0_FFN_VALUE_W) begin : gen_blocks_0_ffn_value_w
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_0_FFN_VALUE_W_NUMEL) begin
           case (addr)
@@ -612,7 +612,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_1_ATT_TIME_SHIFT_W) begin : gen_blocks_1_att_time_shift_w
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_1_ATT_TIME_SHIFT_W_NUMEL) begin
           case (addr)
@@ -646,7 +646,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_1_ATT_TIME_SHIFT_B) begin : gen_blocks_1_att_time_shift_b
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_1_ATT_TIME_SHIFT_B_NUMEL) begin
           case (addr)
@@ -662,7 +662,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_1_ATT_KEY_W) begin : gen_blocks_1_att_key_w
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_1_ATT_KEY_W_NUMEL) begin
           case (addr)
@@ -708,7 +708,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_1_ATT_VALUE_W) begin : gen_blocks_1_att_value_w
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_1_ATT_VALUE_W_NUMEL) begin
           case (addr)
@@ -754,7 +754,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_1_ATT_RECEPTANCE_W) begin : gen_blocks_1_att_receptance_w
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_1_ATT_RECEPTANCE_W_NUMEL) begin
           case (addr)
@@ -800,7 +800,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_1_ATT_OUTPUT_W) begin : gen_blocks_1_att_output_w
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_1_ATT_OUTPUT_W_NUMEL) begin
           case (addr)
@@ -846,7 +846,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_1_FFN_TIME_SHIFT_W) begin : gen_blocks_1_ffn_time_shift_w
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_1_FFN_TIME_SHIFT_W_NUMEL) begin
           case (addr)
@@ -880,7 +880,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_1_FFN_TIME_SHIFT_B) begin : gen_blocks_1_ffn_time_shift_b
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_1_FFN_TIME_SHIFT_B_NUMEL) begin
           case (addr)
@@ -896,7 +896,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_1_FFN_KEY_W) begin : gen_blocks_1_ffn_key_w
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_1_FFN_KEY_W_NUMEL) begin
           case (addr)
@@ -1014,7 +1014,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_1_FFN_RECEPTANCE_W) begin : gen_blocks_1_ffn_receptance_w
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_1_FFN_RECEPTANCE_W_NUMEL) begin
           case (addr)
@@ -1060,7 +1060,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_1_FFN_VALUE_W) begin : gen_blocks_1_ffn_value_w
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_1_FFN_VALUE_W_NUMEL) begin
           case (addr)
@@ -1178,7 +1178,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_OUTPUT_PROJ_W) begin : gen_output_proj_w
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < OUTPUT_PROJ_W_NUMEL) begin
           case (addr)
@@ -1200,7 +1200,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_OUTPUT_PROJ_B) begin : gen_output_proj_b
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < OUTPUT_PROJ_B_NUMEL) begin
           case (addr)
@@ -1212,7 +1212,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_0_ATT_TIME_MIX_K) begin : gen_blocks_0_att_time_mix_k
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_0_ATT_TIME_MIX_K_NUMEL) begin
           case (addr)
@@ -1228,7 +1228,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_0_ATT_TIME_MIX_V) begin : gen_blocks_0_att_time_mix_v
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_0_ATT_TIME_MIX_V_NUMEL) begin
           case (addr)
@@ -1244,7 +1244,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_0_ATT_TIME_MIX_R) begin : gen_blocks_0_att_time_mix_r
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_0_ATT_TIME_MIX_R_NUMEL) begin
           case (addr)
@@ -1260,7 +1260,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_0_ATT_ONE_TM) begin : gen_blocks_0_att_one_tm
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_0_ATT_ONE_TM_NUMEL) begin
           case (addr)
@@ -1271,7 +1271,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_0_FFN_TIME_MIX_K) begin : gen_blocks_0_ffn_time_mix_k
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_0_FFN_TIME_MIX_K_NUMEL) begin
           case (addr)
@@ -1287,7 +1287,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_0_FFN_TIME_MIX_R) begin : gen_blocks_0_ffn_time_mix_r
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_0_FFN_TIME_MIX_R_NUMEL) begin
           case (addr)
@@ -1303,7 +1303,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_0_FFN_ONE_TM) begin : gen_blocks_0_ffn_one_tm
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_0_FFN_ONE_TM_NUMEL) begin
           case (addr)
@@ -1314,7 +1314,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_1_ATT_TIME_MIX_K) begin : gen_blocks_1_att_time_mix_k
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_1_ATT_TIME_MIX_K_NUMEL) begin
           case (addr)
@@ -1330,7 +1330,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_1_ATT_TIME_MIX_V) begin : gen_blocks_1_att_time_mix_v
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_1_ATT_TIME_MIX_V_NUMEL) begin
           case (addr)
@@ -1346,7 +1346,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_1_ATT_TIME_MIX_R) begin : gen_blocks_1_att_time_mix_r
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_1_ATT_TIME_MIX_R_NUMEL) begin
           case (addr)
@@ -1362,7 +1362,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_1_ATT_ONE_TM) begin : gen_blocks_1_att_one_tm
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_1_ATT_ONE_TM_NUMEL) begin
           case (addr)
@@ -1373,7 +1373,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_1_FFN_TIME_MIX_K) begin : gen_blocks_1_ffn_time_mix_k
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_1_FFN_TIME_MIX_K_NUMEL) begin
           case (addr)
@@ -1389,7 +1389,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_1_FFN_TIME_MIX_R) begin : gen_blocks_1_ffn_time_mix_r
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_1_FFN_TIME_MIX_R_NUMEL) begin
           case (addr)
@@ -1405,7 +1405,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_1_FFN_ONE_TM) begin : gen_blocks_1_ffn_one_tm
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_1_FFN_ONE_TM_NUMEL) begin
           case (addr)
@@ -1416,7 +1416,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_WKV_LUT) begin : gen_wkv_lut
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < WKV_LUT_NUMEL) begin
           case (addr)
@@ -1682,7 +1682,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_WKV_MIN_DELTA_I) begin : gen_wkv_min_delta_i
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < WKV_MIN_DELTA_I_NUMEL) begin
           case (addr)
@@ -1693,7 +1693,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_WKV_STEP_I) begin : gen_wkv_step_i
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < WKV_STEP_I_NUMEL) begin
           case (addr)
@@ -1704,7 +1704,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_WKV_E_FRAC) begin : gen_wkv_e_frac
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < WKV_E_FRAC_NUMEL) begin
           case (addr)
@@ -1715,7 +1715,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_WKV_LOG_EXP) begin : gen_wkv_log_exp
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < WKV_LOG_EXP_NUMEL) begin
           case (addr)
@@ -1726,7 +1726,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_0_ATT_TIME_FIRST) begin : gen_blocks_0_att_time_first
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_0_ATT_TIME_FIRST_NUMEL) begin
           case (addr)
@@ -1742,7 +1742,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_0_ATT_TIME_DECAY_WEXP) begin : gen_blocks_0_att_time_decay_wexp
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_0_ATT_TIME_DECAY_WEXP_NUMEL) begin
           case (addr)
@@ -1758,7 +1758,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_1_ATT_TIME_FIRST) begin : gen_blocks_1_att_time_first
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_1_ATT_TIME_FIRST_NUMEL) begin
           case (addr)
@@ -1774,7 +1774,7 @@ module rwkv_rom #(
       end
     end
     else if (ROM_ID == ROM_ID_BLOCKS_1_ATT_TIME_DECAY_WEXP) begin : gen_blocks_1_att_time_decay_wexp
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
         if (addr < BLOCKS_1_ATT_TIME_DECAY_WEXP_NUMEL) begin
           case (addr)
@@ -1790,7 +1790,7 @@ module rwkv_rom #(
       end
     end
     else begin : gen_default
-      always_comb begin
+      always @* begin
         rdata = 32'sd0;
       end
     end
@@ -1824,7 +1824,7 @@ module rwkv_rom_bank (
 );
   import rwkvcnn_pkg::*;
 
-  always_comb begin
+  always @* begin
     rdata = rom_read(rom_id, addr);
   end
 

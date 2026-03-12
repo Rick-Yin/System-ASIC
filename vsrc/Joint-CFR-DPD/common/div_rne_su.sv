@@ -17,7 +17,7 @@ module div_rne_su #(
   logic signed [Q_WIDTH-1:0] q_mag;
   integer bit_idx;
 
-  always_comb begin
+  always @* begin
     q = '0;
     neg = 1'b0;
     ax = '0;
