@@ -1,1 +1,1 @@
-blocks__0__ffn__time_mix_r[0][0][0]=0\nblocks__0__ffn__time_mix_r[0][0][1]=55\nblocks__0__ffn__time_mix_r[0][0][2]=52\nblocks__0__ffn__time_mix_r[0][0][3]=180\nblocks__0__ffn__time_mix_r[0][0][4]=230\nblocks__0__ffn__time_mix_r[0][0][5]=255\n
+blocks__0__ffn__time_mix_r[0][0][0]=0\nblocks__0__ffn__time_mix_r[0][0][1]=42\nblocks__0__ffn__time_mix_r[0][0][2]=77\nblocks__0__ffn__time_mix_r[0][0][3]=186\nblocks__0__ffn__time_mix_r[0][0][4]=160\nblocks__0__ffn__time_mix_r[0][0][5]=246\n

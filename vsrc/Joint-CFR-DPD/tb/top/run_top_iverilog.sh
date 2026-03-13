@@ -6,6 +6,38 @@ if [[ -f "$ROOT_DIR/tools/activate_local_eda.sh" ]]; then
   source "$ROOT_DIR/tools/activate_local_eda.sh"
 fi
 
+detect_full_profile_frames() {
+  local manifest_path="$ROOT_DIR/vsrc/rom/manifest.json"
+  local fallback_frames="$1"
+
+  if [[ ! -f "$manifest_path" ]]; then
+    echo "$fallback_frames"
+    return 0
+  fi
+
+  python3 - "$manifest_path" "$fallback_frames" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+manifest_path = Path(sys.argv[1])
+fallback_frames = int(sys.argv[2])
+
+try:
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+except Exception:
+    print(fallback_frames)
+    raise SystemExit(0)
+
+source_hint = f"{manifest.get('ckpt_path', '')} {manifest.get('export_root', '')}".upper()
+
+if "HPA" in source_hint:
+    print(261)
+else:
+    print(fallback_frames)
+PY
+}
+
 TOP_PROFILE="${TOP_PROFILE:-full}"
 case "$TOP_PROFILE" in
   smoke)
@@ -23,7 +55,7 @@ case "$TOP_PROFILE" in
     default_progress_cycles=50000
     ;;
   full)
-    default_frames=256
+    default_frames="$(detect_full_profile_frames 256)"
     default_mode=random
     default_seed=1
     default_trace=0

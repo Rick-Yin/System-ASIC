@@ -1,1 +1,1 @@
-input_proj__b[0]=-6\ninput_proj__b[1]=-14\ninput_proj__b[2]=-28\ninput_proj__b[3]=5\ninput_proj__b[4]=2\ninput_proj__b[5]=-40\n
+input_proj__b[0]=55\ninput_proj__b[1]=-22\ninput_proj__b[2]=18\ninput_proj__b[3]=66\ninput_proj__b[4]=-16\ninput_proj__b[5]=29\n
