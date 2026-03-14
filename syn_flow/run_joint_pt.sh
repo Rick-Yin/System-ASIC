@@ -18,4 +18,4 @@ export INPUT_VEC_FILE="$ROOT_DIR/vsrc/Joint-CFR-DPD/tb/top/vectors/input_packed.
 export GOLDEN_VEC_FILE="$ROOT_DIR/vsrc/Joint-CFR-DPD/tb/top/vectors/golden_output_packed.vec"
 export OUTPUT_FILE="$FLOW_DIR/runs/joint_cfr/power/joint_gate_output.vec"
 
-exec "$FLOW_DIR/common/run_pt.sh" joint_cfr
+exec bash "$FLOW_DIR/common/run_pt.sh" joint_cfr

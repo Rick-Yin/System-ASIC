@@ -29,10 +29,28 @@ run_with_optional_bsub() {
   shift
 
   local cmd_str
+  local cwd
+  local tmpdir
+  local tmp
+  local temp
+  local wrapped_cmd
+  local cwd_q
+  local tmpdir_q
+  local tmp_q
+  local temp_q
   cmd_str="$(quote_cmd "$@")"
 
   if [[ -n "${BSUB_PREFIX// }" ]]; then
-    eval "$BSUB_PREFIX $cmd_str" 2>&1 | tee "$log_file"
+    cwd="$(pwd)"
+    tmpdir="${TMPDIR:-$cwd}"
+    tmp="${TMP:-$tmpdir}"
+    temp="${TEMP:-$tmpdir}"
+    cwd_q="$(printf '%q' "$cwd")"
+    tmpdir_q="$(printf '%q' "$tmpdir")"
+    tmp_q="$(printf '%q' "$tmp")"
+    temp_q="$(printf '%q' "$temp")"
+    wrapped_cmd="mkdir -p $cwd_q $tmpdir_q && cd $cwd_q && export TMPDIR=$tmpdir_q TMP=$tmp_q TEMP=$temp_q && exec $cmd_str"
+    eval "$BSUB_PREFIX bash -lc $(printf '%q' "$wrapped_cmd")" 2>&1 | tee "$log_file"
   else
     eval "$cmd_str" 2>&1 | tee "$log_file"
   fi
@@ -47,6 +65,43 @@ append_split_paths() {
     [[ -z "$item" ]] && continue
     out_ref+=("$item")
   done
+}
+
+infer_sim_lib_files() {
+  local target_lib="$1"
+  local front_end_dir=""
+  local lib_family=""
+  local -a candidates=()
+
+  if [[ "$target_lib" != *"/digital/Front_End/"* ]]; then
+    return 1
+  fi
+
+  front_end_dir="${target_lib%%/digital/Front_End/*}/digital/Front_End"
+  lib_family="$(basename "$(dirname "$target_lib")")"
+
+  if [[ ! -d "$front_end_dir" || -z "$lib_family" ]]; then
+    return 1
+  fi
+
+  mapfile -t candidates < <(
+    find "$front_end_dir" -type f \( -name "*.v" -o -name "*.sv" \) 2>/dev/null \
+      | grep "/verilog/" \
+      | grep "$(printf '%s' "$lib_family" | sed 's/[][^$.*/+?(){}|\\]/\\&/g')" \
+      | LC_ALL=C sort -u
+  )
+
+  if [[ ${#candidates[@]} -eq 1 ]]; then
+    printf '%s\n' "${candidates[0]}"
+    return 0
+  fi
+
+  if [[ ${#candidates[@]} -gt 1 ]]; then
+    echo "[PT][ERR] multiple SIM library candidates found for $lib_family:" >&2
+    printf '  %s\n' "${candidates[@]}" >&2
+  fi
+
+  return 1
 }
 
 if [[ $# -ne 1 ]]; then
@@ -89,6 +144,13 @@ if [[ -z "$SIM_LIB_FILES" && "$TARGET_LIB" == "$ROOT_DIR/lib/gscl45nm/gscl45nm.l
 fi
 
 if [[ -z "$SIM_LIB_FILES" ]]; then
+  if detected_sim_lib="$(infer_sim_lib_files "$TARGET_LIB")"; then
+    SIM_LIB_FILES="$detected_sim_lib"
+    echo "[PT] auto-detected SIM_LIB_FILES=$SIM_LIB_FILES"
+  fi
+fi
+
+if [[ -z "$SIM_LIB_FILES" ]]; then
   echo "[PT][ERR] SIM_LIB_FILES is required for gate-level simulation."
   echo "[PT][ERR] Example: export SIM_LIB_FILES=/abs/path/stdcells.v"
   exit 2
@@ -102,6 +164,9 @@ COMPILE_LOG="$RUN_ROOT/logs/vcs_compile.log"
 SIM_LOG="$RUN_ROOT/logs/vcs_sim.log"
 PT_LOG="$RUN_ROOT/logs/pt_shell.log"
 SIM_OUT="$POWER_BUILD_DIR/${TB_TOP}.simv"
+PT_TCL="$FLOW_DIR/common/pt_main.tcl"
+PT_TCL_REL="../../../common/pt_main.tcl"
+TMP_WORK_DIR="${TMPDIR:-$RUN_ROOT/tmp}"
 
 mkdir -p "$POWER_BUILD_DIR" "$RUN_ROOT/logs" "$RUN_ROOT/power"
 
@@ -117,6 +182,15 @@ if [[ ! -f "$TB_FILE" ]]; then
   echo "[PT][ERR] TB file missing: $TB_FILE"
   exit 2
 fi
+if [[ ! -f "$PT_TCL" ]]; then
+  echo "[PT][ERR] missing PT Tcl script: $PT_TCL"
+  exit 2
+fi
+
+mkdir -p "$TMP_WORK_DIR"
+export TMPDIR="$TMP_WORK_DIR"
+export TMP="$TMP_WORK_DIR"
+export TEMP="$TMP_WORK_DIR"
 
 if [[ -n "${PT_PREPARE_CMD:-}" ]]; then
   echo "[PT] running prepare command"
@@ -182,11 +256,9 @@ export TARGET_LIB
 export LINK_LIB
 export SEARCH_PATHS
 export SAIF_FILE
-
-PT_TCL="$FLOW_DIR/common/pt_main.tcl"
 (
   cd "$RUN_ROOT/power"
-  run_with_optional_bsub "$PT_LOG" "$PT_SHELL_BIN" -file "$PT_TCL"
+  run_with_optional_bsub "$PT_LOG" "$PT_SHELL_BIN" -file "$PT_TCL_REL"
 )
 
 "$PYTHON_BIN" "$ROOT_DIR/psrc/export_syn_reports.py" \

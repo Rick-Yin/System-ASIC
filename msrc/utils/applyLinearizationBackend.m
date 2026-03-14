@@ -51,7 +51,7 @@ function cmd = buildBackendCommand(params, input_csv, input_meta, output_csv, ou
 
     if ispc && isWslUncPath(backend_entry)
         distro_name = extractWslDistroName(backend_entry);
-        python_cmd_wsl = normalizeWslPythonCommand(python_cmd);
+        python_cmd_wsl = resolveWslPythonCommand(char(params.repo.root), python_cmd);
         wrapper_ps1 = fullfile(char(params.repo.root), 'tools', 'run_wsl_backend.ps1');
         cmd = sprintf('%s -NoProfile -ExecutionPolicy Bypass -File %s -Distro %s -Python %s -RepoRoot %s -BackendEntry %s -InputCsv %s -InputMeta %s -OutputCsv %s -OutputMeta %s', ...
             quoteShellArg('powershell.exe'), ...
@@ -79,6 +79,15 @@ end
 
 function payload = buildBackendPayload(tx_sum, params, case_cfg)
     volterra_pairs = [real(params.linearization.volterra_coeffs(:)), imag(params.linearization.volterra_coeffs(:))];
+    model_manifest = char(params.linearization.model_manifest);
+    model_bin_dir = char(params.linearization.model_bin_dir);
+    if ispc && isWslUncPath(model_manifest)
+        model_manifest = convertWindowsPathToWsl(model_manifest);
+    end
+    if ispc && isWslUncPath(model_bin_dir)
+        model_bin_dir = convertWindowsPathToWsl(model_bin_dir);
+    end
+
     payload = struct( ...
         'case_id', char(case_cfg.case_id), ...
         'iter_idx', params.info.IterNum, ...
@@ -95,8 +104,8 @@ function payload = buildBackendPayload(tx_sum, params, case_cfg)
             'dpd_iterations', params.linearization.dpd_iterations, ...
             'dpd_step', params.linearization.dpd_step, ...
             'volterra_coeffs_real_imag', volterra_pairs, ...
-            'model_manifest', params.linearization.model_manifest, ...
-            'model_bin_dir', params.linearization.model_bin_dir));
+            'model_manifest', model_manifest, ...
+            'model_bin_dir', model_bin_dir));
 end
 
 
@@ -155,4 +164,15 @@ function python_cmd_wsl = normalizeWslPythonCommand(python_cmd)
         otherwise
             python_cmd_wsl = string(python_cmd);
     end
+end
+
+
+function python_cmd_wsl = resolveWslPythonCommand(repo_root, python_cmd)
+    venv_python_windows = fullfile(repo_root, '.venv', 'bin', 'python3');
+    if exist(venv_python_windows, 'file') == 2
+        python_cmd_wsl = convertWindowsPathToWsl(venv_python_windows);
+        return;
+    end
+
+    python_cmd_wsl = normalizeWslPythonCommand(python_cmd);
 end

@@ -95,11 +95,10 @@ report/syn/
 
 其中：
 
-- `report/syn/dc/data.csv` 与 `report/syn/pt/data.csv` 都统一使用表 1 列头：
-  `模块 / 顶层验证 / 结构级验证 / 单元面积 / 总功耗 / WNS/WHS`
-- `DC` 的 `data.csv` 当前自动填写：`模块`、`单元面积`
-- `PT` 的 `data.csv` 当前自动填写：`模块`、`总功耗`、`WNS/WHS`
-- 其余与当前阶段无关的列留空，便于后续直接拼成论文表
+- `report/syn/dc/data.csv` 只保留 `DC` 能直接给出的列：
+  `模块 / 单元面积`
+- `report/syn/pt/data.csv` 只保留 `PT` 能直接给出的列：
+  `模块 / 总功耗 / WNS/WHS`
 - 每个 `<design>/data.csv`：对应该设计当前 run 的单行摘要
 - `dc/` 子目录导出 DC 产物：`mapped/`、`dc_shell.log`、DC 报告
 - `pt/` 子目录导出 PT 产物：`power/`、`vcs/pt` 日志、PT 报告

@@ -14,4 +14,4 @@ export TB_FILE="$FLOW_DIR/designs/migo/tb/tb_migo_saif.sv"
 export TB_TOP="tb_migo_saif"
 export OUTPUT_FILE="$FLOW_DIR/runs/migo/power/migo_output.vec"
 
-exec "$FLOW_DIR/common/run_pt.sh" migo
+exec bash "$FLOW_DIR/common/run_pt.sh" migo

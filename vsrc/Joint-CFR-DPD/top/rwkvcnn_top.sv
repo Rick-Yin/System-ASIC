@@ -575,6 +575,11 @@ module rwkvcnn_top (
   logic signed [31:0] tmv;
   logic signed [31:0] wd;
   logic signed [31:0] uu;
+  logic signed [31:0] xx_word;
+  logic signed [31:0] att_out_word;
+  logic signed [31:0] k_ffn_word;
+  logic signed [31:0] gate_ffn_word;
+  logic signed [31:0] ffn_out_word;
 
   integer exp_acc;
   integer hist_head_idx;
@@ -857,7 +862,10 @@ module rwkvcnn_top (
     end
   endgenerate
 
-  always_ff @(posedge clk or negedge rst_n) begin
+  // This FSM uses blocking assignments for cycle-local intermediates and
+  // nonblocking assignments for architected state updates, so it cannot be
+  // modeled as always_ff.
+  always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       state <= S_IDLE;
       blk_idx <= '0;
@@ -938,7 +946,7 @@ module rwkvcnn_top (
 
         S_ATT_TS: begin
           for (c = 0; c < MODEL_DIM; c++) begin
-            x_base[c] = work_vec[c];
+            x_base[c] <= work_vec[c];
           end
 
           for (c = 0; c < MODEL_DIM; c++) begin
@@ -954,22 +962,21 @@ module rwkvcnn_top (
             exp_acc = RES_EXP + att_ts_w_exp(blk_idx);
             b_aligned = requant_pow2_signed($signed(att_ts_b(blk_idx, c)), att_ts_b_exp(blk_idx), exp_acc, 32);
             acc = acc + $signed(b_aligned);
-            xx[c] = requant_pow2_signed(acc, exp_acc, RES_EXP, RES_BITS);
-          end
+            xx_word = requant_pow2_signed(acc, exp_acc, RES_EXP, RES_BITS);
+            xx[c] <= xx_word;
 
-          one_tm = att_one_tm(blk_idx);
-          for (c = 0; c < MODEL_DIM; c++) begin
             tmv = att_tm_k(blk_idx, c);
-            prod = $signed(work_vec[c]) * $signed(tmv) + $signed(xx[c]) * $signed(one_tm - tmv);
-            xk[c] = sat_signed32(rshift_rne64(prod, -att_tm_exp(blk_idx)), RES_BITS);
+            one_tm = att_one_tm(blk_idx);
+            prod = $signed(work_vec[c]) * $signed(tmv) + $signed(xx_word) * $signed(one_tm - tmv);
+            xk[c] <= sat_signed32(rshift_rne64(prod, -att_tm_exp(blk_idx)), RES_BITS);
 
             tmv = att_tm_v(blk_idx, c);
-            prod = $signed(work_vec[c]) * $signed(tmv) + $signed(xx[c]) * $signed(one_tm - tmv);
-            xv[c] = sat_signed32(rshift_rne64(prod, -att_tm_exp(blk_idx)), RES_BITS);
+            prod = $signed(work_vec[c]) * $signed(tmv) + $signed(xx_word) * $signed(one_tm - tmv);
+            xv[c] <= sat_signed32(rshift_rne64(prod, -att_tm_exp(blk_idx)), RES_BITS);
 
             tmv = att_tm_r(blk_idx, c);
-            prod = $signed(work_vec[c]) * $signed(tmv) + $signed(xx[c]) * $signed(one_tm - tmv);
-            xr[c] = sat_signed32(rshift_rne64(prod, -att_tm_exp(blk_idx)), RES_BITS);
+            prod = $signed(work_vec[c]) * $signed(tmv) + $signed(xx_word) * $signed(one_tm - tmv);
+            xr[c] <= sat_signed32(rshift_rne64(prod, -att_tm_exp(blk_idx)), RES_BITS);
           end
 
           state <= S_ATT_QK;
@@ -982,7 +989,7 @@ module rwkvcnn_top (
         S_ATT_QK_WAIT: begin
           if (lin_done) begin
             for (o = 0; o < MODEL_DIM; o++) begin
-              k_att[o] = lin_y_word(o);
+              k_att[o] <= lin_y_word(o);
             end
             state <= S_ATT_QV;
           end
@@ -995,7 +1002,7 @@ module rwkvcnn_top (
         S_ATT_QV_WAIT: begin
           if (lin_done) begin
             for (o = 0; o < MODEL_DIM; o++) begin
-              v_att[o] = lin_y_word(o);
+              v_att[o] <= lin_y_word(o);
             end
             state <= S_ATT_QR;
           end
@@ -1008,7 +1015,7 @@ module rwkvcnn_top (
         S_ATT_QR_WAIT: begin
           if (lin_done) begin
             for (o = 0; o < MODEL_DIM; o++) begin
-              r_att[o] = lin_y_word(o);
+              r_att[o] <= lin_y_word(o);
             end
             state <= S_ATT_GATE;
           end
@@ -1016,7 +1023,7 @@ module rwkvcnn_top (
 
         S_ATT_GATE: begin
           for (o = 0; o < MODEL_DIM; o++) begin
-            gate_att[o] = hardsigmoid_int_default(r_att[o], EXP_R, GATE_BITS);
+            gate_att[o] <= hardsigmoid_int_default(r_att[o], EXP_R, GATE_BITS);
           end
           state <= S_ATT_WKV;
         end
@@ -1043,8 +1050,8 @@ module rwkvcnn_top (
             t2 = e2;
             bb = $signed(sat_unsigned64(t1 + t2, B_BITS));
 
-            att_aa_div[c] = aa;
-            att_bb_div[c] = bb;
+            att_aa_div[c] <= aa;
+            att_bb_div[c] <= bb;
 
             ww2 = $signed(pp_state[blk_idx][c]) + $signed(wd);
             p2 = ($signed(ww2) > $signed(k_att[c])) ? ww2 : k_att[c];
@@ -1054,12 +1061,12 @@ module rwkvcnn_top (
 
             t1 = rshift_rne64(aa * e1n, wkv_e_frac_rom);
             t2 = $signed(v_att[c]) * e2n;
-            att_aa_next[c] = sat_signed64(t1 + t2, A_BITS);
+            att_aa_next[c] <= sat_signed64(t1 + t2, A_BITS);
 
             t1 = rshift_rne64(bb * e1n, wkv_e_frac_rom);
             t2 = e2n;
-            att_bb_next[c] = $signed(sat_unsigned64(t1 + t2, B_BITS));
-            att_pp_next[c] = p2;
+            att_bb_next[c] <= $signed(sat_unsigned64(t1 + t2, B_BITS));
+            att_pp_next[c] <= p2;
           end
 
           state <= S_ATT_DIV;
@@ -1067,7 +1074,7 @@ module rwkvcnn_top (
 
         S_ATT_DIV: begin
           for (c = 0; c < MODEL_DIM; c++) begin
-            y_wkv[c] = att_div_q[c];
+            y_wkv[c] <= att_div_q[c];
 
             pp_state[blk_idx][c] <= att_pp_next[c];
             aa_state[blk_idx][c] <= att_aa_next[c];
@@ -1084,8 +1091,9 @@ module rwkvcnn_top (
         S_ATT_OUT_WAIT: begin
           if (lin_done) begin
             for (o = 0; o < MODEL_DIM; o++) begin
-              att_out[o] = lin_y_word(o);
-              work_vec[o] <= sat_signed32($signed(work_vec[o]) + $signed(att_out[o]), RES_BITS);
+              att_out_word = lin_y_word(o);
+              att_out[o] <= att_out_word;
+              work_vec[o] <= sat_signed32($signed(work_vec[o]) + $signed(att_out_word), RES_BITS);
             end
 
             for (c = 0; c < MODEL_DIM; c++) begin
@@ -1106,7 +1114,7 @@ module rwkvcnn_top (
 
         S_FFN_TS: begin
           for (c = 0; c < MODEL_DIM; c++) begin
-            x_base[c] = work_vec[c];
+            x_base[c] <= work_vec[c];
           end
 
           for (c = 0; c < MODEL_DIM; c++) begin
@@ -1122,18 +1130,17 @@ module rwkvcnn_top (
             exp_acc = RES_EXP + ffn_ts_w_exp(blk_idx);
             b_aligned = requant_pow2_signed($signed(ffn_ts_b(blk_idx, c)), ffn_ts_b_exp(blk_idx), exp_acc, 32);
             acc = acc + $signed(b_aligned);
-            xx[c] = requant_pow2_signed(acc, exp_acc, RES_EXP, RES_BITS);
-          end
+            xx_word = requant_pow2_signed(acc, exp_acc, RES_EXP, RES_BITS);
+            xx[c] <= xx_word;
 
-          one_tm = ffn_one_tm(blk_idx);
-          for (c = 0; c < MODEL_DIM; c++) begin
             tmv = ffn_tm_k(blk_idx, c);
-            prod = $signed(work_vec[c]) * $signed(tmv) + $signed(xx[c]) * $signed(one_tm - tmv);
-            xk[c] = sat_signed32(rshift_rne64(prod, -ffn_tm_exp(blk_idx)), RES_BITS);
+            one_tm = ffn_one_tm(blk_idx);
+            prod = $signed(work_vec[c]) * $signed(tmv) + $signed(xx_word) * $signed(one_tm - tmv);
+            xk[c] <= sat_signed32(rshift_rne64(prod, -ffn_tm_exp(blk_idx)), RES_BITS);
 
             tmv = ffn_tm_r(blk_idx, c);
-            prod = $signed(work_vec[c]) * $signed(tmv) + $signed(xx[c]) * $signed(one_tm - tmv);
-            xr[c] = sat_signed32(rshift_rne64(prod, -ffn_tm_exp(blk_idx)), RES_BITS);
+            prod = $signed(work_vec[c]) * $signed(tmv) + $signed(xx_word) * $signed(one_tm - tmv);
+            xr[c] <= sat_signed32(rshift_rne64(prod, -ffn_tm_exp(blk_idx)), RES_BITS);
           end
 
           state <= S_FFN_KEY;
@@ -1146,16 +1153,17 @@ module rwkvcnn_top (
         S_FFN_KEY_WAIT: begin
           if (lin_done) begin
             for (o = 0; o < HIDDEN_SZ; o++) begin
-              k_ffn[o] = lin_y_word(o);
+              k_ffn_word = lin_y_word(o);
 
-              if (k_ffn[o] < 0) begin
-                k_ffn[o] = 32'sd0;
-              end else if ($signed(k_ffn[o]) > qmax_signed64(RES_BITS)) begin
-                k_ffn[o] = qmax_signed64(RES_BITS);
+              if (k_ffn_word < 0) begin
+                k_ffn_word = 32'sd0;
+              end else if ($signed(k_ffn_word) > qmax_signed64(RES_BITS)) begin
+                k_ffn_word = qmax_signed64(RES_BITS);
               end
 
-              prod = $signed(k_ffn[o]) * $signed(k_ffn[o]);
-              k_sq[o] = requant_pow2_signed(prod, RES_EXP + RES_EXP, RES_EXP, RES_BITS);
+              k_ffn[o] <= k_ffn_word;
+              prod = $signed(k_ffn_word) * $signed(k_ffn_word);
+              k_sq[o] <= requant_pow2_signed(prod, RES_EXP + RES_EXP, RES_EXP, RES_BITS);
             end
 
             state <= S_FFN_VAL;
@@ -1169,7 +1177,7 @@ module rwkvcnn_top (
         S_FFN_VAL_WAIT: begin
           if (lin_done) begin
             for (o = 0; o < MODEL_DIM; o++) begin
-              kv_ffn[o] = lin_y_word(o);
+              kv_ffn[o] <= lin_y_word(o);
             end
             state <= S_FFN_REC;
           end
@@ -1182,7 +1190,7 @@ module rwkvcnn_top (
         S_FFN_REC_WAIT: begin
           if (lin_done) begin
             for (o = 0; o < MODEL_DIM; o++) begin
-              gate_in_ffn[o] = lin_y_word(o);
+              gate_in_ffn[o] <= lin_y_word(o);
             end
             state <= S_FFN_OUT;
           end
@@ -1190,10 +1198,12 @@ module rwkvcnn_top (
 
         S_FFN_OUT: begin
           for (o = 0; o < MODEL_DIM; o++) begin
-            gate_ffn[o] = hardsigmoid_int_default(gate_in_ffn[o], RES_EXP, GATE_BITS);
-            prod = $signed(kv_ffn[o]) * $signed(gate_ffn[o]);
-            ffn_out[o] = requant_pow2_signed(prod, RES_EXP - GATE_BITS, RES_EXP, RES_BITS);
-            work_vec[o] <= sat_signed32($signed(work_vec[o]) + $signed(ffn_out[o]), RES_BITS);
+            gate_ffn_word = hardsigmoid_int_default(gate_in_ffn[o], RES_EXP, GATE_BITS);
+            gate_ffn[o] <= gate_ffn_word;
+            prod = $signed(kv_ffn[o]) * $signed(gate_ffn_word);
+            ffn_out_word = requant_pow2_signed(prod, RES_EXP - GATE_BITS, RES_EXP, RES_BITS);
+            ffn_out[o] <= ffn_out_word;
+            work_vec[o] <= sat_signed32($signed(work_vec[o]) + $signed(ffn_out_word), RES_BITS);
           end
 
           for (c = 0; c < MODEL_DIM; c++) begin

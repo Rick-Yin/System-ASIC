@@ -88,7 +88,7 @@ end
 
 
 function plotMetricFigure(datasets, metric_name, png_path, pdf_path)
-    case_order = { ...
+    preferred_case_order = { ...
         'migo_no_cfr_no_dpd', ...
         'migo_hc_no_dpd', ...
         'migo_no_cfr_dpd', ...
@@ -96,11 +96,12 @@ function plotMetricFigure(datasets, metric_name, png_path, pdf_path)
         'migo_hc_volterra', ...
         'migo_joint_cfr_dpd' ...
     };
+    case_order = resolveAvailableCaseOrder(datasets, preferred_case_order);
     legend_labels = cellfun(@(case_id) char(getPaperCaseDisplayName(case_id)), case_order, 'UniformOutput', false);
 
     colors = lines(numel(case_order));
-    line_styles = {'-', '--', '-.', ':', '-', '--'};
-    markers = {'o', 's', '^', 'd', 'x', 'v'};
+    line_styles = {'-', '--', '-.', ':', '-', '--', '-.'};
+    markers = {'o', 's', '^', 'd', 'x', 'v', 'p'};
 
     y_limits = determineYLimits(datasets, case_order, metric_name);
     fig = figure('Color', 'w', 'Position', [100 100 1680 560]);
@@ -112,7 +113,10 @@ function plotMetricFigure(datasets, metric_name, png_path, pdf_path)
         hold(ax, 'on');
 
         for case_idx = 1:numel(case_order)
-            row_idx = findCaseRow(datasets(dataset_idx).case_ids, case_order{case_idx});
+            row_idx = findCaseRowOrEmpty(datasets(dataset_idx).case_ids, case_order{case_idx});
+            if isempty(row_idx)
+                continue;
+            end
             x_vals = datasets(dataset_idx).snr_range;
             if strcmp(metric_name, 'ber')
                 y_vals = datasets(dataset_idx).ber_curve_by_method(row_idx, :);
@@ -173,7 +177,10 @@ function y_limits = determineYLimits(datasets, case_order, metric_name)
     all_vals = [];
     for dataset_idx = 1:numel(datasets)
         for case_idx = 1:numel(case_order)
-            row_idx = findCaseRow(datasets(dataset_idx).case_ids, case_order{case_idx});
+            row_idx = findCaseRowOrEmpty(datasets(dataset_idx).case_ids, case_order{case_idx});
+            if isempty(row_idx)
+                continue;
+            end
             if strcmp(metric_name, 'ber')
                 curve_vals = datasets(dataset_idx).ber_curve_by_method(row_idx, :);
                 curve_vals = curve_vals(curve_vals > 0);
@@ -205,57 +212,56 @@ end
 
 function summary_table = buildTable2Summary(datasets, key_snr_points)
     joint_case_ids = {'migo_joint_cfr_dpd', 'wls_joint_cfr_dpd', 'swls_joint_cfr_dpd'};
-    filter_labels = {'MIGO', 'WLS', 'SWLS'};
+    rows = struct( ...
+        'mcs_value', {}, ...
+        'modulation', {}, ...
+        'filter', {}, ...
+        'linearization', {}, ...
+        'snr_m5_ber', {}, ...
+        'snr_m5_evm_percent', {}, ...
+        'snr_15_ber', {}, ...
+        'snr_15_evm_percent', {});
 
-    num_rows = numel(datasets) * numel(joint_case_ids);
-    mcs_values = zeros(num_rows, 1);
-    modulations = strings(num_rows, 1);
-    filters = strings(num_rows, 1);
-    linearizations = strings(num_rows, 1);
-    snr_neg5_ber = zeros(num_rows, 1);
-    snr_neg5_evm_percent = zeros(num_rows, 1);
-    snr_15_ber = zeros(num_rows, 1);
-    snr_15_evm_percent = zeros(num_rows, 1);
-
-    row_ptr = 1;
     for dataset_idx = 1:numel(datasets)
         neg5_idx = findSNRIndex(datasets(dataset_idx).snr_range, key_snr_points(1));
         pos15_idx = findSNRIndex(datasets(dataset_idx).snr_range, key_snr_points(2));
 
         for case_idx = 1:numel(joint_case_ids)
-            row_idx = findCaseRow(datasets(dataset_idx).case_ids, joint_case_ids{case_idx});
+            row_idx = findCaseRowOrEmpty(datasets(dataset_idx).case_ids, joint_case_ids{case_idx});
+            if isempty(row_idx)
+                continue;
+            end
 
-            mcs_values(row_ptr) = datasets(dataset_idx).mcs_value;
-            modulations(row_ptr) = string(datasets(dataset_idx).modulation_name);
-            filters(row_ptr) = string(filter_labels{case_idx});
-            linearizations(row_ptr) = "Joint CFR-DPD";
-            snr_neg5_ber(row_ptr) = datasets(dataset_idx).ber_curve_by_method(row_idx, neg5_idx);
-            snr_neg5_evm_percent(row_ptr) = 100 * datasets(dataset_idx).evm_curve_by_method(row_idx, neg5_idx);
-            snr_15_ber(row_ptr) = datasets(dataset_idx).ber_curve_by_method(row_idx, pos15_idx);
-            snr_15_evm_percent(row_ptr) = 100 * datasets(dataset_idx).evm_curve_by_method(row_idx, pos15_idx);
-            row_ptr = row_ptr + 1;
+            rows(end + 1) = struct( ... %#ok<AGROW>
+                'mcs_value', datasets(dataset_idx).mcs_value, ...
+                'modulation', string(datasets(dataset_idx).modulation_name), ...
+                'filter', string(getFilterLabelForJointCase(joint_case_ids{case_idx})), ...
+                'linearization', "Joint CFR-DPD", ...
+                'snr_m5_ber', datasets(dataset_idx).ber_curve_by_method(row_idx, neg5_idx), ...
+                'snr_m5_evm_percent', 100 * datasets(dataset_idx).evm_curve_by_method(row_idx, neg5_idx), ...
+                'snr_15_ber', datasets(dataset_idx).ber_curve_by_method(row_idx, pos15_idx), ...
+                'snr_15_evm_percent', 100 * datasets(dataset_idx).evm_curve_by_method(row_idx, pos15_idx));
         end
     end
 
-    summary_table = table( ...
-        mcs_values, ...
-        modulations, ...
-        filters, ...
-        linearizations, ...
-        snr_neg5_ber, ...
-        snr_neg5_evm_percent, ...
-        snr_15_ber, ...
-        snr_15_evm_percent, ...
-        'VariableNames', { ...
-            'mcs_value', ...
-            'modulation', ...
-            'filter', ...
-            'linearization', ...
-            'snr_m5_ber', ...
-            'snr_m5_evm_percent', ...
-            'snr_15_ber', ...
-            'snr_15_evm_percent' ...
-        });
+    if isempty(rows)
+        summary_table = table( ...
+            zeros(0, 1), strings(0, 1), strings(0, 1), strings(0, 1), ...
+            zeros(0, 1), zeros(0, 1), zeros(0, 1), zeros(0, 1), ...
+            'VariableNames', { ...
+                'mcs_value', ...
+                'modulation', ...
+                'filter', ...
+                'linearization', ...
+                'snr_m5_ber', ...
+                'snr_m5_evm_percent', ...
+                'snr_15_ber', ...
+                'snr_15_evm_percent' ...
+            });
+        return;
+    end
+
+    summary_table = struct2table(rows, 'AsArray', true);
 end
 
 
@@ -308,6 +314,11 @@ function row_idx = findCaseRow(case_ids, target_case_id)
 end
 
 
+function row_idx = findCaseRowOrEmpty(case_ids, target_case_id)
+    row_idx = find(strcmp(case_ids, target_case_id), 1);
+end
+
+
 function snr_idx = findSNRIndex(snr_range, target_snr)
     snr_idx = find(abs(snr_range - target_snr) < 1e-9, 1);
     if isempty(snr_idx)
@@ -325,12 +336,85 @@ function mcs_value = parseMcsValueFromFilename(result_file)
 end
 
 
-function saveFigureDualFormat(fig, png_path, pdf_path)
-    try
-        exportgraphics(fig, png_path, 'Resolution', 300);
-        exportgraphics(fig, pdf_path, 'ContentType', 'vector');
-    catch
-        saveas(fig, png_path);
-        saveas(fig, pdf_path);
+function case_order = resolveAvailableCaseOrder(datasets, preferred_case_order)
+    available_case_ids = {};
+    for dataset_idx = 1:numel(datasets)
+        available_case_ids = [available_case_ids, datasets(dataset_idx).case_ids(:)']; %#ok<AGROW>
     end
+    available_case_ids = unique(available_case_ids, 'stable');
+
+    case_order = {};
+    for idx = 1:numel(preferred_case_order)
+        if any(strcmp(available_case_ids, preferred_case_order{idx}))
+            case_order{end + 1} = preferred_case_order{idx}; %#ok<AGROW>
+        end
+    end
+
+    for idx = 1:numel(available_case_ids)
+        if ~any(strcmp(case_order, available_case_ids{idx}))
+            case_order{end + 1} = available_case_ids{idx}; %#ok<AGROW>
+        end
+    end
+
+    if isempty(case_order)
+        error('No case data was found for plotting.');
+    end
+end
+
+
+function filter_label = getFilterLabelForJointCase(case_id)
+    switch string(case_id)
+        case "migo_joint_cfr_dpd"
+            filter_label = "MIGO";
+        case "wls_joint_cfr_dpd"
+            filter_label = "WLS";
+        case "swls_joint_cfr_dpd"
+            filter_label = "SWLS";
+        otherwise
+            filter_label = string(case_id);
+    end
+end
+
+
+function saveFigureDualFormat(fig, png_path, pdf_path)
+    saveFigureOne(fig, png_path, 'png');
+    saveFigureOne(fig, pdf_path, 'pdf');
+end
+
+
+function saveFigureOne(fig, target_path, file_kind)
+    target_path = char(target_path);
+    save_path = target_path;
+    temp_path = '';
+    if ispc && isWslUncPathLocal(target_path)
+        temp_path = [tempname, '.', file_kind];
+        save_path = temp_path;
+    end
+
+    try
+        switch lower(file_kind)
+            case 'png'
+                exportgraphics(fig, save_path, 'Resolution', 300);
+            case 'pdf'
+                exportgraphics(fig, save_path, 'ContentType', 'vector');
+            otherwise
+                saveas(fig, save_path);
+        end
+    catch
+        saveas(fig, save_path);
+    end
+
+    if ~isempty(temp_path)
+        target_dir = fileparts(target_path);
+        if ~exist(target_dir, 'dir')
+            mkdir(target_dir);
+        end
+        copyfile(temp_path, target_path);
+        delete(temp_path);
+    end
+end
+
+
+function tf = isWslUncPathLocal(path_str)
+    tf = startsWith(string(path_str), "\\wsl.localhost\") || startsWith(string(path_str), "\\wsl$\");
 end

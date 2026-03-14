@@ -17,10 +17,28 @@ run_with_optional_bsub() {
   shift
 
   local cmd_str
+  local cwd
+  local tmpdir
+  local tmp
+  local temp
+  local wrapped_cmd
+  local cwd_q
+  local tmpdir_q
+  local tmp_q
+  local temp_q
   cmd_str="$(quote_cmd "$@")"
 
   if [[ -n "${BSUB_PREFIX// }" ]]; then
-    eval "$BSUB_PREFIX $cmd_str" 2>&1 | tee "$log_file"
+    cwd="$(pwd)"
+    tmpdir="${TMPDIR:-$cwd}"
+    tmp="${TMP:-$tmpdir}"
+    temp="${TEMP:-$tmpdir}"
+    cwd_q="$(printf '%q' "$cwd")"
+    tmpdir_q="$(printf '%q' "$tmpdir")"
+    tmp_q="$(printf '%q' "$tmp")"
+    temp_q="$(printf '%q' "$temp")"
+    wrapped_cmd="mkdir -p $cwd_q $tmpdir_q && cd $cwd_q && export TMPDIR=$tmpdir_q TMP=$tmp_q TEMP=$temp_q && exec $cmd_str"
+    eval "$BSUB_PREFIX bash -lc $(printf '%q' "$wrapped_cmd")" 2>&1 | tee "$log_file"
   else
     eval "$cmd_str" 2>&1 | tee "$log_file"
   fi
@@ -66,14 +84,27 @@ export MAX_CORES
 
 LOG_FILE="$RUN_ROOT/logs/dc_shell.log"
 DC_TCL="$FLOW_DIR/common/dc_main.tcl"
+DC_TCL_REL="../../../common/dc_main.tcl"
+TMP_WORK_DIR="${TMPDIR:-$RUN_ROOT/tmp}"
+
+if [[ ! -f "$DC_TCL" ]]; then
+  echo "[DC][ERR] missing DC Tcl script: $DC_TCL"
+  exit 2
+fi
+
+mkdir -p "$TMP_WORK_DIR"
+export TMPDIR="$TMP_WORK_DIR"
+export TMP="$TMP_WORK_DIR"
+export TEMP="$TMP_WORK_DIR"
 
 echo "[DC] design=$DESIGN"
 echo "[DC] clock_ns=$CLOCK_NS"
 echo "[DC] run_root=$RUN_ROOT"
+echo "[DC] tmpdir=$TMPDIR"
 
 (
   cd "$RUN_ROOT/dc"
-  run_with_optional_bsub "$LOG_FILE" "$DC_SHELL_BIN" -f "$DC_TCL"
+  run_with_optional_bsub "$LOG_FILE" "$DC_SHELL_BIN" -f "$DC_TCL_REL"
 )
 
 "$PYTHON_BIN" "$ROOT_DIR/psrc/export_syn_reports.py" \

@@ -5,6 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 GENERATED_DIRS=(
   "report"
+  "syn_flow/runs"
   "flow/yosys/out"
   "flow/yosys/reports"
   "vsrc/Joint-CFR-DPD/tb/top/build"
