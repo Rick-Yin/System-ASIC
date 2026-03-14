@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
 TB_DIR="$ROOT_DIR/vsrc/Joint-CFR-DPD/tb/l0_ops"
-REPORT_DIR="${1:-$ROOT_DIR/report/l0}"
+REPORT_DIR="${1:-$ROOT_DIR/report/func/l0}"
 BUILD_DIR="$REPORT_DIR/build"
 LOG_DIR="$REPORT_DIR/logs"
 VECTOR_DIR="$REPORT_DIR/vectors"

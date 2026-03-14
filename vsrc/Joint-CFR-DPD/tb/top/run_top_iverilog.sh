@@ -67,9 +67,9 @@ case "$TOP_PROFILE" in
     ;;
 esac
 
-DEFAULT_REPORT_DIR="$ROOT_DIR/report/joint_top"
+DEFAULT_REPORT_DIR="$ROOT_DIR/report/func/joint_top"
 if [[ -z "${1:-}" && "$TOP_PROFILE" != "full" ]]; then
-  DEFAULT_REPORT_DIR="$ROOT_DIR/report/joint_top_${TOP_PROFILE}"
+  DEFAULT_REPORT_DIR="$ROOT_DIR/report/func/joint_top_${TOP_PROFILE}"
 fi
 
 TB_DIR="$ROOT_DIR/vsrc/Joint-CFR-DPD/tb/top"
@@ -79,6 +79,9 @@ LOG_DIR="$REPORT_DIR/logs"
 VECTOR_DIR="$REPORT_DIR/vectors"
 
 mkdir -p "$BUILD_DIR" "$LOG_DIR" "$VECTOR_DIR"
+
+# Keep RTL package / ROM outputs in sync with the latest exported manifest and bins.
+python3 "$ROOT_DIR/psrc/tools/gen_rwkv_sv_rom.py"
 
 TOP_FRAMES="${TOP_FRAMES:-$default_frames}"
 TOP_MODE="${TOP_MODE:-$default_mode}"

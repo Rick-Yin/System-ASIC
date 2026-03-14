@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
-REPORT_DIR="${1:-$ROOT_DIR/report/joint_top_validation}"
+REPORT_DIR="${1:-$ROOT_DIR/report/func/joint_top_validation}"
 CORE_REPORT_DIR="$REPORT_DIR/core"
 PROFILES_STRING="${TOP_VALIDATION_PROFILES:-smoke medium full}"
 

@@ -7,7 +7,7 @@ if [[ -f "$ROOT_DIR/tools/activate_local_eda.sh" ]]; then
 fi
 
 TB_DIR="$ROOT_DIR/vsrc/Joint-CFR-DPD/tb/core"
-REPORT_DIR="${1:-$ROOT_DIR/report/core}"
+REPORT_DIR="${1:-$ROOT_DIR/report/func/core}"
 BUILD_DIR="$REPORT_DIR/build"
 LOG_DIR="$REPORT_DIR/logs"
 

@@ -26,12 +26,12 @@ bash vsrc/Joint-CFR-DPD/tb/top/run_top_iverilog.sh
 This flow will:
 - Use `iverilog + vvp` only (no verilator fallback)
 - Generate packed top vectors from `RWKVCNN_Quan.forward_int`:
-  - `report/joint_top/vectors/input_packed.vec`
-  - `report/joint_top/vectors/golden_output_packed.vec`
+  - `report/func/joint_top/vectors/input_packed.vec`
+  - `report/func/joint_top/vectors/golden_output_packed.vec`
 - Run `tb_rwkvcnn_top_vec.sv` self-check on `rwkvcnn_top`
 - Dump RTL outputs to:
-  - `report/joint_top/logs/rtl_output_packed.vec`
-- Report BER/MAE CSV to `report/joint_top/rtl_ber_eval.csv`
+  - `report/func/joint_top/logs/rtl_output_packed.vec`
+- Report BER/MAE CSV to `report/func/joint_top/rtl_ber_eval.csv`
 
 Profiles:
 
@@ -76,10 +76,10 @@ This generates frontend checkpoints and trend reports under `report/yosys/`.
 ## One-click local run
 
 ```bash
-bash run_all_frontend.sh
+bash run_func.sh
 ```
 
-This writes all local regression outputs plus Yosys frontend checkpoints under `report/<tag>/`.
+This writes functional regression outputs under `report/<tag>/`.
 
 ## External DC/PT
 
