@@ -1,0 +1,2 @@
+[MIGO-STRUCT][PASS] item=const_coeff_mac cases=256 mismatches=0
+/home/rick/System-ASIC/dc/designs/migo/tb/tb_migo_const_coeff_mac.sv:96: $finish called at 272000 (1ps)

@@ -1,0 +1,4 @@
+stage_id: joint_l0
+stage_label: Joint L0 regression
+cwd: /home/rick/System-ASIC
+command: bash /home/rick/System-ASIC/vsrc/Joint-CFR-DPD/tb/l0_ops/run_l0_iverilog.sh /home/rick/System-ASIC/report/func/l0

@@ -1,0 +1,2 @@
+[MIGO][PASS] sent=512 recv=512 flush=96
+/home/rick/System-ASIC/dc/designs/migo/tb/tb_migo_saif.sv:257: $finish called at 7415000 (1ps)

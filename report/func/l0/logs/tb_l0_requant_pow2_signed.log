@@ -1,0 +1,2 @@
+[L0][PASS] op=requant_pow2_signed cases=8757 mismatches=0
+/home/rick/System-ASIC/vsrc/Joint-CFR-DPD/tb/l0_ops/tb_l0_requant_pow2_signed.sv:59: $finish called at 0 (1ps)

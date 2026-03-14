@@ -1,0 +1,2 @@
+rows,dims,bits_per_component,bit_errors,bit_total,ber,vector_mismatch,vector_mismatch_ratio,mae,max_abs_err
+512,1,9,0,4608,0.000000e+00,0,0.000000e+00,0.000000,0

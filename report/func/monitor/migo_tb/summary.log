@@ -1,0 +1,20 @@
+stage_id: migo_tb
+stage_label: MIGO bit-exact regression
+started_at_utc: 2026-03-13T20:48:18Z
+finished_at_utc: 2026-03-13T20:48:18Z
+exit_status: 0
+oom_hint: no
+peak_rss_kb: unavailable
+elapsed: 
+user_time_sec: 
+system_time_sec: 
+percent_cpu: 
+major_page_faults: 
+minor_page_faults: 
+command_log: /home/rick/System-ASIC/report/func/monitor/migo_tb/command.log
+host_initial_log: /home/rick/System-ASIC/report/func/monitor/migo_tb/host_initial.log
+host_samples_log: /home/rick/System-ASIC/report/func/monitor/migo_tb/host_samples.log
+host_final_log: /home/rick/System-ASIC/report/func/monitor/migo_tb/host_final.log
+time_log: /home/rick/System-ASIC/report/func/monitor/migo_tb/time_v.log
+dmesg_before_log: /home/rick/System-ASIC/report/func/monitor/migo_tb/dmesg_before.log
+dmesg_after_log: /home/rick/System-ASIC/report/func/monitor/migo_tb/dmesg_after.log

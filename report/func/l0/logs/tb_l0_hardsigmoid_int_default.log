@@ -1,0 +1,2 @@
+[L0][PASS] op=hardsigmoid_int_default cases=5326 mismatches=0
+/home/rick/System-ASIC/vsrc/Joint-CFR-DPD/tb/l0_ops/tb_l0_hardsigmoid_int_default.sv:56: $finish called at 0 (1ps)

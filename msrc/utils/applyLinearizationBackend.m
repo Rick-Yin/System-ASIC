@@ -24,13 +24,7 @@ function [tx_lin, backend_meta, params] = applyLinearizationBackend(tx_sum, para
     writeComplexCsv(input_csv, tx_sum);
     writeJsonFile(input_meta, buildBackendPayload(tx_sum, params, case_cfg));
 
-    cmd = sprintf('%s %s --input-csv %s --input-meta %s --output-csv %s --output-meta %s', ...
-        quoteShellArg(char(params.linearization.python_cmd)), ...
-        quoteShellArg(char(params.linearization.backend_entry)), ...
-        quoteShellArg(input_csv), ...
-        quoteShellArg(input_meta), ...
-        quoteShellArg(output_csv), ...
-        quoteShellArg(output_meta));
+    cmd = buildBackendCommand(params, input_csv, input_meta, output_csv, output_meta);
 
     [status, cmdout] = system(cmd);
     if status ~= 0
@@ -48,6 +42,38 @@ function [tx_lin, backend_meta, params] = applyLinearizationBackend(tx_sum, para
     backend_meta = readJsonFile(output_meta);
     params.linearization.last_exchange_dir = exchange_dir;
     params.linearization.last_backend_stdout = string(cmdout);
+end
+
+
+function cmd = buildBackendCommand(params, input_csv, input_meta, output_csv, output_meta)
+    backend_entry = char(params.linearization.backend_entry);
+    python_cmd = char(params.linearization.python_cmd);
+
+    if ispc && isWslUncPath(backend_entry)
+        distro_name = extractWslDistroName(backend_entry);
+        python_cmd_wsl = normalizeWslPythonCommand(python_cmd);
+        wrapper_ps1 = fullfile(char(params.repo.root), 'tools', 'run_wsl_backend.ps1');
+        cmd = sprintf('%s -NoProfile -ExecutionPolicy Bypass -File %s -Distro %s -Python %s -RepoRoot %s -BackendEntry %s -InputCsv %s -InputMeta %s -OutputCsv %s -OutputMeta %s', ...
+            quoteShellArg('powershell.exe'), ...
+            quoteShellArg(wrapper_ps1), ...
+            quoteShellArg(distro_name), ...
+            quoteShellArg(python_cmd_wsl), ...
+            quoteShellArg(char(params.repo.root)), ...
+            quoteShellArg(backend_entry), ...
+            quoteShellArg(input_csv), ...
+            quoteShellArg(input_meta), ...
+            quoteShellArg(output_csv), ...
+            quoteShellArg(output_meta));
+        return;
+    end
+
+    cmd = sprintf('%s %s --input-csv %s --input-meta %s --output-csv %s --output-meta %s', ...
+        quoteShellArg(python_cmd), ...
+        quoteShellArg(backend_entry), ...
+        quoteShellArg(input_csv), ...
+        quoteShellArg(input_meta), ...
+        quoteShellArg(output_csv), ...
+        quoteShellArg(output_meta));
 end
 
 
@@ -81,5 +107,52 @@ function quoted = quoteShellArg(value)
     else
         value = replace(value, "'", "'\"'\"'");
         quoted = sprintf('''%s''', value);
+    end
+end
+
+
+function tf = isWslUncPath(path_str)
+    tf = startsWith(string(path_str), "\\wsl.localhost\") || startsWith(string(path_str), "\\wsl$\");
+end
+
+
+function distro_name = extractWslDistroName(path_str)
+    path_str = char(path_str);
+    tokens = regexp(path_str, '^\\\\wsl(?:\.localhost)?\\([^\\]+)\\', 'tokens', 'once');
+    if isempty(tokens)
+        error('Unable to extract WSL distro name from path: %s', path_str);
+    end
+    distro_name = tokens{1};
+end
+
+
+function wsl_path = convertWindowsPathToWsl(path_str)
+    path_str = char(path_str);
+    unc_tokens = regexp(path_str, '^\\\\wsl(?:\.localhost)?\\[^\\]+\\(.*)$', 'tokens', 'once');
+    if ~isempty(unc_tokens)
+        suffix = strrep(unc_tokens{1}, '\', '/');
+        wsl_path = ['/' suffix];
+        return;
+    end
+
+    drive_tokens = regexp(path_str, '^([A-Za-z]):\\(.*)$', 'tokens', 'once');
+    if ~isempty(drive_tokens)
+        drive_letter = lower(drive_tokens{1});
+        suffix = strrep(drive_tokens{2}, '\', '/');
+        wsl_path = sprintf('/mnt/%s/%s', drive_letter, suffix);
+        return;
+    end
+
+    wsl_path = strrep(path_str, '\', '/');
+end
+
+
+function python_cmd_wsl = normalizeWslPythonCommand(python_cmd)
+    token = lower(strtrim(string(python_cmd)));
+    switch token
+        case {"python", "python.exe", "py"}
+            python_cmd_wsl = "python3";
+        otherwise
+            python_cmd_wsl = string(python_cmd);
     end
 end

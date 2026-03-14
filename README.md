@@ -2,9 +2,11 @@
 
 This repo currently supports three local entrypoints:
 
-- `bash run_all_frontend.sh`
+- `bash run_func.sh`
+- `bash run_dc.sh`
+- `bash run_pt.sh`
 - `bash vsrc/Joint-CFR-DPD/tb/top/run_top_iverilog.sh`
-- `bash flow/yosys/run_presynth.sh --flow <joint|migo> --clocks <ns>`
+- `bash syn_flow/designs/migo/tb/run_migo_struct_iverilog.sh`
 
 All local outputs are written under `report/`.
 
@@ -29,19 +31,33 @@ If `slang` is unavailable, the script can fall back to `sv2v` when present in `P
 Run the full local flow:
 
 ```bash
-bash run_all_frontend.sh
+bash run_func.sh
+```
+
+Run the Synopsys synthesis flow for both designs:
+
+```bash
+bash run_dc.sh
+bash run_pt.sh
+```
+
+Or run only one design:
+
+```bash
+bash run_dc.sh migo 2.0
+bash run_pt.sh migo
 ```
 
 Or set a custom output tag:
 
 ```bash
-bash run_all_frontend.sh my_run
+bash run_func.sh my_run
 ```
 
-Optional clock overrides:
+Run only selected stages:
 
 ```bash
-JOINT_CLOCKS=2.0 MIGO_CLOCKS=2.0 bash run_all_frontend.sh my_run
+RUN_STAGES=migo_tb,migo_struct bash run_func.sh my_migo_only
 ```
 
 Outputs land in:
@@ -49,8 +65,6 @@ Outputs land in:
 - `report/<tag>/joint_top/`
 - `report/<tag>/l0/`
 - `report/<tag>/migo/`
-- `report/<tag>/yosys/joint_frontend/`
-- `report/<tag>/yosys/migo_frontend/`
 
 ## Minimal Validation Commands
 
@@ -66,7 +80,19 @@ yosys -Q -p 'plugin -i slang; help read_slang'
 Run only Joint functional regression:
 
 ```bash
-bash vsrc/Joint-CFR-DPD/tb/top/run_top_iverilog.sh report/joint_top
+bash vsrc/Joint-CFR-DPD/tb/top/run_top_iverilog.sh report/func/joint_top
+```
+
+Run only MIGO bit-exact regression:
+
+```bash
+bash syn_flow/designs/migo/tb/run_migo_iverilog.sh report/func/migo
+```
+
+Run only MIGO structure regression:
+
+```bash
+bash syn_flow/designs/migo/tb/run_migo_struct_iverilog.sh report/func/migo
 ```
 
 Run staged top validation profiles:
@@ -81,21 +107,11 @@ Run only a fast smoke profile:
 TOP_PROFILE=smoke bash vsrc/Joint-CFR-DPD/tb/top/run_top_iverilog.sh report/joint_top_smoke
 ```
 
-Run only Joint frontend synthesis:
-
-```bash
-bash flow/yosys/run_presynth.sh --flow joint --clocks 2.0 --report-root report/yosys --tag joint_frontend
-```
-
-Run only MIGO frontend synthesis:
-
-```bash
-bash flow/yosys/run_presynth.sh --flow migo --clocks 2.0 --report-root report/yosys --tag migo_frontend
-```
-
 ## Notes
 
-- The local Yosys flow is frontend-only and is intended for trend exploration plus reusable frontend checkpoints.
-- CSV summaries are the only table-format exports kept by the local flow.
+- `run_func.sh` now only runs functional validation stages.
+- CSV summaries are the table-format exports kept by the local functional flow.
 - Top validation supports `smoke`, `medium`, and `full` profiles via `TOP_PROFILE`, and `tb_rwkvcnn_top_vec.sv` now reports linear-stage coverage and richer timeout diagnostics.
+- MIGO regression now generates deterministic input/golden vectors and writes a bit-exact summary to `report/<tag>/migo/rtl_vec_eval.csv`.
+- MIGO structure regression writes `report/<tag>/migo/migo_structure_validation.csv`.
 - Top regression also accepts `TOP_MAX_FRAME_LATENCY` and `TOP_TIMEOUT_CYCLES` for bounded debug runs.

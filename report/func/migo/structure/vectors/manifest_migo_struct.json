@@ -1,0 +1,9 @@
+{
+  "generator": "psrc/gen_migo_struct_vectors.py",
+  "const_coeff_mac_cases": 256,
+  "round_shift_cases": 256,
+  "seed": 11,
+  "n": 161,
+  "shift": 8,
+  "out_bits": 9
+}

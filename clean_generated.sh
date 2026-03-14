@@ -13,8 +13,8 @@ GENERATED_DIRS=(
   "vsrc/Joint-CFR-DPD/tb/l0_ops/build"
   "vsrc/Joint-CFR-DPD/tb/l0_ops/logs"
   "vsrc/Joint-CFR-DPD/tb/l0_ops/vectors"
-  "dc/designs/migo/tb/build"
-  "dc/designs/migo/tb/logs"
+  "syn_flow/designs/migo/tb/build"
+  "syn_flow/designs/migo/tb/logs"
   "psrc/__pycache__"
   "psrc/tools/__pycache__"
 )

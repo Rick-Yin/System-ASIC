@@ -1,0 +1,8 @@
+Index,Category,Operator,Test Vectors,Mismatches,Mismatch Rate (%),Verdict
+OP1,Saturation,sat_signed32,3110,0,0.000000,Equivalent (bit-exact)
+OP2,Rounding,rshift_rne64,3221,0,0.000000,Equivalent (bit-exact)
+OP3,Rounding,div_rne64,3679,0,0.000000,Equivalent (bit-exact)
+OP4,Quantization,requant_pow2_signed,8757,0,0.000000,Equivalent (bit-exact)
+OP5,Activation,hardsigmoid_int_default,5326,0,0.000000,Equivalent (bit-exact)
+OP6,Lookup,wkv_lut_lookup,5488,0,0.000000,Equivalent (bit-exact)
+TOTAL,-,6 operators,29581,0,0.000000,Equivalent (bit-exact)

@@ -24,23 +24,31 @@ function saveCompareResults(params, save_root)
         mkdir(save_root_ber);
     end
 
-    snr_range = params.iter.snr_range;
-    ber_curve_by_method = params.save.ber_curve_by_method;
-    method_names = params.save.method_names;
-    compare_results = params.save.compare_results;
-    case_ids = method_names;
-
     ber_filename = sprintf("ber_compare_MCS_%d_seed_%d.mat", ...
         params.info.MCSValue, params.info.randseed);
     ber_file = fullfile(save_root_ber, ber_filename);
-    if isfield(params.save, 'case_configs')
-        case_configs = params.save.case_configs;
-        save(ber_file, 'snr_range', 'ber_curve_by_method', ...
-            'method_names', 'case_ids', 'compare_results', 'case_configs', '-v7.3');
-    else
-        save(ber_file, 'snr_range', 'ber_curve_by_method', ...
-            'method_names', 'case_ids', 'compare_results', '-v7.3');
+
+    payload = struct();
+    payload.snr_range = params.iter.snr_range;
+    payload.ber_curve_by_method = params.save.ber_curve_by_method;
+    payload.method_names = params.save.method_names;
+    payload.case_ids = params.save.method_names;
+    payload.compare_results = params.save.compare_results;
+    payload.mcs_value = params.info.MCSValue;
+    if isfield(params.info, 'modulation_name')
+        payload.modulation_name = params.info.modulation_name;
     end
+    if isfield(params.save, 'evm_curve_by_method')
+        payload.evm_curve_by_method = params.save.evm_curve_by_method;
+    end
+    if isfield(params.save, 'case_configs')
+        payload.case_configs = params.save.case_configs;
+    end
+    if isfield(params.save, 'key_snr_points')
+        payload.key_snr_points = params.save.key_snr_points;
+    end
+
+    save(ber_file, '-struct', 'payload', '-v7.3');
 end
 
 
@@ -76,10 +84,16 @@ function saveSingleMethodResults(params, save_root, method_tag)
         mkdir(save_root_ber);
     end
 
-    snr_range = params.iter.snr_range;
-    ber_curve = params.save.ber_curve;
     ber_filename = sprintf("ber_curve_%s_MCS_%d_seed_%d.mat", ...
         lower(char(method_tag)), params.info.MCSValue, params.info.randseed);
     ber_file = fullfile(save_root_ber, ber_filename);
-    save(ber_file, 'snr_range', 'ber_curve', '-v7.3');
+
+    payload = struct();
+    payload.snr_range = params.iter.snr_range;
+    payload.ber_curve = params.save.ber_curve;
+    if isfield(params.save, 'evm_curve')
+        payload.evm_curve = params.save.evm_curve;
+    end
+
+    save(ber_file, '-struct', 'payload', '-v7.3');
 end

@@ -1,0 +1,5 @@
+rows=512 dims=1 bits=9
+bit_errors=0 bit_total=4608 BER=0.000000e+00
+vector_mismatch=0/512 ratio=0.000000e+00
+MAE=0.000000 max_abs_err=0
+csv=/home/rick/System-ASIC/report/func/migo/rtl_vec_eval.csv

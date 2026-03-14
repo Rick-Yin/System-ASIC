@@ -1,0 +1,4 @@
+Item,Correct,Total,Mismatches,Verdict
+常数系数乘加路径,256,256,0,Equivalent (bit-exact)
+末级舍入与右移输出,256,256,0,Equivalent (bit-exact)
+TOTAL,512,512,0,Equivalent (bit-exact)

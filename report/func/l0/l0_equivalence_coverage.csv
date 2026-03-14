@@ -1,0 +1,7 @@
+Operator,Function,Numeric Domain,Directed Corner Coverage
+sat_signed32,Signed clipping,x:int64; bits:1..32,Lower/upper clip boundaries; near-boundary +/-1 transitions
+rshift_rne64,Arithmetic right-shift with RNE,x:int64; sh:-8..96,sh<=0 passthrough; sh>=62; tie-to-even at half LSB
+div_rne64,Signed divide with RNE,x:int64; d:int64,d=0 handling; sign flips; half-way tie-to-even
+requant_pow2_signed,Power-of-two requantization,x:int64; exp delta:-48..48; bits:2..31,Large shift saturation; signed overflow guard; tie rounding
+hardsigmoid_int_default,Integer hard-sigmoid,x_i:int32; exp_x:-20..12; gate_bits:4..15,"Lower/upper clamp to [0, 2^gate_bits-1]"
+wkv_lut_lookup,WKV LUT index mapping,delta/min/step:int32; LUT_NUMEL=256,"step=0; +/-step; index clamp to [0, LUT_NUMEL-1]"

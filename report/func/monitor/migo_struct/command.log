@@ -1,0 +1,4 @@
+stage_id: migo_struct
+stage_label: MIGO structure regression
+cwd: /home/rick/System-ASIC
+command: bash /home/rick/System-ASIC/dc/designs/migo/tb/run_migo_struct_iverilog.sh /home/rick/System-ASIC/report/func/migo

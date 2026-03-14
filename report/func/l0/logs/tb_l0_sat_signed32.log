@@ -1,0 +1,2 @@
+[L0][PASS] op=sat_signed32 cases=3110 mismatches=0
+/home/rick/System-ASIC/vsrc/Joint-CFR-DPD/tb/l0_ops/tb_l0_sat_signed32.sv:52: $finish called at 0 (1ps)

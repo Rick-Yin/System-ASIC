@@ -1,0 +1,1171 @@
+#! /home/rick/tools/oss-cad-suite/bin/vvp
+:ivl_version "14.0 (devel)" "(s20251012-118-g8e4a37aa0)";
+:ivl_delay_selection "TYPICAL";
+:vpi_time_precision - 12;
+:vpi_module "/home/rick/tools/oss-cad-suite/lib/ivl/system.vpi";
+:vpi_module "/home/rick/tools/oss-cad-suite/lib/ivl/vhdl_sys.vpi";
+:vpi_module "/home/rick/tools/oss-cad-suite/lib/ivl/vhdl_textio.vpi";
+:vpi_module "/home/rick/tools/oss-cad-suite/lib/ivl/v2005_math.vpi";
+:vpi_module "/home/rick/tools/oss-cad-suite/lib/ivl/va_math.vpi";
+:vpi_module "/home/rick/tools/oss-cad-suite/lib/ivl/v2009.vpi";
+S_0x555592192240 .scope package, "$unit" "$unit" 2 1;
+ .timescale 0 0;
+S_0x5555921997f0 .scope package, "l0_case_pkg" "l0_case_pkg" 3 1;
+ .timescale 0 0;
+S_0x555592175fb0 .scope autotask, "l0_report" "l0_report" 3 3, 3 3 0, S_0x5555921997f0;
+ .timescale 0 0;
+v0x5555921904b0_0 .var/2s "mismatches", 31 0;
+v0x55559218e640_0 .var "op_name", 511 0;
+v0x5555921ba330_0 .var/2s "total_cases", 31 0;
+TD_l0_case_pkg.l0_report ;
+    %load/vec4 v0x5555921904b0_0;
+    %cmpi/e 0, 0, 32;
+    %jmp/0xz  T_0.0, 4;
+    %vpi_call/w 3 9 "$display", "[L0][PASS] op=%0s cases=%0d mismatches=%0d", v0x55559218e640_0, v0x5555921ba330_0, v0x5555921904b0_0 {0 0 0};
+    %jmp T_0.1;
+T_0.0 ;
+    %vpi_call/w 3 11 "$display", "[L0][FAIL] op=%0s cases=%0d mismatches=%0d", v0x55559218e640_0, v0x5555921ba330_0, v0x5555921904b0_0 {0 0 0};
+T_0.1 ;
+    %end;
+S_0x555592175c90 .scope package, "quant_utils_pkg" "quant_utils_pkg" 4 1;
+ .timescale 0 0;
+S_0x5555921ba3f0 .scope autofunction.vec4.s64, "abs64" "abs64" 4 109, 4 109 0, S_0x555592175c90;
+ .timescale 0 0;
+; Variable abs64 is vec4 return value of scope S_0x5555921ba3f0
+v0x5555921ba6f0_0 .var/s "x", 63 0;
+TD_quant_utils_pkg.abs64 ;
+    %load/vec4 v0x5555921ba6f0_0;
+    %cmpi/s 0, 0, 64;
+    %jmp/0xz  T_1.2, 5;
+    %load/vec4 v0x5555921ba6f0_0;
+    %inv;
+    %addi 1, 0, 64;
+    %ret/vec4 0, 0, 64;  Assign to abs64 (store_vec4_to_lval)
+    %jmp T_1.3;
+T_1.2 ;
+    %load/vec4 v0x5555921ba6f0_0;
+    %ret/vec4 0, 0, 64;  Assign to abs64 (store_vec4_to_lval)
+T_1.3 ;
+    %end;
+S_0x5555921ba7d0 .scope autofunction.vec4.u64, "div_rne64" "div_rne64" 4 151, 4 151 0, S_0x555592175c90;
+ .timescale 0 0;
+v0x5555921ba9d0_0 .var "ad", 63 0;
+v0x5555921baab0_0 .var "ax", 63 0;
+v0x5555921bab90_0 .var/s "d", 63 0;
+; Variable div_rne64 is vec4 return value of scope S_0x5555921ba7d0
+v0x5555921bad60_0 .var "inc", 0 0;
+v0x5555921bae70_0 .var "neg", 0 0;
+v0x5555921baf30_0 .var "q", 63 0;
+v0x5555921bb010_0 .var "q2", 63 0;
+v0x5555921bb0f0_0 .var "r", 63 0;
+v0x5555921bb1d0_0 .var "two_r", 63 0;
+v0x5555921bb2b0_0 .var/s "x", 63 0;
+TD_quant_utils_pkg.div_rne64 ;
+    %load/vec4 v0x5555921bab90_0;
+    %cmpi/e 0, 0, 64;
+    %jmp/0xz  T_2.4, 4;
+    %pushi/vec4 0, 0, 64;
+    %ret/vec4 0, 0, 64;  Assign to div_rne64 (store_vec4_to_lval)
+    %jmp T_2.5;
+T_2.4 ;
+    %load/vec4 v0x5555921bb2b0_0;
+    %cmpi/s 0, 0, 64;
+    %flag_get/vec4 5;
+    %load/vec4 v0x5555921bab90_0;
+    %cmpi/s 0, 0, 64;
+    %flag_get/vec4 5;
+    %xor;
+    %store/vec4 v0x5555921bae70_0, 0, 1;
+    %alloc S_0x5555921ba3f0;
+    %load/vec4 v0x5555921bb2b0_0;
+    %store/vec4 v0x5555921ba6f0_0, 0, 64;
+    %callf/vec4 TD_quant_utils_pkg.abs64, S_0x5555921ba3f0;
+    %free S_0x5555921ba3f0;
+    %store/vec4 v0x5555921baab0_0, 0, 64;
+    %alloc S_0x5555921ba3f0;
+    %load/vec4 v0x5555921bab90_0;
+    %store/vec4 v0x5555921ba6f0_0, 0, 64;
+    %callf/vec4 TD_quant_utils_pkg.abs64, S_0x5555921ba3f0;
+    %free S_0x5555921ba3f0;
+    %store/vec4 v0x5555921ba9d0_0, 0, 64;
+    %load/vec4 v0x5555921baab0_0;
+    %load/vec4 v0x5555921ba9d0_0;
+    %div;
+    %store/vec4 v0x5555921baf30_0, 0, 64;
+    %load/vec4 v0x5555921baab0_0;
+    %load/vec4 v0x5555921baf30_0;
+    %load/vec4 v0x5555921ba9d0_0;
+    %mul;
+    %sub;
+    %store/vec4 v0x5555921bb0f0_0, 0, 64;
+    %load/vec4 v0x5555921bb0f0_0;
+    %ix/load 4, 1, 0;
+    %flag_set/imm 4, 0;
+    %shiftl 4;
+    %store/vec4 v0x5555921bb1d0_0, 0, 64;
+    %load/vec4 v0x5555921ba9d0_0;
+    %load/vec4 v0x5555921bb1d0_0;
+    %cmp/u;
+    %flag_get/vec4 5;
+    %jmp/1 T_2.6, 5;
+    %load/vec4 v0x5555921bb1d0_0;
+    %load/vec4 v0x5555921ba9d0_0;
+    %cmp/e;
+    %flag_get/vec4 4;
+    %jmp/0 T_2.7, 4;
+    %load/vec4 v0x5555921baf30_0;
+    %pushi/vec4 1, 0, 64;
+    %and;
+    %pushi/vec4 1, 0, 64;
+    %cmp/e;
+    %flag_get/vec4 4;
+    %and;
+T_2.7;
+    %or;
+T_2.6;
+    %store/vec4 v0x5555921bad60_0, 0, 1;
+    %load/vec4 v0x5555921baf30_0;
+    %load/vec4 v0x5555921bad60_0;
+    %flag_set/vec4 8;
+    %jmp/0 T_2.8, 8;
+    %pushi/vec4 1, 0, 64;
+    %jmp/1 T_2.9, 8;
+T_2.8 ; End of true expr.
+    %pushi/vec4 0, 0, 64;
+    %jmp/0 T_2.9, 8;
+ ; End of false expr.
+    %blend;
+T_2.9;
+    %add;
+    %store/vec4 v0x5555921bb010_0, 0, 64;
+    %load/vec4 v0x5555921bae70_0;
+    %flag_set/vec4 8;
+    %jmp/0xz  T_2.10, 8;
+    %load/vec4 v0x5555921bb010_0;
+    %inv;
+    %addi 1, 0, 64;
+    %ret/vec4 0, 0, 64;  Assign to div_rne64 (store_vec4_to_lval)
+    %jmp T_2.11;
+T_2.10 ;
+    %load/vec4 v0x5555921bb010_0;
+    %ret/vec4 0, 0, 64;  Assign to div_rne64 (store_vec4_to_lval)
+T_2.11 ;
+T_2.5 ;
+    %end;
+S_0x5555921bb390 .scope autofunction.vec4.s32, "hardsigmoid_int_default" "hardsigmoid_int_default" 4 278, 4 278 0, S_0x555592175c90;
+ .timescale 0 0;
+v0x5555921bb520_0 .var "cmax", 63 0;
+v0x5555921bb600_0 .var/s "div_term", 63 0;
+v0x5555921bb6e0_0 .var/2s "exp_gate", 31 0;
+v0x5555921bb7d0_0 .var/2s "exp_x", 31 0;
+v0x5555921bb8b0_0 .var/2s "gate_bits", 31 0;
+; Variable hardsigmoid_int_default is vec4 return value of scope S_0x5555921bb390
+v0x5555921bbac0_0 .var "offset", 63 0;
+v0x5555921bbba0_0 .var/2s "s", 31 0;
+v0x5555921bbc80_0 .var/s "x_i", 31 0;
+v0x5555921bbd60_0 .var/s "x_scaled", 63 0;
+v0x5555921bbe40_0 .var/s "xi", 63 0;
+v0x5555921bbf20_0 .var/s "y", 63 0;
+TD_quant_utils_pkg.hardsigmoid_int_default ;
+    %load/vec4 v0x5555921bb8b0_0;
+    %inv;
+    %addi 1, 0, 32;
+    %store/vec4 v0x5555921bb6e0_0, 0, 32;
+    %load/vec4 v0x5555921bb7d0_0;
+    %load/vec4 v0x5555921bb6e0_0;
+    %sub;
+    %store/vec4 v0x5555921bbba0_0, 0, 32;
+    %load/vec4 v0x5555921bbc80_0;
+    %pad/s 64;
+    %store/vec4 v0x5555921bbe40_0, 0, 64;
+    %load/vec4 v0x5555921bbba0_0;
+    %cmpi/s 0, 0, 32;
+    %flag_or 5, 4; GT is !LE
+    %flag_inv 5;
+    %jmp/0xz  T_3.12, 5;
+    %load/vec4 v0x5555921bbba0_0;
+    %cmpi/s 62, 0, 32;
+    %flag_inv 5; GE is !LT
+    %jmp/0xz  T_3.14, 5;
+    %load/vec4 v0x5555921bbe40_0;
+    %cmpi/s 0, 0, 64;
+    %flag_mov 8, 5;
+    %jmp/0 T_3.16, 8;
+    %pushi/vec4 3221225472, 0, 32;
+    %concati/vec4 0, 0, 32;
+    %jmp/1 T_3.17, 8;
+T_3.16 ; End of true expr.
+    %pushi/vec4 4294967295, 0, 34;
+    %concati/vec4 1073741823, 0, 30;
+    %jmp/0 T_3.17, 8;
+ ; End of false expr.
+    %blend;
+T_3.17;
+    %store/vec4 v0x5555921bbd60_0, 0, 64;
+    %jmp T_3.15;
+T_3.14 ;
+    %load/vec4 v0x5555921bbe40_0;
+    %load/vec4 v0x5555921bbba0_0;
+    %ix/vec4 4;
+    %shiftl 4;
+    %store/vec4 v0x5555921bbd60_0, 0, 64;
+T_3.15 ;
+    %jmp T_3.13;
+T_3.12 ;
+    %load/vec4 v0x5555921bbba0_0;
+    %cmpi/s 0, 0, 32;
+    %jmp/0xz  T_3.18, 5;
+    %alloc S_0x5555921be040;
+    %load/vec4 v0x5555921bbe40_0;
+    %load/vec4 v0x5555921bbba0_0;
+    %inv;
+    %addi 1, 0, 32;
+    %store/vec4 v0x5555921beae0_0, 0, 32;
+    %store/vec4 v0x5555921bebc0_0, 0, 64;
+    %callf/vec4 TD_quant_utils_pkg.rshift_rne64, S_0x5555921be040;
+    %free S_0x5555921be040;
+    %store/vec4 v0x5555921bbd60_0, 0, 64;
+    %jmp T_3.19;
+T_3.18 ;
+    %load/vec4 v0x5555921bbe40_0;
+    %store/vec4 v0x5555921bbd60_0, 0, 64;
+T_3.19 ;
+T_3.13 ;
+    %alloc S_0x5555921ba7d0;
+    %load/vec4 v0x5555921bbd60_0;
+    %pushi/vec4 6, 0, 64;
+    %store/vec4 v0x5555921bab90_0, 0, 64;
+    %store/vec4 v0x5555921bb2b0_0, 0, 64;
+    %callf/vec4 TD_quant_utils_pkg.div_rne64, S_0x5555921ba7d0;
+    %free S_0x5555921ba7d0;
+    %store/vec4 v0x5555921bb600_0, 0, 64;
+    %pushi/vec4 1, 0, 64;
+    %load/vec4 v0x5555921bb8b0_0;
+    %ix/vec4 4;
+    %shiftl 4;
+    %ix/load 4, 1, 0;
+    %flag_set/imm 4, 0;
+    %shiftr 4;
+    %store/vec4 v0x5555921bbac0_0, 0, 64;
+    %load/vec4 v0x5555921bb600_0;
+    %load/vec4 v0x5555921bbac0_0;
+    %add;
+    %store/vec4 v0x5555921bbf20_0, 0, 64;
+    %alloc S_0x5555921bc430;
+    %load/vec4 v0x5555921bb8b0_0;
+    %store/vec4 v0x5555921bc660_0, 0, 32;
+    %callf/vec4 TD_quant_utils_pkg.qmax_unsigned64, S_0x5555921bc430;
+    %free S_0x5555921bc430;
+    %store/vec4 v0x5555921bb520_0, 0, 64;
+    %load/vec4 v0x5555921bbf20_0;
+    %cmpi/s 0, 0, 64;
+    %jmp/0xz  T_3.20, 5;
+    %pushi/vec4 0, 0, 32;
+    %ret/vec4 0, 0, 32;  Assign to hardsigmoid_int_default (store_vec4_to_lval)
+    %jmp T_3.21;
+T_3.20 ;
+    %load/vec4 v0x5555921bb520_0;
+    %load/vec4 v0x5555921bbf20_0;
+    %cmp/u;
+    %jmp/0xz  T_3.22, 5;
+    %load/vec4 v0x5555921bb520_0;
+    %parti/s 32, 0, 2;
+    %ret/vec4 0, 0, 32;  Assign to hardsigmoid_int_default (store_vec4_to_lval)
+    %jmp T_3.23;
+T_3.22 ;
+    %load/vec4 v0x5555921bbf20_0;
+    %parti/s 32, 0, 2;
+    %ret/vec4 0, 0, 32;  Assign to hardsigmoid_int_default (store_vec4_to_lval)
+T_3.23 ;
+T_3.21 ;
+    %end;
+S_0x5555921bc000 .scope autofunction.vec4.u64, "qmax_signed64" "qmax_signed64" 4 3, 4 3 0, S_0x555592175c90;
+ .timescale 0 0;
+v0x5555921bc190_0 .var/2s "bits", 31 0;
+; Variable qmax_signed64 is vec4 return value of scope S_0x5555921bc000
+v0x5555921bc370_0 .var/s "v", 63 0;
+TD_quant_utils_pkg.qmax_signed64 ;
+    %load/vec4 v0x5555921bc190_0;
+    %cmpi/s 1, 0, 32;
+    %flag_or 5, 4;
+    %jmp/0xz  T_4.24, 5;
+    %pushi/vec4 0, 0, 64;
+    %store/vec4 v0x5555921bc370_0, 0, 64;
+    %jmp T_4.25;
+T_4.24 ;
+    %load/vec4 v0x5555921bc190_0;
+    %cmpi/s 63, 0, 32;
+    %flag_inv 5; GE is !LT
+    %jmp/0xz  T_4.26, 5;
+    %pushi/vec4 4294967295, 0, 34;
+    %concati/vec4 1073741823, 0, 30;
+    %store/vec4 v0x5555921bc370_0, 0, 64;
+    %jmp T_4.27;
+T_4.26 ;
+    %pushi/vec4 1, 0, 64;
+    %load/vec4 v0x5555921bc190_0;
+    %subi 1, 0, 32;
+    %ix/vec4 4;
+    %shiftl 4;
+    %subi 1, 0, 64;
+    %store/vec4 v0x5555921bc370_0, 0, 64;
+T_4.27 ;
+T_4.25 ;
+    %load/vec4 v0x5555921bc370_0;
+    %ret/vec4 0, 0, 64;  Assign to qmax_signed64 (store_vec4_to_lval)
+    %end;
+S_0x5555921bc430 .scope autofunction.vec4.s64, "qmax_unsigned64" "qmax_unsigned64" 4 31, 4 31 0, S_0x555592175c90;
+ .timescale 0 0;
+v0x5555921bc660_0 .var/2s "bits", 31 0;
+; Variable qmax_unsigned64 is vec4 return value of scope S_0x5555921bc430
+v0x5555921bc840_0 .var "v", 63 0;
+TD_quant_utils_pkg.qmax_unsigned64 ;
+    %load/vec4 v0x5555921bc660_0;
+    %cmpi/s 0, 0, 32;
+    %flag_or 5, 4;
+    %jmp/0xz  T_5.28, 5;
+    %pushi/vec4 0, 0, 64;
+    %store/vec4 v0x5555921bc840_0, 0, 64;
+    %jmp T_5.29;
+T_5.28 ;
+    %load/vec4 v0x5555921bc660_0;
+    %cmpi/s 63, 0, 32;
+    %flag_inv 5; GE is !LT
+    %jmp/0xz  T_5.30, 5;
+    %pushi/vec4 4294967295, 0, 33;
+    %concati/vec4 2147483647, 0, 31;
+    %store/vec4 v0x5555921bc840_0, 0, 64;
+    %jmp T_5.31;
+T_5.30 ;
+    %pushi/vec4 1, 0, 64;
+    %load/vec4 v0x5555921bc660_0;
+    %ix/vec4 4;
+    %shiftl 4;
+    %subi 1, 0, 64;
+    %store/vec4 v0x5555921bc840_0, 0, 64;
+T_5.31 ;
+T_5.29 ;
+    %load/vec4 v0x5555921bc840_0;
+    %ret/vec4 0, 0, 64;  Assign to qmax_unsigned64 (store_vec4_to_lval)
+    %end;
+S_0x5555921bc900 .scope autofunction.vec4.u64, "qmin_signed64" "qmin_signed64" 4 17, 4 17 0, S_0x555592175c90;
+ .timescale 0 0;
+v0x5555921bcae0_0 .var/2s "bits", 31 0;
+; Variable qmin_signed64 is vec4 return value of scope S_0x5555921bc900
+v0x5555921bccc0_0 .var/s "v", 63 0;
+TD_quant_utils_pkg.qmin_signed64 ;
+    %load/vec4 v0x5555921bcae0_0;
+    %cmpi/s 1, 0, 32;
+    %flag_or 5, 4;
+    %jmp/0xz  T_6.32, 5;
+    %pushi/vec4 4294967295, 0, 32;
+    %concati/vec4 4294967295, 0, 32;
+    %store/vec4 v0x5555921bccc0_0, 0, 64;
+    %jmp T_6.33;
+T_6.32 ;
+    %load/vec4 v0x5555921bcae0_0;
+    %cmpi/s 63, 0, 32;
+    %flag_inv 5; GE is !LT
+    %jmp/0xz  T_6.34, 5;
+    %pushi/vec4 3221225472, 0, 32;
+    %concati/vec4 0, 0, 32;
+    %store/vec4 v0x5555921bccc0_0, 0, 64;
+    %jmp T_6.35;
+T_6.34 ;
+    %pushi/vec4 1, 0, 64;
+    %load/vec4 v0x5555921bcae0_0;
+    %subi 1, 0, 32;
+    %ix/vec4 4;
+    %shiftl 4;
+    %inv;
+    %addi 1, 0, 64;
+    %store/vec4 v0x5555921bccc0_0, 0, 64;
+T_6.35 ;
+T_6.33 ;
+    %load/vec4 v0x5555921bccc0_0;
+    %ret/vec4 0, 0, 64;  Assign to qmin_signed64 (store_vec4_to_lval)
+    %end;
+S_0x5555921bcdb0 .scope autofunction.vec4.u32, "requant_pow2_signed" "requant_pow2_signed" 4 216, 4 216 0, S_0x555592175c90;
+ .timescale 0 0;
+v0x5555921bcf90_0 .var/2s "bits", 31 0;
+v0x5555921bd090_0 .var/2s "delta", 31 0;
+v0x5555921bd170_0 .var/2s "exp_in", 31 0;
+v0x5555921bd260_0 .var/2s "exp_out", 31 0;
+; Variable requant_pow2_signed is vec4 return value of scope S_0x5555921bcdb0
+v0x5555921bd470_0 .var/s "x", 63 0;
+v0x5555921bd550_0 .var/s "y", 63 0;
+v0x5555921bd630_0 .var/s "y_shifted", 63 0;
+TD_quant_utils_pkg.requant_pow2_signed ;
+    %load/vec4 v0x5555921bd170_0;
+    %load/vec4 v0x5555921bd260_0;
+    %sub;
+    %store/vec4 v0x5555921bd090_0, 0, 32;
+    %load/vec4 v0x5555921bd090_0;
+    %cmpi/s 0, 0, 32;
+    %flag_or 5, 4; GT is !LE
+    %flag_inv 5;
+    %jmp/0xz  T_7.36, 5;
+    %load/vec4 v0x5555921bd090_0;
+    %cmpi/s 62, 0, 32;
+    %flag_inv 5; GE is !LT
+    %jmp/0xz  T_7.38, 5;
+    %load/vec4 v0x5555921bd470_0;
+    %cmpi/s 0, 0, 64;
+    %flag_mov 8, 5;
+    %jmp/0 T_7.40, 8;
+    %alloc S_0x5555921bc900;
+    %load/vec4 v0x5555921bcf90_0;
+    %store/vec4 v0x5555921bcae0_0, 0, 32;
+    %callf/vec4 TD_quant_utils_pkg.qmin_signed64, S_0x5555921bc900;
+    %free S_0x5555921bc900;
+    %jmp/1 T_7.41, 8;
+T_7.40 ; End of true expr.
+    %alloc S_0x5555921bc000;
+    %load/vec4 v0x5555921bcf90_0;
+    %store/vec4 v0x5555921bc190_0, 0, 32;
+    %callf/vec4 TD_quant_utils_pkg.qmax_signed64, S_0x5555921bc000;
+    %free S_0x5555921bc000;
+    %jmp/0 T_7.41, 8;
+ ; End of false expr.
+    %blend;
+T_7.41;
+    %store/vec4 v0x5555921bd550_0, 0, 64;
+    %jmp T_7.39;
+T_7.38 ;
+    %load/vec4 v0x5555921bd470_0;
+    %load/vec4 v0x5555921bd090_0;
+    %ix/vec4 4;
+    %shiftl 4;
+    %store/vec4 v0x5555921bd630_0, 0, 64;
+    %load/vec4 v0x5555921bd630_0;
+    %load/vec4 v0x5555921bd090_0;
+    %ix/vec4 4;
+    %shiftr/s 4;
+    %load/vec4 v0x5555921bd470_0;
+    %cmp/ne;
+    %jmp/0xz  T_7.42, 4;
+    %load/vec4 v0x5555921bd470_0;
+    %cmpi/s 0, 0, 64;
+    %flag_mov 8, 5;
+    %jmp/0 T_7.44, 8;
+    %alloc S_0x5555921bc900;
+    %load/vec4 v0x5555921bcf90_0;
+    %store/vec4 v0x5555921bcae0_0, 0, 32;
+    %callf/vec4 TD_quant_utils_pkg.qmin_signed64, S_0x5555921bc900;
+    %free S_0x5555921bc900;
+    %jmp/1 T_7.45, 8;
+T_7.44 ; End of true expr.
+    %alloc S_0x5555921bc000;
+    %load/vec4 v0x5555921bcf90_0;
+    %store/vec4 v0x5555921bc190_0, 0, 32;
+    %callf/vec4 TD_quant_utils_pkg.qmax_signed64, S_0x5555921bc000;
+    %free S_0x5555921bc000;
+    %jmp/0 T_7.45, 8;
+ ; End of false expr.
+    %blend;
+T_7.45;
+    %store/vec4 v0x5555921bd550_0, 0, 64;
+    %jmp T_7.43;
+T_7.42 ;
+    %load/vec4 v0x5555921bd630_0;
+    %store/vec4 v0x5555921bd550_0, 0, 64;
+T_7.43 ;
+T_7.39 ;
+    %jmp T_7.37;
+T_7.36 ;
+    %load/vec4 v0x5555921bd090_0;
+    %cmpi/s 0, 0, 32;
+    %jmp/0xz  T_7.46, 5;
+    %alloc S_0x5555921be040;
+    %load/vec4 v0x5555921bd470_0;
+    %load/vec4 v0x5555921bd090_0;
+    %inv;
+    %addi 1, 0, 32;
+    %store/vec4 v0x5555921beae0_0, 0, 32;
+    %store/vec4 v0x5555921bebc0_0, 0, 64;
+    %callf/vec4 TD_quant_utils_pkg.rshift_rne64, S_0x5555921be040;
+    %free S_0x5555921be040;
+    %store/vec4 v0x5555921bd550_0, 0, 64;
+    %jmp T_7.47;
+T_7.46 ;
+    %load/vec4 v0x5555921bd470_0;
+    %store/vec4 v0x5555921bd550_0, 0, 64;
+T_7.47 ;
+T_7.37 ;
+    %alloc S_0x5555921beca0;
+    %load/vec4 v0x5555921bd550_0;
+    %load/vec4 v0x5555921bcf90_0;
+    %store/vec4 v0x5555921bee30_0, 0, 32;
+    %store/vec4 v0x5555921bf1b0_0, 0, 64;
+    %callf/vec4 TD_quant_utils_pkg.sat_signed32, S_0x5555921beca0;
+    %free S_0x5555921beca0;
+    %ret/vec4 0, 0, 32;  Assign to requant_pow2_signed (store_vec4_to_lval)
+    %end;
+S_0x5555921bd710 .scope autofunction.vec4.s32, "requant_pow2_unsigned" "requant_pow2_unsigned" 4 247, 4 247 0, S_0x555592175c90;
+ .timescale 0 0;
+v0x5555921bd8f0_0 .var/2s "bits", 31 0;
+v0x5555921bd9f0_0 .var/2s "delta", 31 0;
+v0x5555921bdad0_0 .var/2s "exp_in", 31 0;
+v0x5555921bdb90_0 .var/2s "exp_out", 31 0;
+; Variable requant_pow2_unsigned is vec4 return value of scope S_0x5555921bd710
+v0x5555921bdda0_0 .var/s "x", 63 0;
+v0x5555921bde80_0 .var/s "y", 63 0;
+v0x5555921bdf60_0 .var/s "y_shifted", 63 0;
+TD_quant_utils_pkg.requant_pow2_unsigned ;
+    %load/vec4 v0x5555921bdad0_0;
+    %load/vec4 v0x5555921bdb90_0;
+    %sub;
+    %store/vec4 v0x5555921bd9f0_0, 0, 32;
+    %load/vec4 v0x5555921bd9f0_0;
+    %cmpi/s 0, 0, 32;
+    %flag_or 5, 4; GT is !LE
+    %flag_inv 5;
+    %jmp/0xz  T_8.48, 5;
+    %load/vec4 v0x5555921bd9f0_0;
+    %cmpi/s 62, 0, 32;
+    %flag_inv 5; GE is !LT
+    %jmp/0xz  T_8.50, 5;
+    %load/vec4 v0x5555921bdda0_0;
+    %cmpi/s 0, 0, 64;
+    %flag_mov 8, 5;
+    %jmp/0 T_8.52, 8;
+    %pushi/vec4 0, 0, 64;
+    %jmp/1 T_8.53, 8;
+T_8.52 ; End of true expr.
+    %alloc S_0x5555921bc430;
+    %load/vec4 v0x5555921bd8f0_0;
+    %store/vec4 v0x5555921bc660_0, 0, 32;
+    %callf/vec4 TD_quant_utils_pkg.qmax_unsigned64, S_0x5555921bc430;
+    %free S_0x5555921bc430;
+    %jmp/0 T_8.53, 8;
+ ; End of false expr.
+    %blend;
+T_8.53;
+    %store/vec4 v0x5555921bde80_0, 0, 64;
+    %jmp T_8.51;
+T_8.50 ;
+    %load/vec4 v0x5555921bdda0_0;
+    %load/vec4 v0x5555921bd9f0_0;
+    %ix/vec4 4;
+    %shiftl 4;
+    %store/vec4 v0x5555921bdf60_0, 0, 64;
+    %load/vec4 v0x5555921bdf60_0;
+    %load/vec4 v0x5555921bd9f0_0;
+    %ix/vec4 4;
+    %shiftr/s 4;
+    %load/vec4 v0x5555921bdda0_0;
+    %cmp/ne;
+    %jmp/0xz  T_8.54, 4;
+    %load/vec4 v0x5555921bdda0_0;
+    %cmpi/s 0, 0, 64;
+    %flag_mov 8, 5;
+    %jmp/0 T_8.56, 8;
+    %pushi/vec4 0, 0, 64;
+    %jmp/1 T_8.57, 8;
+T_8.56 ; End of true expr.
+    %alloc S_0x5555921bc430;
+    %load/vec4 v0x5555921bd8f0_0;
+    %store/vec4 v0x5555921bc660_0, 0, 32;
+    %callf/vec4 TD_quant_utils_pkg.qmax_unsigned64, S_0x5555921bc430;
+    %free S_0x5555921bc430;
+    %jmp/0 T_8.57, 8;
+ ; End of false expr.
+    %blend;
+T_8.57;
+    %store/vec4 v0x5555921bde80_0, 0, 64;
+    %jmp T_8.55;
+T_8.54 ;
+    %load/vec4 v0x5555921bdf60_0;
+    %store/vec4 v0x5555921bde80_0, 0, 64;
+T_8.55 ;
+T_8.51 ;
+    %jmp T_8.49;
+T_8.48 ;
+    %load/vec4 v0x5555921bd9f0_0;
+    %cmpi/s 0, 0, 32;
+    %jmp/0xz  T_8.58, 5;
+    %alloc S_0x5555921be040;
+    %load/vec4 v0x5555921bdda0_0;
+    %load/vec4 v0x5555921bd9f0_0;
+    %inv;
+    %addi 1, 0, 32;
+    %store/vec4 v0x5555921beae0_0, 0, 32;
+    %store/vec4 v0x5555921bebc0_0, 0, 64;
+    %callf/vec4 TD_quant_utils_pkg.rshift_rne64, S_0x5555921be040;
+    %free S_0x5555921be040;
+    %store/vec4 v0x5555921bde80_0, 0, 64;
+    %jmp T_8.59;
+T_8.58 ;
+    %load/vec4 v0x5555921bdda0_0;
+    %store/vec4 v0x5555921bde80_0, 0, 64;
+T_8.59 ;
+T_8.49 ;
+    %alloc S_0x5555921bfb30;
+    %load/vec4 v0x5555921bde80_0;
+    %load/vec4 v0x5555921bd8f0_0;
+    %store/vec4 v0x5555921bfd10_0, 0, 32;
+    %store/vec4 v0x5555921bffb0_0, 0, 64;
+    %callf/vec4 TD_quant_utils_pkg.sat_unsigned32, S_0x5555921bfb30;
+    %free S_0x5555921bfb30;
+    %ret/vec4 0, 0, 32;  Assign to requant_pow2_unsigned (store_vec4_to_lval)
+    %end;
+S_0x5555921be040 .scope autofunction.vec4.u64, "rshift_rne64" "rshift_rne64" 4 119, 4 119 0, S_0x555592175c90;
+ .timescale 0 0;
+v0x5555921be2b0_0 .var "ax", 63 0;
+v0x5555921be3b0_0 .var "half", 63 0;
+v0x5555921be490_0 .var "inc", 0 0;
+v0x5555921be530_0 .var "mask", 63 0;
+v0x5555921be610_0 .var "neg", 0 0;
+v0x5555921be6d0_0 .var "q", 63 0;
+v0x5555921be7b0_0 .var "q2", 63 0;
+v0x5555921be890_0 .var "r", 63 0;
+; Variable rshift_rne64 is vec4 return value of scope S_0x5555921be040
+v0x5555921beae0_0 .var/2s "sh", 31 0;
+v0x5555921bebc0_0 .var/s "x", 63 0;
+TD_quant_utils_pkg.rshift_rne64 ;
+    %load/vec4 v0x5555921beae0_0;
+    %cmpi/s 0, 0, 32;
+    %flag_or 5, 4;
+    %jmp/0xz  T_9.60, 5;
+    %load/vec4 v0x5555921bebc0_0;
+    %ret/vec4 0, 0, 64;  Assign to rshift_rne64 (store_vec4_to_lval)
+    %jmp T_9.61;
+T_9.60 ;
+    %load/vec4 v0x5555921beae0_0;
+    %cmpi/s 62, 0, 32;
+    %flag_inv 5; GE is !LT
+    %jmp/0xz  T_9.62, 5;
+    %pushi/vec4 0, 0, 64;
+    %ret/vec4 0, 0, 64;  Assign to rshift_rne64 (store_vec4_to_lval)
+    %jmp T_9.63;
+T_9.62 ;
+    %load/vec4 v0x5555921bebc0_0;
+    %cmpi/s 0, 0, 64;
+    %flag_get/vec4 5;
+    %store/vec4 v0x5555921be610_0, 0, 1;
+    %alloc S_0x5555921ba3f0;
+    %load/vec4 v0x5555921bebc0_0;
+    %store/vec4 v0x5555921ba6f0_0, 0, 64;
+    %callf/vec4 TD_quant_utils_pkg.abs64, S_0x5555921ba3f0;
+    %free S_0x5555921ba3f0;
+    %store/vec4 v0x5555921be2b0_0, 0, 64;
+    %pushi/vec4 1, 0, 64;
+    %load/vec4 v0x5555921beae0_0;
+    %subi 1, 0, 32;
+    %ix/vec4 4;
+    %shiftl 4;
+    %store/vec4 v0x5555921be3b0_0, 0, 64;
+    %pushi/vec4 1, 0, 64;
+    %load/vec4 v0x5555921beae0_0;
+    %ix/vec4 4;
+    %shiftl 4;
+    %subi 1, 0, 64;
+    %store/vec4 v0x5555921be530_0, 0, 64;
+    %load/vec4 v0x5555921be2b0_0;
+    %load/vec4 v0x5555921be530_0;
+    %and;
+    %store/vec4 v0x5555921be890_0, 0, 64;
+    %load/vec4 v0x5555921be2b0_0;
+    %load/vec4 v0x5555921beae0_0;
+    %ix/vec4 4;
+    %shiftr 4;
+    %store/vec4 v0x5555921be6d0_0, 0, 64;
+    %load/vec4 v0x5555921be3b0_0;
+    %load/vec4 v0x5555921be890_0;
+    %cmp/u;
+    %flag_get/vec4 5;
+    %jmp/1 T_9.64, 5;
+    %load/vec4 v0x5555921be890_0;
+    %load/vec4 v0x5555921be3b0_0;
+    %cmp/e;
+    %flag_get/vec4 4;
+    %jmp/0 T_9.65, 4;
+    %load/vec4 v0x5555921be6d0_0;
+    %pushi/vec4 1, 0, 64;
+    %and;
+    %pushi/vec4 1, 0, 64;
+    %cmp/e;
+    %flag_get/vec4 4;
+    %and;
+T_9.65;
+    %or;
+T_9.64;
+    %store/vec4 v0x5555921be490_0, 0, 1;
+    %load/vec4 v0x5555921be6d0_0;
+    %load/vec4 v0x5555921be490_0;
+    %flag_set/vec4 8;
+    %jmp/0 T_9.66, 8;
+    %pushi/vec4 1, 0, 64;
+    %jmp/1 T_9.67, 8;
+T_9.66 ; End of true expr.
+    %pushi/vec4 0, 0, 64;
+    %jmp/0 T_9.67, 8;
+ ; End of false expr.
+    %blend;
+T_9.67;
+    %add;
+    %store/vec4 v0x5555921be7b0_0, 0, 64;
+    %load/vec4 v0x5555921be610_0;
+    %flag_set/vec4 8;
+    %jmp/0xz  T_9.68, 8;
+    %load/vec4 v0x5555921be7b0_0;
+    %inv;
+    %addi 1, 0, 64;
+    %ret/vec4 0, 0, 64;  Assign to rshift_rne64 (store_vec4_to_lval)
+    %jmp T_9.69;
+T_9.68 ;
+    %load/vec4 v0x5555921be7b0_0;
+    %ret/vec4 0, 0, 64;  Assign to rshift_rne64 (store_vec4_to_lval)
+T_9.69 ;
+T_9.63 ;
+T_9.61 ;
+    %end;
+S_0x5555921beca0 .scope autofunction.vec4.u32, "sat_signed32" "sat_signed32" 4 45, 4 45 0, S_0x555592175c90;
+ .timescale 0 0;
+v0x5555921bee30_0 .var/2s "bits", 31 0;
+v0x5555921bef30_0 .var/s "hi", 63 0;
+v0x5555921bf010_0 .var/s "lo", 63 0;
+; Variable sat_signed32 is vec4 return value of scope S_0x5555921beca0
+v0x5555921bf1b0_0 .var/s "x", 63 0;
+v0x5555921bf2e0_0 .var/s "y", 63 0;
+TD_quant_utils_pkg.sat_signed32 ;
+    %alloc S_0x5555921bc900;
+    %load/vec4 v0x5555921bee30_0;
+    %store/vec4 v0x5555921bcae0_0, 0, 32;
+    %callf/vec4 TD_quant_utils_pkg.qmin_signed64, S_0x5555921bc900;
+    %free S_0x5555921bc900;
+    %store/vec4 v0x5555921bf010_0, 0, 64;
+    %alloc S_0x5555921bc000;
+    %load/vec4 v0x5555921bee30_0;
+    %store/vec4 v0x5555921bc190_0, 0, 32;
+    %callf/vec4 TD_quant_utils_pkg.qmax_signed64, S_0x5555921bc000;
+    %free S_0x5555921bc000;
+    %store/vec4 v0x5555921bef30_0, 0, 64;
+    %load/vec4 v0x5555921bef30_0;
+    %load/vec4 v0x5555921bf1b0_0;
+    %cmp/s;
+    %jmp/0xz  T_10.70, 5;
+    %load/vec4 v0x5555921bef30_0;
+    %store/vec4 v0x5555921bf2e0_0, 0, 64;
+    %jmp T_10.71;
+T_10.70 ;
+    %load/vec4 v0x5555921bf1b0_0;
+    %load/vec4 v0x5555921bf010_0;
+    %cmp/s;
+    %jmp/0xz  T_10.72, 5;
+    %load/vec4 v0x5555921bf010_0;
+    %store/vec4 v0x5555921bf2e0_0, 0, 64;
+    %jmp T_10.73;
+T_10.72 ;
+    %load/vec4 v0x5555921bf1b0_0;
+    %store/vec4 v0x5555921bf2e0_0, 0, 64;
+T_10.73 ;
+T_10.71 ;
+    %load/vec4 v0x5555921bf2e0_0;
+    %parti/s 32, 0, 2;
+    %ret/vec4 0, 0, 32;  Assign to sat_signed32 (store_vec4_to_lval)
+    %end;
+S_0x5555921bf3c0 .scope autofunction.vec4.u64, "sat_signed64" "sat_signed64" 4 77, 4 77 0, S_0x555592175c90;
+ .timescale 0 0;
+v0x5555921bf5a0_0 .var/2s "bits", 31 0;
+v0x5555921bf6a0_0 .var/s "hi", 63 0;
+v0x5555921bf780_0 .var/s "lo", 63 0;
+; Variable sat_signed64 is vec4 return value of scope S_0x5555921bf3c0
+v0x5555921bf920_0 .var/s "x", 63 0;
+v0x5555921bfa50_0 .var/s "y", 63 0;
+TD_quant_utils_pkg.sat_signed64 ;
+    %alloc S_0x5555921bc900;
+    %load/vec4 v0x5555921bf5a0_0;
+    %store/vec4 v0x5555921bcae0_0, 0, 32;
+    %callf/vec4 TD_quant_utils_pkg.qmin_signed64, S_0x5555921bc900;
+    %free S_0x5555921bc900;
+    %store/vec4 v0x5555921bf780_0, 0, 64;
+    %alloc S_0x5555921bc000;
+    %load/vec4 v0x5555921bf5a0_0;
+    %store/vec4 v0x5555921bc190_0, 0, 32;
+    %callf/vec4 TD_quant_utils_pkg.qmax_signed64, S_0x5555921bc000;
+    %free S_0x5555921bc000;
+    %store/vec4 v0x5555921bf6a0_0, 0, 64;
+    %load/vec4 v0x5555921bf6a0_0;
+    %load/vec4 v0x5555921bf920_0;
+    %cmp/s;
+    %jmp/0xz  T_11.74, 5;
+    %load/vec4 v0x5555921bf6a0_0;
+    %store/vec4 v0x5555921bfa50_0, 0, 64;
+    %jmp T_11.75;
+T_11.74 ;
+    %load/vec4 v0x5555921bf920_0;
+    %load/vec4 v0x5555921bf780_0;
+    %cmp/s;
+    %jmp/0xz  T_11.76, 5;
+    %load/vec4 v0x5555921bf780_0;
+    %store/vec4 v0x5555921bfa50_0, 0, 64;
+    %jmp T_11.77;
+T_11.76 ;
+    %load/vec4 v0x5555921bf920_0;
+    %store/vec4 v0x5555921bfa50_0, 0, 64;
+T_11.77 ;
+T_11.75 ;
+    %load/vec4 v0x5555921bfa50_0;
+    %ret/vec4 0, 0, 64;  Assign to sat_signed64 (store_vec4_to_lval)
+    %end;
+S_0x5555921bfb30 .scope autofunction.vec4.s32, "sat_unsigned32" "sat_unsigned32" 4 61, 4 61 0, S_0x555592175c90;
+ .timescale 0 0;
+v0x5555921bfd10_0 .var/2s "bits", 31 0;
+v0x5555921bfe10_0 .var "hi", 63 0;
+; Variable sat_unsigned32 is vec4 return value of scope S_0x5555921bfb30
+v0x5555921bffb0_0 .var/s "x", 63 0;
+v0x5555921c0090_0 .var/s "y", 63 0;
+TD_quant_utils_pkg.sat_unsigned32 ;
+    %alloc S_0x5555921bc430;
+    %load/vec4 v0x5555921bfd10_0;
+    %store/vec4 v0x5555921bc660_0, 0, 32;
+    %callf/vec4 TD_quant_utils_pkg.qmax_unsigned64, S_0x5555921bc430;
+    %free S_0x5555921bc430;
+    %store/vec4 v0x5555921bfe10_0, 0, 64;
+    %load/vec4 v0x5555921bffb0_0;
+    %cmpi/s 0, 0, 64;
+    %jmp/0xz  T_12.78, 5;
+    %pushi/vec4 0, 0, 64;
+    %store/vec4 v0x5555921c0090_0, 0, 64;
+    %jmp T_12.79;
+T_12.78 ;
+    %load/vec4 v0x5555921bfe10_0;
+    %load/vec4 v0x5555921bffb0_0;
+    %cmp/u;
+    %jmp/0xz  T_12.80, 5;
+    %load/vec4 v0x5555921bfe10_0;
+    %store/vec4 v0x5555921c0090_0, 0, 64;
+    %jmp T_12.81;
+T_12.80 ;
+    %load/vec4 v0x5555921bffb0_0;
+    %store/vec4 v0x5555921c0090_0, 0, 64;
+T_12.81 ;
+T_12.79 ;
+    %load/vec4 v0x5555921c0090_0;
+    %parti/s 32, 0, 2;
+    %ret/vec4 0, 0, 32;  Assign to sat_unsigned32 (store_vec4_to_lval)
+    %end;
+S_0x5555921c01c0 .scope autofunction.vec4.s64, "sat_unsigned64" "sat_unsigned64" 4 93, 4 93 0, S_0x555592175c90;
+ .timescale 0 0;
+v0x5555921c03a0_0 .var/2s "bits", 31 0;
+v0x5555921c04a0_0 .var "hi", 63 0;
+; Variable sat_unsigned64 is vec4 return value of scope S_0x5555921c01c0
+v0x5555921c0640_0 .var/s "x", 63 0;
+v0x5555921c0720_0 .var "y", 63 0;
+TD_quant_utils_pkg.sat_unsigned64 ;
+    %alloc S_0x5555921bc430;
+    %load/vec4 v0x5555921c03a0_0;
+    %store/vec4 v0x5555921bc660_0, 0, 32;
+    %callf/vec4 TD_quant_utils_pkg.qmax_unsigned64, S_0x5555921bc430;
+    %free S_0x5555921bc430;
+    %store/vec4 v0x5555921c04a0_0, 0, 64;
+    %load/vec4 v0x5555921c0640_0;
+    %cmpi/s 0, 0, 64;
+    %jmp/0xz  T_13.82, 5;
+    %pushi/vec4 0, 0, 64;
+    %store/vec4 v0x5555921c0720_0, 0, 64;
+    %jmp T_13.83;
+T_13.82 ;
+    %load/vec4 v0x5555921c04a0_0;
+    %load/vec4 v0x5555921c0640_0;
+    %cmp/u;
+    %jmp/0xz  T_13.84, 5;
+    %load/vec4 v0x5555921c04a0_0;
+    %store/vec4 v0x5555921c0720_0, 0, 64;
+    %jmp T_13.85;
+T_13.84 ;
+    %load/vec4 v0x5555921c0640_0;
+    %store/vec4 v0x5555921c0720_0, 0, 64;
+T_13.85 ;
+T_13.83 ;
+    %load/vec4 v0x5555921c0720_0;
+    %ret/vec4 0, 0, 64;  Assign to sat_unsigned64 (store_vec4_to_lval)
+    %end;
+S_0x5555921c0850 .scope autofunction.vec2.u32, "wkv_lut_lookup_idx" "wkv_lut_lookup_idx" 4 181, 4 181 0, S_0x555592175c90;
+ .timescale 0 0;
+v0x5555921c0a30_0 .var/s "delta_i", 31 0;
+v0x5555921c0b30_0 .var/2s "idx", 31 0;
+v0x5555921c0c10_0 .var/2s "lut_numel", 31 0;
+v0x5555921c0cd0_0 .var/s "min_delta_i", 31 0;
+v0x5555921c0db0_0 .var/s "num", 63 0;
+v0x5555921c0ee0_0 .var/s "q", 63 0;
+v0x5555921c0fc0_0 .var/s "step_i", 31 0;
+; Variable wkv_lut_lookup_idx is bool return value of scope S_0x5555921c0850
+TD_quant_utils_pkg.wkv_lut_lookup_idx ;
+    %load/vec4 v0x5555921c0c10_0;
+    %cmpi/s 0, 0, 32;
+    %flag_or 5, 4;
+    %jmp/0xz  T_14.86, 5;
+    %pushi/vec4 0, 0, 32;
+    %store/vec4 v0x5555921c0b30_0, 0, 32;
+    %jmp T_14.87;
+T_14.86 ;
+    %load/vec4 v0x5555921c0a30_0;
+    %pad/s 64;
+    %load/vec4 v0x5555921c0cd0_0;
+    %pad/s 64;
+    %sub;
+    %store/vec4 v0x5555921c0db0_0, 0, 64;
+    %load/vec4 v0x5555921c0fc0_0;
+    %cmpi/e 0, 0, 32;
+    %jmp/0xz  T_14.88, 4;
+    %pushi/vec4 0, 0, 32;
+    %store/vec4 v0x5555921c0b30_0, 0, 32;
+    %jmp T_14.89;
+T_14.88 ;
+    %load/vec4 v0x5555921c0fc0_0;
+    %cmpi/e 1, 0, 32;
+    %jmp/0xz  T_14.90, 4;
+    %load/vec4 v0x5555921c0db0_0;
+    %cast2;
+    %pad/s 32;
+    %store/vec4 v0x5555921c0b30_0, 0, 32;
+    %jmp T_14.91;
+T_14.90 ;
+    %load/vec4 v0x5555921c0fc0_0;
+    %cmpi/e 4294967295, 0, 32;
+    %jmp/0xz  T_14.92, 4;
+    %load/vec4 v0x5555921c0db0_0;
+    %inv;
+    %addi 1, 0, 64;
+    %cast2;
+    %pad/s 32;
+    %store/vec4 v0x5555921c0b30_0, 0, 32;
+    %jmp T_14.93;
+T_14.92 ;
+    %alloc S_0x5555921ba7d0;
+    %load/vec4 v0x5555921c0db0_0;
+    %load/vec4 v0x5555921c0fc0_0;
+    %pad/s 64;
+    %store/vec4 v0x5555921bab90_0, 0, 64;
+    %store/vec4 v0x5555921bb2b0_0, 0, 64;
+    %callf/vec4 TD_quant_utils_pkg.div_rne64, S_0x5555921ba7d0;
+    %free S_0x5555921ba7d0;
+    %store/vec4 v0x5555921c0ee0_0, 0, 64;
+    %load/vec4 v0x5555921c0ee0_0;
+    %cast2;
+    %pad/s 32;
+    %store/vec4 v0x5555921c0b30_0, 0, 32;
+T_14.93 ;
+T_14.91 ;
+T_14.89 ;
+    %load/vec4 v0x5555921c0b30_0;
+    %cmpi/s 0, 0, 32;
+    %jmp/0xz  T_14.94, 5;
+    %pushi/vec4 0, 0, 32;
+    %store/vec4 v0x5555921c0b30_0, 0, 32;
+    %jmp T_14.95;
+T_14.94 ;
+    %load/vec4 v0x5555921c0c10_0;
+    %load/vec4 v0x5555921c0b30_0;
+    %cmp/s;
+    %flag_or 5, 4;
+    %jmp/0xz  T_14.96, 5;
+    %load/vec4 v0x5555921c0c10_0;
+    %subi 1, 0, 32;
+    %store/vec4 v0x5555921c0b30_0, 0, 32;
+T_14.96 ;
+T_14.95 ;
+T_14.87 ;
+    %load/vec4 v0x5555921c0b30_0;
+    %ret/vec4 0, 0, 32;  Assign to wkv_lut_lookup_idx (store_vec4_to_lval)
+    %end;
+S_0x555592175e20 .scope module, "tb_l0_hardsigmoid_int_default" "tb_l0_hardsigmoid_int_default" 5 3;
+ .timescale -9 -12;
+v0x5555921c1380_0 .var/i "case_cnt", 31 0;
+v0x5555921c1480_0 .var "exp_u", 31 0;
+v0x5555921c1560_0 .var/i "exp_x_i", 31 0;
+v0x5555921c1620_0 .var "exp_x_u", 31 0;
+v0x5555921c1700_0 .var/i "fd", 31 0;
+v0x5555921c1830_0 .var "gate_bits_u", 31 0;
+v0x5555921c1910_0 .var "got", 31 0;
+v0x5555921c19f0_0 .var/i "mismatches", 31 0;
+v0x5555921c1ad0_0 .var/i "plusargs_rc", 31 0;
+v0x5555921c1c40_0 .var/i "scan_rc", 31 0;
+v0x5555921c1d20_0 .var "vector_path", 1023 0;
+v0x5555921c1e00_0 .var "x_u", 31 0;
+S_0x5555921c1180 .scope begin, "read_loop" "read_loop" 5 34, 5 34 0, S_0x555592175e20;
+ .timescale -9 -12;
+    .scope S_0x555592175e20;
+T_15 ;
+    %pushi/vec4 0, 0, 32;
+    %store/vec4 v0x5555921c1380_0, 0, 32;
+    %pushi/vec4 0, 0, 32;
+    %store/vec4 v0x5555921c19f0_0, 0, 32;
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1987277411, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 793407337, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1853107523, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1179790660, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1346645876, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1647275056, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1601138803, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 796288355, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1953460851, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 795369842, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1685285223, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1836018020, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1600745076, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1600415078, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1635085428, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 779511139, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %store/vec4 v0x5555921c1d20_0, 0, 1024;
+    %vpi_func 5 26 "$value$plusargs" 32, "VECTOR_FILE=%s", v0x5555921c1d20_0 {0 0 0};
+    %store/vec4 v0x5555921c1ad0_0, 0, 32;
+    %vpi_func 5 28 "$fopen" 32, v0x5555921c1d20_0, "r" {0 0 0};
+    %store/vec4 v0x5555921c1700_0, 0, 32;
+    %load/vec4 v0x5555921c1700_0;
+    %cmpi/e 0, 0, 32;
+    %jmp/0xz  T_15.0, 4;
+    %vpi_call/w 5 30 "$display", "[L0][FAIL] op=hardsigmoid_int_default cannot open vector file" {0 0 0};
+    %vpi_call/w 5 31 "$finish" {0 0 0};
+T_15.0 ;
+    %fork t_1, S_0x5555921c1180;
+    %jmp t_0;
+    .scope S_0x5555921c1180;
+t_1 ;
+T_15.2 ;
+    %vpi_func 5 36 "$fscanf" 32, v0x5555921c1700_0, "%h %h %h %h\012", v0x5555921c1e00_0, v0x5555921c1620_0, v0x5555921c1830_0, v0x5555921c1480_0 {0 0 0};
+    %store/vec4 v0x5555921c1c40_0, 0, 32;
+    %load/vec4 v0x5555921c1c40_0;
+    %cmpi/e 4294967295, 0, 32;
+    %jmp/0xz  T_15.4, 4;
+    %disable S_0x5555921c1180;
+T_15.4 ;
+    %load/vec4 v0x5555921c1c40_0;
+    %cmpi/ne 4, 0, 32;
+    %jmp/0xz  T_15.6, 4;
+    %vpi_call/w 5 41 "$display", "[L0][FAIL] op=hardsigmoid_int_default malformed vector row, scan_rc=%0d", v0x5555921c1c40_0 {0 0 0};
+    %vpi_call/w 5 42 "$finish" {0 0 0};
+T_15.6 ;
+    %load/vec4 v0x5555921c1620_0;
+    %store/vec4 v0x5555921c1560_0, 0, 32;
+    %alloc S_0x5555921bb390;
+    %load/vec4 v0x5555921c1e00_0;
+    %load/vec4 v0x5555921c1560_0;
+    %cast2;
+    %load/vec4 v0x5555921c1830_0;
+    %cast2;
+    %store/vec4 v0x5555921bb8b0_0, 0, 32;
+    %store/vec4 v0x5555921bb7d0_0, 0, 32;
+    %store/vec4 v0x5555921bbc80_0, 0, 32;
+    %callf/vec4 TD_quant_utils_pkg.hardsigmoid_int_default, S_0x5555921bb390;
+    %free S_0x5555921bb390;
+    %store/vec4 v0x5555921c1910_0, 0, 32;
+    %load/vec4 v0x5555921c1910_0;
+    %load/vec4 v0x5555921c1480_0;
+    %cmp/ne;
+    %jmp/0xz  T_15.8, 6;
+    %load/vec4 v0x5555921c19f0_0;
+    %addi 1, 0, 32;
+    %store/vec4 v0x5555921c19f0_0, 0, 32;
+T_15.8 ;
+    %load/vec4 v0x5555921c1380_0;
+    %addi 1, 0, 32;
+    %store/vec4 v0x5555921c1380_0, 0, 32;
+    %jmp T_15.2;
+T_15.3 ;
+    %end;
+    .scope S_0x555592175e20;
+t_0 %join;
+    %vpi_call/w 5 53 "$fclose", v0x5555921c1700_0 {0 0 0};
+    %alloc S_0x555592175fb0;
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 0, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 6840690, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1685285223, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1836018020, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1600745076, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1600415078, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %pushi/vec4 1635085428, 0, 32; draw_string_vec4
+    %concat/vec4; draw_string_vec4
+    %store/vec4 v0x55559218e640_0, 0, 512;
+    %load/vec4 v0x5555921c1380_0;
+    %cast2;
+    %store/vec4 v0x5555921ba330_0, 0, 32;
+    %load/vec4 v0x5555921c19f0_0;
+    %cast2;
+    %store/vec4 v0x5555921904b0_0, 0, 32;
+    %fork TD_l0_case_pkg.l0_report, S_0x555592175fb0;
+    %join;
+    %free S_0x555592175fb0;
+    %vpi_call/w 5 56 "$finish" {0 0 0};
+    %end;
+    .thread T_15;
+# The file index is used to find the file name in the following table.
+:file_names 6;
+    "N/A";
+    "<interactive>";
+    "-";
+    "/home/rick/System-ASIC/vsrc/Joint-CFR-DPD/tb/l0_ops/l0_case_pkg.sv";
+    "/home/rick/System-ASIC/vsrc/Joint-CFR-DPD/common/quant_utils_pkg.sv";
+    "/home/rick/System-ASIC/vsrc/Joint-CFR-DPD/tb/l0_ops/tb_l0_hardsigmoid_int_default.sv";

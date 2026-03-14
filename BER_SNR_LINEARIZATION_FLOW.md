@@ -4,15 +4,16 @@
 
 ## 1. 当前实验矩阵
 
-`msrc/utils/buildDefaultBerExperimentCases.m` 里默认启用 7 个 case：
+`msrc/utils/buildDefaultBerExperimentCases.m` 里默认启用 8 个 case：
 
+- `migo_no_cfr_no_dpd`
+- `migo_hc_no_dpd`
+- `migo_no_cfr_dpd`
+- `migo_no_cfr_volterra`
+- `migo_hc_volterra`
 - `migo_joint_cfr_dpd`
 - `wls_joint_cfr_dpd`
 - `swls_joint_cfr_dpd`
-- `migo_no_cfr_dpd`
-- `migo_hc_no_dpd`
-- `migo_hc_volterra`
-- `migo_no_cfr_volterra`
 
 它们分别组合了：
 
@@ -46,19 +47,24 @@ System-ASIC/
 其中：
 
 - `data/ber_coeff_workspace/` 放滤波器设计结果，只需要 `run_summary.json`
+- 当前 `main.m` 也会优先尝试从 `msrc/FilterInfo/method-*/run_summary.json` 自动解析三份滤波器结果
 - `data/linear_backend_exchange/` 是运行时中间文件，不需要手工维护，已在 `.gitignore` 中忽略
 
 ## 3. 运行前准备
 
 ### 3.1 滤波器结果
 
-把 `FilterDesign-MIGO` 中用于 BER 的三份 `run_summary.json` 复制到：
+可选的两种放置方式：
+
+1. 复制到 `data/ber_coeff_workspace/`：
 
 - `data/ber_coeff_workspace/MIGO/run_summary.json`
 - `data/ber_coeff_workspace/WLS/run_summary.json`
 - `data/ber_coeff_workspace/SWLS/run_summary.json`
 
-如果你不想用默认路径，也可以在 `msrc/main.m` 的 `config.filterExternalJsons` 里填绝对路径。
+2. 保持在 `msrc/FilterInfo/method-*/run_summary.json`，由 `main.m` 自动探测。
+
+如果你不想用这两种默认路径，也可以在 `msrc/main.m` 的 `config.filterExternalJsons` 里填绝对路径。
 
 ### 3.2 联合 CFR-DPD 模型
 
@@ -87,15 +93,17 @@ main
 当前主流程是：
 
 1. 读取三份外部滤波器 `run_summary.json`
-2. 为每个 case 选择激活的 FIR 系数
-3. `Transmitter` 仅生成 `tx_sum`
-4. `applyLinearizationBackend` 把 `tx_sum` 写成 `CSV/JSON`
-5. Python 后端执行 `joint_cfr_dpd / hc / dpd / volterra`
-6. MATLAB 读回 `tx_lin`
-7. `PA -> Channel -> Receiver`
-8. 扫描整条 `SNR` 范围并保存 BER
+2. 依次运行 `MCS=5 / 9 / 13`
+3. 为每个 case 选择激活的 FIR 系数
+4. `Transmitter` 生成 `tx_sum` 与参考星座
+5. `applyLinearizationBackend` 把 `tx_sum` 写成 `CSV/JSON`
+6. Python 后端执行 `joint_cfr_dpd / passthrough / hc / dpd / volterra`
+7. MATLAB 读回 `tx_lin`
+8. `PA -> Channel -> Receiver`
+9. 扫描整条 `SNR` 范围并同时保存 `BER` 与 `EVM`
+10. 生成图 1、图 2 与表 2 对应的论文产物
 
-注意：当前实现是“每个 `case × iter` 只调用一次 Python 后端”，然后同一份 `tx_lin` 复用于全部 SNR 点，所以 SNR 扫描不会重复跑 CFR/DPD。
+注意：当前实现是“每个 `MCS × case × iter` 只调用一次 Python 后端”，然后同一份 `tx_lin` 复用于全部 SNR 点，所以 SNR 扫描不会重复跑 CFR/DPD。
 
 ## 5. 产物输出
 
@@ -116,10 +124,11 @@ main
 
 ### 5.2 BER 汇总文件
 
-`saveData` 会在 `data/BER-SNR/` 下写出 `.mat` 文件，核心内容包括：
+`saveData` 会在 `data/BER-SNR/` 下写出 `ber_compare_MCS_<mcs>_seed_<seed>.mat`，核心内容包括：
 
 - `snr_range`
 - `ber_curve_by_method`
+- `evm_curve_by_method`
 - `method_names`
 - `case_ids`
 - `compare_results`
@@ -140,9 +149,11 @@ main
 当前代码层面已经完成：
 
 - 外部 `MIGO / WLS / SWLS` 滤波器加载
-- BER 多 case 主循环
+- `MCS=5 / 9 / 13` 批量主循环
+- BER / EVM 多 case 主循环
 - MATLAB/Python 文件交换接口
 - `passthrough / hc_only / dpd_only / volterra_only / hc_plus_volterra / joint_cfr_dpd` Python 后端可执行
+- 图 1、图 2、表 2 的产物生成脚本
 
 如果后续你要继续往链路里加入更多 baseline，建议直接扩展：
 

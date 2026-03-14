@@ -1,0 +1,19 @@
+{
+  "generator": "psrc/gen_l0_vectors.py",
+  "generated_at_utc": "2026-03-13T20:48:17.806568+00:00",
+  "seed": 20260305,
+  "files": {
+    "sat_signed32.vec": 3110,
+    "rshift_rne64.vec": 3221,
+    "div_rne64.vec": 3679,
+    "requant_pow2_signed.vec": 8757,
+    "hardsigmoid_int_default.vec": 5326,
+    "wkv_lut_lookup.vec": 5488
+  },
+  "wkv_lut": {
+    "numel": 256,
+    "value_formula": "lut[i] = bias + step * i",
+    "bias": -500,
+    "step": 3
+  }
+}

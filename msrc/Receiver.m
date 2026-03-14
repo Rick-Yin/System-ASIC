@@ -1,7 +1,9 @@
-function decoded_bits = Receiver(rx_sum, params)
+function [decoded_bits, rx_metrics] = Receiver(rx_sum, params)
     decoded_bits = zeros((params.mod.K * 5) * params.ofdm.numSymbols * params.rf.numCarriers * params.mod.bits_per_sym / 4, 1);
     info_ptr = 1;
     IterAllNum = params.ofdm.numSymbols * params.mod.bits_per_sym / 4;
+    ref_symbols_all = complex([], []);
+    rx_symbols_all = complex([], []);
     % PA process
     rx_sum = rx_sum / sqrt(mean(abs(rx_sum).^2));
 
@@ -47,6 +49,12 @@ function decoded_bits = Receiver(rx_sum, params)
         rx_no_cp = rx_cp(params.ofdm.CP_len+1:end, :);
         rx_fft = fft(rx_no_cp, params.ofdm.N_sub, 1) / sqrt(params.ofdm.N_sub);
         rx_fft_masked = rx_fft(params.ofdm.mask, :);
+
+        if isfield(params, 'debug') && isfield(params.debug, 'tx_symbols_active')
+            ref_symbols_k = params.debug.tx_symbols_active(:,:, k);
+            ref_symbols_all = [ref_symbols_all; ref_symbols_k(:)]; %#ok<AGROW>
+            rx_symbols_all = [rx_symbols_all; rx_fft_masked(:)]; %#ok<AGROW>
+        end
         
         rx_llr_k = qamdemod(rx_fft_masked(:), params.mod.M, 'OutputType', 'llr', 'UnitAveragePower', true);
 
@@ -79,4 +87,48 @@ function decoded_bits = Receiver(rx_sum, params)
             saveas(gcf, fullfile(params.plot.save_path, ['rx_constellation.' params.plot.save_fmt]));
         end
     end
+
+    [evm_rms, evm_percent, evm_db, align_gain] = computeRmsEvm(ref_symbols_all, rx_symbols_all);
+    rx_metrics = struct( ...
+        'evm_rms', evm_rms, ...
+        'evm_percent', evm_percent, ...
+        'evm_db', evm_db, ...
+        'align_gain_real_imag', [real(align_gain), imag(align_gain)], ...
+        'num_symbols', numel(ref_symbols_all));
+end
+
+
+function [evm_rms, evm_percent, evm_db, align_gain] = computeRmsEvm(ref_symbols, rx_symbols)
+    ref_symbols = ref_symbols(:);
+    rx_symbols = rx_symbols(:);
+
+    valid_mask = isfinite(real(ref_symbols)) & isfinite(imag(ref_symbols)) & ...
+        isfinite(real(rx_symbols)) & isfinite(imag(rx_symbols));
+    ref_symbols = ref_symbols(valid_mask);
+    rx_symbols = rx_symbols(valid_mask);
+
+    if isempty(ref_symbols)
+        evm_rms = NaN;
+        evm_percent = NaN;
+        evm_db = NaN;
+        align_gain = NaN;
+        return;
+    end
+
+    ref_energy = sum(abs(ref_symbols).^2);
+    if ref_energy <= eps
+        evm_rms = NaN;
+        evm_percent = NaN;
+        evm_db = NaN;
+        align_gain = NaN;
+        return;
+    end
+
+    % Remove a common complex gain before measuring EVM so the metric
+    % reflects residual waveform distortion rather than a trivial scale/phase offset.
+    align_gain = (ref_symbols' * rx_symbols) / ref_energy;
+    err_symbols = rx_symbols - align_gain * ref_symbols;
+    evm_rms = sqrt(sum(abs(err_symbols).^2) / ref_energy);
+    evm_percent = 100 * evm_rms;
+    evm_db = 20 * log10(max(evm_rms, eps));
 end

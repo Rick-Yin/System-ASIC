@@ -1,0 +1,2 @@
+[L0][PASS] op=div_rne64 cases=3679 mismatches=0
+/home/rick/System-ASIC/vsrc/Joint-CFR-DPD/tb/l0_ops/tb_l0_div_rne64.sv:52: $finish called at 0 (1ps)

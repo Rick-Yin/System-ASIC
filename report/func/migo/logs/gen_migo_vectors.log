@@ -1,0 +1,5 @@
+frames=512
+seed=1
+input=/home/rick/System-ASIC/report/func/migo/vectors/input_samples.vec
+golden=/home/rick/System-ASIC/report/func/migo/vectors/golden_output.vec
+meta=/home/rick/System-ASIC/report/func/migo/vectors/meta_migo.json

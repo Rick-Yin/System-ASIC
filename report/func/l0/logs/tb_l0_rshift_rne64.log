@@ -1,0 +1,2 @@
+[L0][PASS] op=rshift_rne64 cases=3221 mismatches=0
+/home/rick/System-ASIC/vsrc/Joint-CFR-DPD/tb/l0_ops/tb_l0_rshift_rne64.sv:54: $finish called at 0 (1ps)

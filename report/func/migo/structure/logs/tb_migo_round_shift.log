@@ -1,0 +1,2 @@
+[MIGO-STRUCT][PASS] item=round_shift cases=256 mismatches=0
+/home/rick/System-ASIC/dc/designs/migo/tb/tb_migo_round_shift.sv:85: $finish called at 528000 (1ps)

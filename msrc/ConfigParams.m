@@ -7,6 +7,12 @@ function params = ConfigParams(config)
     %% Iteration config setting
     params.iter.snr_range = -5:1:24;
     params.iter.numIter = 1;
+    if isfield(config, 'SNRRange') && ~isempty(config.SNRRange)
+        params.iter.snr_range = double(config.SNRRange(:)');
+    end
+    if isfield(config, 'NumIter') && ~isempty(config.NumIter)
+        params.iter.numIter = double(config.NumIter);
+    end
 
     %% 时间结构
     params.time.Ts = 1 / (30.72e6);
@@ -199,7 +205,7 @@ function params = ConfigParams(config)
 
     %% Save data
     params.save.enable = true;
-    params.save.save_root = 'data/';
+    params.save.save_root = fullfile(repo_root, 'data');
 end
 
 

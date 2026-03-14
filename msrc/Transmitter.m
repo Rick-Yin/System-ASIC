@@ -2,6 +2,8 @@ function [tx_sum, info, params] = Transmitter(params)
     % SLB OFDM System: Transmitter Module
     % This function generates the transmitted signal for a multi-carrier OFDM system.
 
+    params.debug = struct();
+
     bits_per_carrier = params.ofdm.num_active_subcarriers * params.ofdm.numSymbols * params.mod.bits_per_sym;
     IterAllNum = params.rf.numCarriers * params.ofdm.numSymbols * params.mod.bits_per_sym / 4;
     mod_bits = zeros(bits_per_carrier * params.rf.numCarriers, 1);
@@ -44,6 +46,7 @@ function [tx_sum, info, params] = Transmitter(params)
         tx_carriers(:, k) = tx_filt .* exp(1j*2*pi*params.rf.f_center(k)*t);
 
         % debug data
+        params.debug.tx_symbols_active(:,:, k) = symbols_k_active;
         params.debug.symbols_k(:,:, k) = symbols_k;
         params.debug.ofdm_k(:,:, k) = ofdm_k;
         params.debug.ofdm_cp(:,:, k) = ofdm_cp;
